@@ -1,11 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdminClient } from "@/lib/supabase-server";
+import type { Database } from "@/types/supabase";   // ← Add this
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
+    
     const { first_name, last_name, email, phone, dob, guest_status } = body;
 
     // 1. Presence validation
@@ -26,9 +28,17 @@ export async function POST(req: NextRequest) {
 
     // 3. Insert into Supabase
     const supabaseAdmin = getSupabaseAdminClient();
+
     const { error: dbError } = await supabaseAdmin
       .from("members")
-      .insert([{ first_name, last_name, email, phone, dob, guest_status }]);
+      .insert([{
+        first_name,
+        last_name,
+        email,
+        phone,
+        dob,
+        guest_status,
+      } satisfies Database["public"]["Tables"]["members"]["Insert"]]);   // ← Best fix
 
     if (dbError) {
       if (dbError.code === "23505") {
@@ -37,6 +47,7 @@ export async function POST(req: NextRequest) {
           { status: 409 }
         );
       }
+      console.error("Supabase error:", dbError);
       throw dbError;
     }
 
@@ -44,9 +55,7 @@ export async function POST(req: NextRequest) {
     if (process.env.BREVO_API_KEY) {
       const listId = parseInt(process.env.BREVO_LIST_ID ?? "0", 10);
 
-      if (!listId) {
-        console.warn("[BREVO] BREVO_LIST_ID is missing or invalid — skipping contact sync");
-      } else {
+      if (listId) {
         const brevoRes = await fetch("https://api.brevo.com/v3/contacts", {
           method: "POST",
           headers: {
@@ -70,8 +79,6 @@ export async function POST(req: NextRequest) {
         if (!brevoRes.ok) {
           const brevoError = await brevoRes.text();
           console.error("[BREVO] Failed to sync contact:", brevoRes.status, brevoError);
-          // We do NOT return an error here — Supabase insert already succeeded.
-          // Log and continue so the user still reaches /success.
         }
       }
     }
