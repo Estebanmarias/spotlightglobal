@@ -26,20 +26,12 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // 3. Insert into Supabase
-    const supabaseAdmin = getSupabaseAdminClient();
-
-    const { error: dbError } = await supabaseAdmin
-      .from("members")
-      .insert([{
-        first_name,
-        last_name,
-        email,
-        phone,
-        dob,
-        guest_status,
-      } satisfies Database["public"]["Tables"]["members"]["Insert"]]);   // ← Best fix
-
+  // 3. Insert into Supabase
+const supabaseAdmin = getSupabaseAdminClient();
+const { error: dbError } = await supabaseAdmin
+  .from("members")
+  .insert([{ first_name, last_name, email, phone, dob, guest_status }] as any);
+  
     if (dbError) {
       if (dbError.code === "23505") {
         return NextResponse.json(
