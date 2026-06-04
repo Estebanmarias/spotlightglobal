@@ -54,7 +54,7 @@ export default function Navbar() {
 
         {/* CTA */}
         <motion.div whileTap={{ scale: 0.95 }}>
-          <Link href="/#connect"
+          <Link href="/join"
             className="bg-[#081534] text-white px-6 py-2.5 rounded-full text-[14px] font-bold hover:brightness-110 transition-all">
             Join Us
           </Link>
