@@ -77,7 +77,7 @@ export default function AdminDashboard() {
 
       // Status breakdown
       const { data: all } = await supabase
-        .from("members").select("guest_status");
+        .from("members").select("guest_status") as { data: { guest_status: string }[] | null };
       const counts: StatusCounts = { First_Timer: 0, Returning: 0, Regular: 0, Member: 0 };
       (all || []).forEach(m => {
         if (m.guest_status in counts) counts[m.guest_status as keyof StatusCounts]++;
