@@ -64,7 +64,15 @@ export default function HeroSection() {
               <span className="material-symbols-outlined">arrow_forward</span>
             </button>
             <button className="bg-white/10 backdrop-blur-md border border-white/20 text-white px-8 py-4 rounded-lg text-[14px] font-bold hover:bg-white/20 transition-all active:scale-95">
-              Watch Live
+              <a
+                href="https://www.youtube.com/@pstedetkingsley"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2"
+              >
+                Watch Live
+                <span className="material-symbols-outlined">play_circle</span>
+              </a>
             </button>
           </motion.div>
         </div>

@@ -1,24 +1,29 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdminClient } from "@/lib/supabase-server";
 
-
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
     
-    const { first_name, last_name, email, phone, dob, guest_status } = body;
+    const { 
+      first_name, 
+      last_name, 
+      email, 
+      phone, 
+      dob, 
+      guest_status = "First_Timer"
+    } = body;
 
-    // 1. Presence validation
-    if (!first_name || !last_name || !email || !phone || !dob || !guest_status) {
+    // 1. Validation
+    if (!first_name || !last_name || !email || !phone || !dob) {
       return NextResponse.json(
-        { error: "All fields are required" },
+        { error: "First name, last name, email, phone and DOB are required" },
         { status: 400 }
       );
     }
 
-    // 2. Email format validation
     if (!EMAIL_REGEX.test(email)) {
       return NextResponse.json(
         { error: "Please enter a valid email address." },
@@ -26,12 +31,21 @@ export async function POST(req: NextRequest) {
       );
     }
 
-  // 3. Insert into Supabase
-const supabaseAdmin = getSupabaseAdminClient();
-const { error: dbError } = await supabaseAdmin
-  .from("members")
-  .insert([{ first_name, last_name, email, phone, dob, guest_status }] as any);
-  
+    // 2. Insert into Supabase (Only existing columns)
+    const supabaseAdmin = getSupabaseAdminClient();
+    const { data: member, error: dbError } = await supabaseAdmin
+      .from("members")
+      .insert([{
+        first_name,
+        last_name,
+        email: email.toLowerCase().trim(),
+        phone,
+        dob,
+        guest_status,
+      }])
+      .select()
+      .single();
+
     if (dbError) {
       if (dbError.code === "23505") {
         return NextResponse.json(
@@ -43,39 +57,54 @@ const { error: dbError } = await supabaseAdmin
       throw dbError;
     }
 
-    // 4. Push to Brevo
-    if (process.env.BREVO_API_KEY) {
-      const listId = parseInt(process.env.BREVO_LIST_ID ?? "0", 10);
+    // 3. Push to Brevo
+    if (process.env.BREVO_API_KEY && process.env.BREVO_LIST_ID) {
+      const listId = parseInt(process.env.BREVO_LIST_ID, 10);
 
-      if (listId) {
-        const brevoRes = await fetch("https://api.brevo.com/v3/contacts", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "api-key": process.env.BREVO_API_KEY,
-          },
-          body: JSON.stringify({
-            email,
-            attributes: {
-              FIRSTNAME: first_name,
-              LASTNAME: last_name,
-              SMS: phone,
-              DOB: dob,
-              GUEST_STATUS: guest_status,
+      if (isNaN(listId) || listId <= 0) {
+        console.error("[BREVO] Invalid BREVO_LIST_ID:", process.env.BREVO_LIST_ID);
+      } else {
+        try {
+          const brevoRes = await fetch("https://api.brevo.com/v3/contacts", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "api-key": process.env.BREVO_API_KEY,
             },
-            listIds: [listId],
-            updateEnabled: true,
-          }),
-        });
+            body: JSON.stringify({
+              email: email.toLowerCase().trim(),
+              attributes: {
+                FIRSTNAME: first_name,
+                LASTNAME: last_name,
+                PHONE: phone,
+                DOB: dob,
+                GUEST_STATUS: guest_status,
+              },
+              listIds: [listId],
+              updateEnabled: true,
+            }),
+          });
 
-        if (!brevoRes.ok) {
-          const brevoError = await brevoRes.text();
-          console.error("[BREVO] Failed to sync contact:", brevoRes.status, brevoError);
+          if (brevoRes.ok) {
+            console.log(`✅ Brevo: Contact successfully added/updated → ${email}`);
+          } else {
+            const errorText = await brevoRes.text();
+            console.error(`❌ Brevo Error ${brevoRes.status}:`, errorText);
+          }
+        } catch (brevoErr) {
+          console.error("[BREVO] API call failed:", brevoErr);
         }
       }
+    } else {
+      console.warn("[BREVO] BREVO_API_KEY or BREVO_LIST_ID is missing in environment variables");
     }
 
-    return NextResponse.json({ success: true, first_name }, { status: 200 });
+    return NextResponse.json({ 
+      success: true, 
+      first_name,
+      memberId: member?.id 
+    });
+
   } catch (err) {
     console.error("[REGISTER ERROR]", err);
     return NextResponse.json(
