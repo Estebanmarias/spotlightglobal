@@ -34,17 +34,17 @@ export async function POST(req: NextRequest) {
     // 2. Insert into Supabase (Only existing columns)
     const supabaseAdmin = getSupabaseAdminClient();
     const { data: member, error: dbError } = await supabaseAdmin
-      .from("members")
-      .insert([{
-        first_name,
-        last_name,
-        email: email.toLowerCase().trim(),
-        phone,
-        dob,
-        guest_status,
-      }])
-      .select()
-      .single();
+    .from("members")
+    .insert([{
+      first_name,
+      last_name,
+      email: email.toLowerCase().trim(),
+      phone,
+      dob,
+      guest_status,
+    }] as any)
+    .select()
+    .single();
 
     if (dbError) {
       if (dbError.code === "23505") {
