@@ -152,8 +152,7 @@ export default function AddMemberPage() {
                       <select name="guest_status" value={form.guest_status}
                         onChange={handleChange} className={inputClass}>
                         <option value="First_Timer">First Timer</option>
-                        <option value="Returning">Returning Visitor</option>
-                        <option value="Regular">Regular Attendee</option>
+                        <option value="Attending">Attending</option>
                         <option value="Member">Active Member</option>
                       </select>
                     </div>

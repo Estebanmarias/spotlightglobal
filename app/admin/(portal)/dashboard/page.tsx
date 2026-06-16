@@ -15,8 +15,7 @@ type Member = {
 
 type StatusCounts = {
   First_Timer: number;
-  Returning: number;
-  Regular: number;
+  Attending: number;
   Member: number;
 };
 
@@ -29,16 +28,25 @@ export default function AdminDashboard() {
   const [thisMonth, setThisMonth] = useState(0);
   const [recentMembers, setRecentMembers] = useState<Member[]>([]);
   const [statusCounts, setStatusCounts] = useState<StatusCounts>({
-    First_Timer: 0, Returning: 0, Regular: 0, Member: 0,
+    First_Timer: 0, Attending: 0, Member: 0,
   });
   const [loading, setLoading] = useState(true);
   const [adminName, setAdminName] = useState("Admin");
+  const [isSuperAdmin, setIsSuperAdmin] = useState(false);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
+    supabase.auth.getSession().then(async ({ data }) => {
       if (!data.session) { router.replace("/admin"); return; }
       const email = data.session.user.email ?? "";
       setAdminName(email.split("@")[0]);
+
+      // Check role
+      const { data: roleData } = await supabase
+        .from("admin_roles")
+        .select("role")
+        .eq("user_id", data.session.user.id)
+        .single() as { data: { role: string } | null };
+      if (roleData?.role === "super_admin") setIsSuperAdmin(true);
     });
   }, [router]);
 
@@ -46,12 +54,10 @@ export default function AdminDashboard() {
     const load = async () => {
       setLoading(true);
 
-      // Total count
       const { count: totalCount } = await supabase
         .from("members").select("id", { count: "exact", head: true });
       setTotal(totalCount || 0);
 
-      // This week
       const weekAgo = new Date();
       weekAgo.setDate(weekAgo.getDate() - 7);
       const { count: weekCount } = await supabase
@@ -59,7 +65,6 @@ export default function AdminDashboard() {
         .gte("created_at", weekAgo.toISOString());
       setThisWeek(weekCount || 0);
 
-      // This month
       const monthAgo = new Date();
       monthAgo.setDate(monthAgo.getDate() - 30);
       const { count: monthCount } = await supabase
@@ -67,7 +72,6 @@ export default function AdminDashboard() {
         .gte("created_at", monthAgo.toISOString());
       setThisMonth(monthCount || 0);
 
-      // Recent 5 members
       const { data: recent } = await supabase
         .from("members")
         .select("id, created_at, first_name, last_name, guest_status")
@@ -75,10 +79,9 @@ export default function AdminDashboard() {
         .limit(5);
       setRecentMembers(recent || []);
 
-      // Status breakdown
       const { data: all } = await supabase
         .from("members").select("guest_status") as { data: { guest_status: string }[] | null };
-      const counts: StatusCounts = { First_Timer: 0, Returning: 0, Regular: 0, Member: 0 };
+      const counts: StatusCounts = { First_Timer: 0, Attending: 0, Member: 0 };
       (all || []).forEach(m => {
         if (m.guest_status in counts) counts[m.guest_status as keyof StatusCounts]++;
       });
@@ -100,19 +103,24 @@ export default function AdminDashboard() {
 
   const statusConfig = [
     { key: "First_Timer", label: "First Timers", color: "bg-green-500", light: "bg-green-50 text-green-700" },
-    { key: "Returning", label: "Returning", color: "bg-purple-500", light: "bg-purple-50 text-purple-700" },
-    { key: "Regular", label: "Regular", color: "bg-blue-500", light: "bg-blue-50 text-blue-700" },
+    { key: "Attending", label: "Attending", color: "bg-blue-500", light: "bg-blue-50 text-blue-700" },
     { key: "Member", label: "Members", color: "bg-[#fdc425]", light: "bg-[#fdc425]/20 text-[#785a00]" },
   ];
 
   const quickActions = [
     { icon: "person_add", label: "Add Member", desc: "Register someone new", href: "/admin/add-member", bg: "bg-[#081534]", text: "text-white" },
     { icon: "group", label: "View Members", desc: "Browse congregation", href: "/admin/members", bg: "bg-[#fdc425]", text: "text-[#6d5200]" },
+    { icon: "fact_check", label: "Attendance", desc: "Log Sunday headcount", href: "/admin/attendance", bg: "bg-white", text: "text-[#081534]" },
     { icon: "church", label: "Ministries", desc: "Manage departments", href: "/admin/ministries", bg: "bg-white", text: "text-[#081534]" },
-    { icon: "analytics", label: "Analytics", desc: "Growth & insights", href: "/admin/analytics", bg: "bg-white", text: "text-[#081534]" },
   ];
 
   const totalForBar = total || 1;
+
+  const statusBadgeStyle = (status: string) => {
+    if (status === "Member") return "bg-[#fdc425]/20 text-[#785a00]";
+    if (status === "Attending") return "bg-blue-50 text-blue-700";
+    return "bg-green-50 text-green-700";
+  };
 
   return (
     <div className="bg-[#f7f9fb] min-h-screen">
@@ -128,10 +136,12 @@ export default function AdminDashboard() {
           <h1 className="text-white text-[24px] sm:text-[30px] font-bold mb-1">
             {greeting}, <span className="text-[#fdc425] capitalize">{adminName}</span> 👋
           </h1>
-          <p className="text-white/60 text-[13px]">Here's what's happening at theSpotlightChurch today.</p>
+          <p className="text-white/60 text-[13px]">
+            Here's what's happening at theSpotlightChurch today.
+            {isSuperAdmin && <span className="ml-2 px-2 py-0.5 bg-[#fdc425] text-[#6d5200] rounded-full text-[10px] font-bold uppercase">Super Admin</span>}
+          </p>
         </div>
 
-        {/* Stat pills in hero */}
         <div className="relative z-10 mt-6 grid grid-cols-3 gap-3 pl-12 lg:pl-0">
           {[
             { label: "Total Members", value: total, icon: "group" },
@@ -271,11 +281,7 @@ export default function AdminDashboard() {
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
-                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold
-                        ${m.guest_status === "Member" ? "bg-[#fdc425]/20 text-[#785a00]" :
-                          m.guest_status === "Regular" ? "bg-blue-50 text-blue-700" :
-                          m.guest_status === "Returning" ? "bg-purple-50 text-purple-700" :
-                          "bg-green-50 text-green-700"}`}>
+                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${statusBadgeStyle(m.guest_status)}`}>
                         {m.guest_status.replace("_", " ")}
                       </span>
                     </div>
@@ -288,7 +294,6 @@ export default function AdminDashboard() {
 
         {/* ── Bottom row — page links ── */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          {/* Ministries card */}
           <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
             onClick={() => router.push("/admin/ministries")}
@@ -303,7 +308,6 @@ export default function AdminDashboard() {
             </div>
           </motion.div>
 
-          {/* Analytics card */}
           <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.35 }}
             onClick={() => router.push("/admin/analytics")}
@@ -315,26 +319,41 @@ export default function AdminDashboard() {
               <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>analytics</span>
             </div>
             <h3 className="text-[15px] font-bold text-white mb-1 relative z-10">Analytics</h3>
-            <p className="text-[12px] text-white/60 mb-4 relative z-10">Growth trends, engagement & impact.</p>
+            <p className="text-[12px] text-white/60 mb-4 relative z-10">Growth trends, attendance & impact.</p>
             <div className="flex items-center gap-1 text-[#fdc425] text-[12px] font-semibold group-hover:gap-2 transition-all relative z-10">
               Open <span className="material-symbols-outlined text-[14px]">arrow_forward</span>
             </div>
           </motion.div>
 
-          {/* Settings card */}
-          <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4 }}
-            onClick={() => router.push("/admin/settings")}
-            className="bg-white border border-[#c6c6cf] rounded-xl p-5 cursor-pointer hover:shadow-md hover:-translate-y-0.5 transition-all group">
-            <div className="w-10 h-10 bg-[#fdc425]/20 text-[#785a00] rounded-xl flex items-center justify-center mb-4">
-              <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>settings</span>
-            </div>
-            <h3 className="text-[15px] font-bold text-[#081534] mb-1">Settings</h3>
-            <p className="text-[12px] text-[#45464e] mb-4">Profile, password, notifications & team.</p>
-            <div className="flex items-center gap-1 text-[#785a00] text-[12px] font-semibold group-hover:gap-2 transition-all">
-              Open <span className="material-symbols-outlined text-[14px]">arrow_forward</span>
-            </div>
-          </motion.div>
+          {isSuperAdmin ? (
+            <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.4 }}
+              onClick={() => router.push("/admin/giving")}
+              className="bg-[#fdc425] rounded-xl p-5 cursor-pointer hover:shadow-md hover:-translate-y-0.5 transition-all group relative overflow-hidden">
+              <div className="w-10 h-10 bg-[#081534] text-[#fdc425] rounded-xl flex items-center justify-center mb-4">
+                <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>volunteer_activism</span>
+              </div>
+              <h3 className="text-[15px] font-bold text-[#081534] mb-1">Giving & Partners</h3>
+              <p className="text-[12px] text-[#6d5200] mb-4">Donations, tithes & partnership records.</p>
+              <div className="flex items-center gap-1 text-[#081534] text-[12px] font-semibold group-hover:gap-2 transition-all">
+                Open <span className="material-symbols-outlined text-[14px]">arrow_forward</span>
+              </div>
+            </motion.div>
+          ) : (
+            <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.4 }}
+              onClick={() => router.push("/admin/settings")}
+              className="bg-white border border-[#c6c6cf] rounded-xl p-5 cursor-pointer hover:shadow-md hover:-translate-y-0.5 transition-all group">
+              <div className="w-10 h-10 bg-[#fdc425]/20 text-[#785a00] rounded-xl flex items-center justify-center mb-4">
+                <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>settings</span>
+              </div>
+              <h3 className="text-[15px] font-bold text-[#081534] mb-1">Settings</h3>
+              <p className="text-[12px] text-[#45464e] mb-4">Account, password & team access.</p>
+              <div className="flex items-center gap-1 text-[#785a00] text-[12px] font-semibold group-hover:gap-2 transition-all">
+                Open <span className="material-symbols-outlined text-[14px]">arrow_forward</span>
+              </div>
+            </motion.div>
+          )}
         </div>
 
         {/* ── Footer note ── */}
