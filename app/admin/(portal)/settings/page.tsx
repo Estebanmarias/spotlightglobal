@@ -3,10 +3,10 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { getSupabaseClient } from '@/lib/supabase'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 
 const ROLES = ['admin', 'super_admin']
-const roleLabel = (r: string) => r === 'super_admin' ? 'Super Admin' : 'Admin'
+const roleLabel = (r: string) => r === 'super_admin' ? 'Setman' : 'Admin'
 
 type AdminRole = {
   id: string
@@ -14,6 +14,8 @@ type AdminRole = {
   email: string
   full_name: string
   role: string
+  status: 'pending' | 'approved' | 'rejected'
+  created_at: string
 }
 
 const tabs = ['My Account', 'Team & Access']
@@ -26,6 +28,7 @@ export default function SettingsPage() {
   const [adminEmail, setAdminEmail] = useState('')
   const [currentUserId, setCurrentUserId] = useState('')
   const [currentRole, setCurrentRole] = useState('admin')
+  const [isSuperAdmin, setIsSuperAdmin] = useState(false)
   const [team, setTeam] = useState<AdminRole[]>([])
   const [loadingTeam, setLoadingTeam] = useState(true)
   const [toast, setToast] = useState<string | null>(null)
@@ -36,13 +39,17 @@ export default function SettingsPage() {
   const [pwSuccess, setPwSuccess] = useState(false)
   const [pwLoading, setPwLoading] = useState(false)
 
-  // Add team member (record only — actual Supabase Auth user must be created manually first)
+  // Add team member request
   const [inviteEmail, setInviteEmail] = useState('')
   const [inviteName, setInviteName] = useState('')
   const [inviteRole, setInviteRole] = useState('admin')
   const [inviting, setInviting] = useState(false)
 
-  const showToast = (msg: string) => { setToast(msg); setTimeout(() => setToast(null), 3000) }
+  // Approval result modal
+  const [approvalResult, setApprovalResult] = useState<{ email: string; password: string } | null>(null)
+  const [processingId, setProcessingId] = useState<string | null>(null)
+
+  const showToast = (msg: string) => { setToast(msg); setTimeout(() => setToast(null), 4000) }
 
   useEffect(() => {
     supabase.auth.getSession().then(async ({ data }) => {
@@ -52,7 +59,10 @@ export default function SettingsPage() {
 
       const { data: roleData } = await supabase
         .from('admin_roles').select('role').eq('user_id', data.session.user.id).single() as { data: { role: string } | null }
-      if (roleData?.role) setCurrentRole(roleData.role)
+      if (roleData?.role) {
+        setCurrentRole(roleData.role)
+        setIsSuperAdmin(roleData.role === 'super_admin')
+      }
 
       fetchTeam()
     })
@@ -78,21 +88,23 @@ export default function SettingsPage() {
     setPwForm({ current: '', next: '', confirm: '' })
   }
 
-  const handleAddTeamRecord = async () => {
+  // Anyone with admin access can submit a request — it goes in as 'pending' until Setman approves
+  const handleRequestTeamMember = async () => {
     if (!inviteEmail || !inviteName) return showToast('Fill in name and email')
     setInviting(true)
     const { error } = await supabase.from('admin_roles').insert([{
       email: inviteEmail.toLowerCase().trim(),
       full_name: inviteName,
       role: inviteRole,
+      status: 'pending',
       invited_by: currentUserId,
     }] as any)
     setInviting(false)
     if (error) {
-      if (error.code === '23505') return showToast('This email is already in the team list')
-      return showToast('Error adding team member')
+      if (error.code === '23505') return showToast('This email already has a request or account')
+      return showToast('Error submitting request')
     }
-    showToast('Team record added — create their Supabase Auth login next')
+    showToast(isSuperAdmin ? 'Request submitted — approve it below' : 'Request sent to Setman for approval')
     setInviteEmail(''); setInviteName(''); setInviteRole('admin')
     fetchTeam()
   }
@@ -112,16 +124,56 @@ export default function SettingsPage() {
     fetchTeam()
   }
 
+  const handleApproveReject = async (id: string, action: 'approve' | 'reject') => {
+    setProcessingId(id)
+    try {
+      const res = await fetch('/api/admin/approve-user', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ admin_role_id: id, action, approver_user_id: currentUserId }),
+      })
+      const data = await res.json()
+      setProcessingId(null)
+
+      if (!res.ok) return showToast(data.error || 'Something went wrong')
+
+      if (action === 'approve') {
+        setApprovalResult({ email: data.email, password: data.temp_password })
+        showToast('Admin approved and login created')
+      } else {
+        showToast('Request rejected')
+      }
+      fetchTeam()
+    } catch {
+      setProcessingId(null)
+      showToast('Network error — please try again')
+    }
+  }
+
   const roleColor = (role: string) => role === 'super_admin' ? 'bg-[#081534] text-white' : 'bg-[#f2f4f6] text-[#45464e]'
+  const pendingRequests = team.filter(t => t.status === 'pending')
+  const activeTeam = team.filter(t => t.status === 'approved')
 
   return (
     <div className="bg-[#f7f9fb] min-h-screen">
 
       {/* Header */}
       <div className="bg-white border-b border-[#c6c6cf] px-4 sm:px-8 lg:px-10 py-6">
-        <div className="pl-12 lg:pl-0">
-          <h1 className="text-[24px] font-bold text-[#081534]">theSpotlightChurch — Settings</h1>
-          <p className="text-[13px] text-[#45464e] mt-1">Manage your account, admin access, and team permissions.</p>
+        <div className="flex items-center justify-between gap-3">
+          <div className="pl-12 lg:pl-0">
+            <h1 className="text-[24px] font-bold text-[#081534]">theSpotlightChurch — Settings</h1>
+            <p className="text-[13px] text-[#45464e] mt-1">Manage your account, admin access, and team permissions.</p>
+          </div>
+          {isSuperAdmin && pendingRequests.length > 0 && (
+            <button onClick={() => setActiveTab(1)}
+              className="relative flex items-center gap-2 bg-[#fdc425] text-[#6d5200] px-4 py-2.5 rounded-xl text-[13px] font-bold hover:brightness-105 transition-all shrink-0">
+              <span className="material-symbols-outlined text-[18px]">notifications</span>
+              <span className="hidden sm:inline">Pending Requests</span>
+              <span className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-[#ba1a1a] text-white rounded-full text-[10px] font-bold flex items-center justify-center">
+                {pendingRequests.length}
+              </span>
+            </button>
+          )}
         </div>
       </div>
 
@@ -131,9 +183,14 @@ export default function SettingsPage() {
         <div className="flex border-b border-[#c6c6cf] mb-8 gap-8">
           {tabs.map((tab, i) => (
             <button key={tab} onClick={() => setActiveTab(i)}
-              className={`pb-3 text-[14px] font-semibold whitespace-nowrap border-b-2 -mb-px transition-colors
+              className={`pb-3 text-[14px] font-semibold whitespace-nowrap border-b-2 -mb-px transition-colors flex items-center gap-2
                 ${activeTab === i ? 'text-[#081534] border-[#081534]' : 'text-[#45464e] border-transparent hover:text-[#081534]'}`}>
               {tab}
+              {tab === 'Team & Access' && isSuperAdmin && pendingRequests.length > 0 && (
+                <span className="w-5 h-5 bg-[#ba1a1a] text-white rounded-full text-[10px] font-bold flex items-center justify-center">
+                  {pendingRequests.length}
+                </span>
+              )}
             </button>
           ))}
         </div>
@@ -207,17 +264,57 @@ export default function SettingsPage() {
         {activeTab === 1 && (
           <div className="space-y-6">
 
+            {/* Pending requests — Setman only */}
+            {isSuperAdmin && (
+              <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
+                className="bg-white border border-[#fdc425] rounded-xl p-6 sm:p-8">
+                <div className="flex items-center gap-2 mb-6">
+                  <span className="material-symbols-outlined text-[#785a00] text-[20px]">notifications_active</span>
+                  <h2 className="text-[16px] font-bold text-[#081534]">Pending Admin Requests</h2>
+                  {pendingRequests.length > 0 && (
+                    <span className="px-2 py-0.5 bg-[#ba1a1a] text-white rounded-full text-[11px] font-bold">{pendingRequests.length}</span>
+                  )}
+                </div>
+
+                {pendingRequests.length === 0 ? (
+                  <p className="text-[13px] text-[#45464e]">No pending requests right now.</p>
+                ) : (
+                  <div className="space-y-3">
+                    {pendingRequests.map(r => (
+                      <div key={r.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 bg-[#ffdf9a]/30 border border-[#fdc425]/40 rounded-xl">
+                        <div>
+                          <p className="text-[14px] font-bold text-[#081534]">{r.full_name}</p>
+                          <p className="text-[12px] text-[#5a4300]">{r.email} · Requesting {roleLabel(r.role)} access</p>
+                        </div>
+                        <div className="flex gap-2 shrink-0">
+                          <button onClick={() => handleApproveReject(r.id, 'reject')} disabled={processingId === r.id}
+                            className="px-4 py-2 border border-[#c6c6cf] text-[#45464e] rounded-lg text-[12px] font-bold hover:bg-white transition-colors disabled:opacity-50">
+                            Reject
+                          </button>
+                          <button onClick={() => handleApproveReject(r.id, 'approve')} disabled={processingId === r.id}
+                            className="px-4 py-2 bg-[#081534] text-white rounded-lg text-[12px] font-bold hover:opacity-90 transition-opacity disabled:opacity-50">
+                            {processingId === r.id ? 'Approving...' : 'Approve'}
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </motion.div>
+            )}
+
             <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.04 }}
               className="bg-white border border-[#c6c6cf] rounded-xl p-6 sm:p-8">
               <h2 className="text-[16px] font-bold text-[#081534] mb-6">Access Levels</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="p-4 rounded-xl border border-[#c6c6cf]">
-                  <span className="inline-block px-3 py-1 rounded-full text-[12px] font-bold mb-3 bg-[#081534] text-white">Super Admin</span>
-                  <p className="text-[13px] text-[#45464e]">Full access — members, settings, team management, and Giving & Partners records.</p>
+                  <span className="inline-block px-3 py-1 rounded-full text-[12px] font-bold mb-3 bg-[#081534] text-white">Setman</span>
+                  <p className="text-[13px] text-[#45464e]">Full access — members, settings, team approval, and Giving & Partners records.</p>
                 </div>
                 <div className="p-4 rounded-xl border border-[#c6c6cf]">
                   <span className="inline-block px-3 py-1 rounded-full text-[12px] font-bold mb-3 bg-[#f2f4f6] text-[#45464e]">Admin</span>
-                  <p className="text-[13px] text-[#45464e]">Manage members, ministries, and attendance. No access to giving records or team management.</p>
+                  <p className="text-[13px] text-[#45464e]">Manage members, ministries, and attendance. Cannot access giving records or approve new admins.</p>
                 </div>
               </div>
             </motion.div>
@@ -228,11 +325,11 @@ export default function SettingsPage() {
               <h2 className="text-[16px] font-bold text-[#081534] mb-6">Current Team</h2>
               {loadingTeam ? (
                 <div className="space-y-3">{[1,2].map(i => <div key={i} className="h-16 bg-[#f2f4f6] rounded-xl animate-pulse" />)}</div>
-              ) : team.length === 0 ? (
-                <p className="text-[13px] text-[#45464e]">No team records yet.</p>
+              ) : activeTeam.length === 0 ? (
+                <p className="text-[13px] text-[#45464e]">No approved team members yet.</p>
               ) : (
                 <div className="space-y-3">
-                  {team.map(m => (
+                  {activeTeam.map(m => (
                     <div key={m.id} className="flex items-center justify-between p-4 bg-[#f2f4f6] rounded-xl gap-3">
                       <div className="flex items-center gap-3 min-w-0">
                         <div className="w-10 h-10 rounded-full bg-[#081534] text-white flex items-center justify-center text-[12px] font-bold shrink-0">
@@ -243,15 +340,18 @@ export default function SettingsPage() {
                             {m.full_name} {m.user_id === currentUserId && <span className="text-[11px] text-[#785a00]">(you)</span>}
                           </p>
                           <p className="text-[11px] text-[#45464e] truncate">{m.email}</p>
-                          {!m.user_id && <p className="text-[10px] text-[#ba1a1a] mt-0.5">No Supabase Auth login linked yet</p>}
                         </div>
                       </div>
                       <div className="flex items-center gap-3 shrink-0">
-                        <select value={m.role} onChange={e => handleRoleChange(m.id, e.target.value)}
-                          className="text-[12px] font-bold bg-white border border-[#c6c6cf] rounded-lg px-3 py-1.5 focus:outline-none focus:border-[#081534]">
-                          {ROLES.map(r => <option key={r} value={r}>{roleLabel(r)}</option>)}
-                        </select>
-                        {m.user_id !== currentUserId && (
+                        {isSuperAdmin ? (
+                          <select value={m.role} onChange={e => handleRoleChange(m.id, e.target.value)}
+                            className="text-[12px] font-bold bg-white border border-[#c6c6cf] rounded-lg px-3 py-1.5 focus:outline-none focus:border-[#081534]">
+                            {ROLES.map(r => <option key={r} value={r}>{roleLabel(r)}</option>)}
+                          </select>
+                        ) : (
+                          <span className={`px-2.5 py-1 text-[11px] font-bold rounded-full ${roleColor(m.role)}`}>{roleLabel(m.role)}</span>
+                        )}
+                        {isSuperAdmin && m.user_id !== currentUserId && (
                           <button onClick={() => handleRemove(m.id, m.user_id)} className="text-[#45464e] hover:text-[#ba1a1a] transition-colors">
                             <span className="material-symbols-outlined text-[20px]">person_remove</span>
                           </button>
@@ -266,9 +366,13 @@ export default function SettingsPage() {
             <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.12 }}
               className="bg-white border border-[#c6c6cf] rounded-xl p-6 sm:p-8">
-              <h2 className="text-[16px] font-bold text-[#081534] mb-2">Add Team Member</h2>
+              <h2 className="text-[16px] font-bold text-[#081534] mb-2">
+                {isSuperAdmin ? 'Add Team Member' : 'Request New Team Member'}
+              </h2>
               <p className="text-[13px] text-[#45464e] mb-6">
-                This adds them to the role list. They still need a Supabase Auth login created manually in the Supabase dashboard with this exact email before they can sign in.
+                {isSuperAdmin
+                  ? 'Submit a request — it will appear above for your approval. Approving it creates their login automatically and emails their credentials.'
+                  : 'This sends a request to Setman for approval. They will create the login and share the credentials once approved.'}
               </p>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-2xl">
                 <div className="flex flex-col gap-2">
@@ -290,10 +394,10 @@ export default function SettingsPage() {
                 </div>
               </div>
               <div className="mt-6">
-                <button onClick={handleAddTeamRecord} disabled={inviting}
+                <button onClick={handleRequestTeamMember} disabled={inviting}
                   className="bg-[#081534] text-white px-6 py-2.5 rounded-lg text-[13px] font-bold hover:opacity-90 transition-opacity disabled:opacity-60 flex items-center gap-2">
                   <span className="material-symbols-outlined text-[18px]">person_add</span>
-                  {inviting ? 'Adding...' : 'Add to Team'}
+                  {inviting ? 'Submitting...' : isSuperAdmin ? 'Submit & Review' : 'Send Request'}
                 </button>
               </div>
             </motion.div>
@@ -302,13 +406,53 @@ export default function SettingsPage() {
         )}
       </div>
 
-      {toast && (
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 20 }}
-          className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-[#081534] text-white px-5 py-3 rounded-full text-[13px] font-semibold shadow-lg flex items-center gap-2">
-          <span className="material-symbols-outlined text-[#fdc425] text-[16px]">check_circle</span>
-          {toast}
-        </motion.div>
-      )}
+      {/* Approval result modal — shows temp password */}
+      <AnimatePresence>
+        {approvalResult && (
+          <>
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/50 z-50 backdrop-blur-sm" onClick={() => setApprovalResult(null)} />
+            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }}
+              className="fixed inset-0 z-50 flex items-center justify-center p-4">
+              <div className="bg-white rounded-2xl w-full max-w-[440px] p-6 sm:p-8 shadow-2xl">
+                <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <span className="material-symbols-outlined text-green-700 text-[24px]">check_circle</span>
+                </div>
+                <h3 className="text-[18px] font-bold text-[#081534] text-center mb-2">Admin Approved</h3>
+                <p className="text-[13px] text-[#45464e] text-center mb-6">
+                  Login created and credentials emailed to {approvalResult.email}. Here's a backup copy:
+                </p>
+                <div className="bg-[#f2f4f6] rounded-xl p-4 space-y-3">
+                  <div>
+                    <p className="text-[11px] font-bold text-[#45464e] uppercase tracking-wide">Email</p>
+                    <p className="text-[14px] font-bold text-[#081534]">{approvalResult.email}</p>
+                  </div>
+                  <div>
+                    <p className="text-[11px] font-bold text-[#45464e] uppercase tracking-wide">Temporary Password</p>
+                    <p className="text-[16px] font-bold text-[#081534] font-mono">{approvalResult.password}</p>
+                  </div>
+                </div>
+                <p className="text-[11px] text-[#76777f] text-center mt-4">They should change this password after first login.</p>
+                <button onClick={() => setApprovalResult(null)}
+                  className="w-full mt-6 py-3 bg-[#081534] text-white rounded-xl text-[13px] font-bold hover:opacity-90 transition-opacity">
+                  Done
+                </button>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
+      {/* Toast */}
+      <AnimatePresence>
+        {toast && (
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 20 }}
+            className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-[#081534] text-white px-5 py-3 rounded-full text-[13px] font-semibold shadow-lg flex items-center gap-2">
+            <span className="material-symbols-outlined text-[#fdc425] text-[16px]">check_circle</span>
+            {toast}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }

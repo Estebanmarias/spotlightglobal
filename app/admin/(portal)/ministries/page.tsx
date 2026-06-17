@@ -212,9 +212,10 @@ export default function MinistriesPage() {
 
                   {m.image ? (
                     <>
-                      <div className="relative h-44 sm:h-52 overflow-hidden">
+                      <div className="relative h-44 sm:h-52 overflow-hidden bg-[#eceef0]">
                         <img src={m.image} alt={m.name}
-                          className={`w-full h-full object-cover transition-transform duration-500 ${hovered === m.id ? 'scale-110' : 'scale-100'}`} />
+                          className={`w-full h-full object-cover object-center transition-transform duration-500 ${hovered === m.id ? 'scale-110' : 'scale-100'}`}
+                          onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }} />
                         <div className="absolute inset-0 bg-gradient-to-t from-[#081534]/80 to-transparent" />
                         <div className="absolute bottom-4 left-5">
                           {m.tag && (
@@ -225,18 +226,20 @@ export default function MinistriesPage() {
                           <h3 className="text-white text-[20px] font-bold">{m.name}</h3>
                         </div>
                       </div>
-                      <div className="p-4 sm:p-5 grid grid-cols-2 sm:grid-cols-4 gap-3">
-                        <div><p className="text-[10px] text-[#45464e] font-semibold">Leader</p><p className="text-[13px] text-[#081534] font-bold">{m.leader}</p></div>
-                        <div><p className="text-[10px] text-[#45464e] font-semibold">Members</p><p className="text-[13px] text-[#081534] font-bold">{m.member_count}</p></div>
-                        <div><p className="text-[10px] text-[#45464e] font-semibold">Meeting</p><p className="text-[13px] text-[#081534] font-bold">{m.meeting_day}</p></div>
-                        <div className="flex items-center justify-end gap-1">
-                          <button onClick={() => setDetail(m)} className="p-2 text-[#45464e] hover:text-[#081534] hover:bg-[#f2f4f6] rounded-lg transition-all">
+                      <div className="p-4 sm:p-5">
+                        <div className="grid grid-cols-3 gap-3 mb-3">
+                          <div><p className="text-[10px] text-[#45464e] font-semibold">Leader</p><p className="text-[13px] text-[#081534] font-bold truncate">{m.leader}</p></div>
+                          <div><p className="text-[10px] text-[#45464e] font-semibold">Members</p><p className="text-[13px] text-[#081534] font-bold">{m.member_count}</p></div>
+                          <div><p className="text-[10px] text-[#45464e] font-semibold">Meeting</p><p className="text-[13px] text-[#081534] font-bold truncate">{m.meeting_day}</p></div>
+                        </div>
+                        <div className="flex items-center justify-end gap-1 pt-2 border-t border-[#f2f4f6]">
+                          <button onClick={() => setDetail(m)} className="p-2 text-[#45464e] hover:text-[#081534] hover:bg-[#f2f4f6] rounded-lg transition-all shrink-0">
                             <span className="material-symbols-outlined text-[18px]">open_in_new</span>
                           </button>
-                          <button onClick={() => openEdit(m)} className="p-2 text-[#45464e] hover:text-[#081534] hover:bg-[#f2f4f6] rounded-lg transition-all">
+                          <button onClick={() => openEdit(m)} className="p-2 text-[#45464e] hover:text-[#081534] hover:bg-[#f2f4f6] rounded-lg transition-all shrink-0">
                             <span className="material-symbols-outlined text-[18px]">edit</span>
                           </button>
-                          <button onClick={() => setDeleteTarget(m)} className="p-2 text-[#45464e] hover:text-[#ba1a1a] hover:bg-[#ffdad6] rounded-lg transition-all">
+                          <button onClick={() => setDeleteTarget(m)} className="p-2 text-[#45464e] hover:text-[#ba1a1a] hover:bg-[#ffdad6] rounded-lg transition-all shrink-0">
                             <span className="material-symbols-outlined text-[18px]">delete</span>
                           </button>
                         </div>

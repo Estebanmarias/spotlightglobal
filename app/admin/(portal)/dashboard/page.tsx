@@ -38,15 +38,22 @@ export default function AdminDashboard() {
     supabase.auth.getSession().then(async ({ data }) => {
       if (!data.session) { router.replace("/admin"); return; }
       const email = data.session.user.email ?? "";
-      setAdminName(email.split("@")[0]);
 
-      // Check role
+      // Check role + full_name from admin_roles
       const { data: roleData } = await supabase
         .from("admin_roles")
-        .select("role")
+        .select("role, full_name")
         .eq("user_id", data.session.user.id)
-        .single() as { data: { role: string } | null };
-      if (roleData?.role === "super_admin") setIsSuperAdmin(true);
+        .single() as { data: { role: string; full_name: string } | null };
+
+      if (roleData?.role === "super_admin") {
+        setIsSuperAdmin(true);
+        setAdminName("Setman");
+      } else if (roleData?.full_name) {
+        setAdminName(roleData.full_name.split(" ")[0]);
+      } else {
+        setAdminName(email.split("@")[0]);
+      }
     });
   }, [router]);
 
@@ -134,11 +141,11 @@ export default function AdminDashboard() {
         <div className="relative z-10 pl-12 lg:pl-0">
           <p className="text-[#fdc425] text-[12px] font-semibold uppercase tracking-widest mb-1">{today}</p>
           <h1 className="text-white text-[24px] sm:text-[30px] font-bold mb-1">
-            {greeting}, <span className="text-[#fdc425] capitalize">{adminName}</span> 👋
+            {greeting}, <span className="text-[#fdc425]">{adminName}</span> 👋
           </h1>
-          <p className="text-white/60 text-[13px]">
+          <p className="text-white/60 text-[13px] flex items-center gap-2">
             Here's what's happening at theSpotlightChurch today.
-            {isSuperAdmin && <span className="ml-2 px-2 py-0.5 bg-[#fdc425] text-[#6d5200] rounded-full text-[10px] font-bold uppercase">Super Admin</span>}
+            {isSuperAdmin && <span className="px-2 py-0.5 bg-[#fdc425] text-[#6d5200] rounded-full text-[10px] font-bold uppercase">Setman</span>}
           </p>
         </div>
 

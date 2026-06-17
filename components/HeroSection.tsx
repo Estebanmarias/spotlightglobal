@@ -46,8 +46,7 @@ export default function HeroSection() {
             transition={{ duration: 0.5, delay: 0.1, ease: "easeOut" }}
             className="text-[18px] leading-[28px] mb-8 opacity-90"
           >
-            We are a People Marvelously Helped, Greatly Blessed, <br /> Deeply
-            Loved and Highly Favored.
+            We Are a People Marvelously Helped, Greatly Blessed, Deeply Loved, and Highly Favored.
           </motion.p>
 
           <motion.div

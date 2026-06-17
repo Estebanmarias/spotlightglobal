@@ -20,12 +20,11 @@ const PAGE_SIZE = 12
 
 const statusConfig: Record<string, { label: string; pill: string; dot: string; bar: string }> = {
   Member:      { label: 'Member',      pill: 'bg-[#fdc425]/20 text-[#785a00] border border-[#fdc425]/40', dot: 'bg-[#fdc425]',   bar: 'bg-[#fdc425]'   },
-  Regular:     { label: 'Regular',     pill: 'bg-blue-50 text-blue-700 border border-blue-200',           dot: 'bg-blue-500',    bar: 'bg-blue-500'    },
-  Returning:   { label: 'Returning',   pill: 'bg-purple-50 text-purple-700 border border-purple-200',     dot: 'bg-purple-500',  bar: 'bg-purple-500'  },
+  Attending:   { label: 'Attending',   pill: 'bg-blue-50 text-blue-700 border border-blue-200',           dot: 'bg-blue-500',    bar: 'bg-blue-500'    },
   First_Timer: { label: 'First Timer', pill: 'bg-green-50 text-green-700 border border-green-200',        dot: 'bg-green-500',   bar: 'bg-green-500'   },
 }
 
-const statusOptions = ['All', 'First_Timer', 'Returning', 'Regular', 'Member']
+const statusOptions = ['All', 'First_Timer', 'Attending', 'Member']
 
 const avatarColors = [
   'bg-[#081534]', 'bg-[#002960]', 'bg-[#1e2a4a]',
@@ -33,8 +32,21 @@ const avatarColors = [
 ]
 const avatarColor = (name: string) => avatarColors[name.charCodeAt(0) % avatarColors.length]
 
+const inputCls = 'w-full bg-[#f2f4f6] border-b-2 border-transparent focus:border-[#081534] outline-none px-4 py-3 rounded-t-lg text-[14px] transition-colors'
+
 // ── Member Detail Drawer ──────────────────────────────────────────────
-function MemberDrawer({ member, onClose }: { member: Member; onClose: () => void }) {
+function MemberDrawer({
+  member, onClose, onEdit, onDeleted,
+}: {
+  member: Member
+  onClose: () => void
+  onEdit: (m: Member) => void
+  onDeleted: () => void
+}) {
+  const supabase = getSupabaseClient()
+  const [deleting, setDeleting] = useState(false)
+  const [confirmDelete, setConfirmDelete] = useState(false)
+
   const cfg = statusConfig[member.guest_status]
   const joinDate = new Date(member.created_at).toLocaleDateString('en-NG', {
     weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
@@ -43,27 +55,31 @@ function MemberDrawer({ member, onClose }: { member: Member; onClose: () => void
     ? new Date(member.dob).toLocaleDateString('en-NG', { day: 'numeric', month: 'long', year: 'numeric' })
     : '—'
 
-  // Calculate age
   const age = member.dob
     ? Math.floor((Date.now() - new Date(member.dob).getTime()) / (365.25 * 24 * 60 * 60 * 1000))
     : null
 
+  const handleDelete = async () => {
+    setDeleting(true)
+    const { error } = await supabase.from('members').delete().eq('id', member.id)
+    setDeleting(false)
+    if (error) { alert('Error deleting member: ' + error.message); return }
+    onDeleted()
+  }
+
   return (
     <>
-      {/* Backdrop */}
       <motion.div
         initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
         onClick={onClose}
         className="fixed inset-0 bg-black/40 z-40"
       />
 
-      {/* Drawer */}
       <motion.aside
         initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }}
         transition={{ type: 'spring', damping: 28, stiffness: 260 }}
         className="fixed right-0 top-0 h-full w-full max-w-[420px] bg-white z-50 shadow-2xl flex flex-col overflow-hidden"
       >
-        {/* Header */}
         <div className="bg-[#081534] px-6 pt-8 pb-10 relative overflow-hidden shrink-0">
           <div className="absolute -right-8 -bottom-8 opacity-10">
             <span className="material-symbols-outlined text-[140px] text-white"
@@ -90,10 +106,8 @@ function MemberDrawer({ member, onClose }: { member: Member; onClose: () => void
           </div>
         </div>
 
-        {/* Body */}
         <div className="flex-1 overflow-y-auto p-6 space-y-6">
 
-          {/* Contact details */}
           <div>
             <h3 className="text-[11px] font-bold text-[#45464e] uppercase tracking-widest mb-3">Contact Information</h3>
             <div className="space-y-3">
@@ -114,7 +128,6 @@ function MemberDrawer({ member, onClose }: { member: Member; onClose: () => void
             </div>
           </div>
 
-          {/* Personal details */}
           <div>
             <h3 className="text-[11px] font-bold text-[#45464e] uppercase tracking-widest mb-3">Personal Details</h3>
             <div className="grid grid-cols-2 gap-3">
@@ -135,7 +148,6 @@ function MemberDrawer({ member, onClose }: { member: Member; onClose: () => void
             </div>
           </div>
 
-          {/* Registration timeline */}
           <div>
             <h3 className="text-[11px] font-bold text-[#45464e] uppercase tracking-widest mb-3">Registration Timeline</h3>
             <div className="relative pl-5">
@@ -155,19 +167,142 @@ function MemberDrawer({ member, onClose }: { member: Member; onClose: () => void
               ))}
             </div>
           </div>
+
+          {confirmDelete && (
+            <div className="p-4 bg-[#ffdad6] rounded-xl border border-[#ba1a1a]/20">
+              <p className="text-[13px] font-bold text-[#ba1a1a] mb-1">Delete this member?</p>
+              <p className="text-[12px] text-[#5a4300] mb-3">This permanently removes {member.first_name} {member.last_name} from the congregation list. This cannot be undone.</p>
+              <div className="flex gap-2">
+                <button onClick={() => setConfirmDelete(false)}
+                  className="flex-1 py-2 border border-[#c6c6cf] rounded-lg text-[12px] font-semibold text-[#45464e] hover:bg-white transition-colors">
+                  Cancel
+                </button>
+                <button onClick={handleDelete} disabled={deleting}
+                  className="flex-1 py-2 bg-[#ba1a1a] text-white rounded-lg text-[12px] font-bold hover:opacity-90 transition-opacity disabled:opacity-60">
+                  {deleting ? 'Deleting...' : 'Confirm Delete'}
+                </button>
+              </div>
+            </div>
+          )}
         </div>
 
-        {/* Footer actions */}
         <div className="shrink-0 border-t border-[#c6c6cf] p-4 flex gap-3 bg-white">
-          <button className="flex-1 flex items-center justify-center gap-2 bg-[#081534] text-white py-2.5 rounded-xl text-[13px] font-bold hover:opacity-90 transition-opacity">
+          <button onClick={() => onEdit(member)}
+            className="flex-1 flex items-center justify-center gap-2 bg-[#081534] text-white py-2.5 rounded-xl text-[13px] font-bold hover:opacity-90 transition-opacity">
             <span className="material-symbols-outlined text-[16px]">edit</span>
             Edit Member
           </button>
-          <button className="flex items-center justify-center gap-2 bg-[#ffdad6] text-[#ba1a1a] px-4 py-2.5 rounded-xl text-[13px] font-bold hover:opacity-90 transition-opacity">
+          <button onClick={() => setConfirmDelete(true)}
+            className="flex items-center justify-center gap-2 bg-[#ffdad6] text-[#ba1a1a] px-4 py-2.5 rounded-xl text-[13px] font-bold hover:opacity-90 transition-opacity">
             <span className="material-symbols-outlined text-[16px]">delete</span>
           </button>
         </div>
       </motion.aside>
+    </>
+  )
+}
+
+// ── Edit Member Modal ───────────────────────────────────────────────
+function EditMemberModal({
+  member, onClose, onSaved,
+}: {
+  member: Member
+  onClose: () => void
+  onSaved: () => void
+}) {
+  const supabase = getSupabaseClient()
+  const [form, setForm] = useState({
+    first_name: member.first_name,
+    last_name: member.last_name,
+    email: member.email,
+    phone: member.phone,
+    dob: member.dob,
+    guest_status: member.guest_status,
+  })
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState('')
+
+  const handleSave = async () => {
+    if (!form.first_name || !form.last_name || !form.email) {
+      setError('First name, last name, and email are required.')
+      return
+    }
+    setSaving(true)
+    setError('')
+    const { error: updateError } = await supabase
+      .from('members')
+      .update(form as any)
+      .eq('id', member.id)
+    setSaving(false)
+    if (updateError) {
+      setError(updateError.code === '23505' ? 'This email is already in use.' : 'Error saving changes.')
+      return
+    }
+    onSaved()
+  }
+
+  return (
+    <>
+      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+        className="fixed inset-0 bg-black/50 z-50 backdrop-blur-sm" onClick={onClose} />
+      <motion.div initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.95, y: 20 }} transition={{ type: 'spring', damping: 25, stiffness: 280 }}
+        className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div className="bg-white rounded-2xl w-full max-w-[520px] max-h-[90vh] overflow-y-auto shadow-2xl">
+          <div className="flex items-center justify-between px-6 py-5 border-b border-[#c6c6cf]">
+            <h3 className="text-[18px] font-bold text-[#081534]">Edit Member</h3>
+            <button onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-lg text-[#45464e] hover:bg-[#f2f4f6]">
+              <span className="material-symbols-outlined text-[20px]">close</span>
+            </button>
+          </div>
+
+          <div className="px-6 py-6 space-y-5">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="flex flex-col gap-1.5">
+                <label className="text-[12px] font-bold text-[#45464e] uppercase tracking-wide">First Name</label>
+                <input value={form.first_name} onChange={e => setForm(p => ({ ...p, first_name: e.target.value }))} className={inputCls} />
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <label className="text-[12px] font-bold text-[#45464e] uppercase tracking-wide">Last Name</label>
+                <input value={form.last_name} onChange={e => setForm(p => ({ ...p, last_name: e.target.value }))} className={inputCls} />
+              </div>
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[12px] font-bold text-[#45464e] uppercase tracking-wide">Email</label>
+              <input type="email" value={form.email} onChange={e => setForm(p => ({ ...p, email: e.target.value }))} className={inputCls} />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="flex flex-col gap-1.5">
+                <label className="text-[12px] font-bold text-[#45464e] uppercase tracking-wide">Phone</label>
+                <input value={form.phone} onChange={e => setForm(p => ({ ...p, phone: e.target.value }))} className={inputCls} />
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <label className="text-[12px] font-bold text-[#45464e] uppercase tracking-wide">Date of Birth</label>
+                <input type="date" value={form.dob} onChange={e => setForm(p => ({ ...p, dob: e.target.value }))} className={inputCls} />
+              </div>
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[12px] font-bold text-[#45464e] uppercase tracking-wide">Guest Status</label>
+              <select value={form.guest_status} onChange={e => setForm(p => ({ ...p, guest_status: e.target.value }))} className={inputCls}>
+                <option value="First_Timer">First Timer</option>
+                <option value="Attending">Attending</option>
+                <option value="Member">Member</option>
+              </select>
+            </div>
+            {error && <p className="text-[#ba1a1a] text-[13px] font-medium">{error}</p>}
+          </div>
+
+          <div className="px-6 py-4 border-t border-[#c6c6cf] flex gap-3">
+            <button onClick={onClose} className="flex-1 py-3 border border-[#c6c6cf] text-[#45464e] rounded-xl text-[13px] font-semibold hover:bg-[#f2f4f6]">
+              Cancel
+            </button>
+            <button onClick={handleSave} disabled={saving}
+              className="flex-1 py-3 bg-[#081534] text-white rounded-xl text-[13px] font-bold hover:opacity-90 disabled:opacity-40">
+              {saving ? 'Saving...' : 'Save Changes'}
+            </button>
+          </div>
+        </div>
+      </motion.div>
     </>
   )
 }
@@ -186,6 +321,10 @@ export default function MembersPage() {
   const [selected, setSelected]       = useState<Set<string>>(new Set())
   const [view, setView]               = useState<'table' | 'grid'>('table')
   const [activeMember, setActive]     = useState<Member | null>(null)
+  const [editTarget, setEditTarget]   = useState<Member | null>(null)
+  const [toast, setToast]             = useState<string | null>(null)
+
+  const showToast = (msg: string) => { setToast(msg); setTimeout(() => setToast(null), 3000) }
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -238,6 +377,23 @@ export default function MembersPage() {
     a.click()
   }
 
+  const handleEditFromDrawer = (m: Member) => {
+    setActive(null)
+    setEditTarget(m)
+  }
+
+  const handleSaved = () => {
+    setEditTarget(null)
+    showToast('Member updated')
+    fetchMembers()
+  }
+
+  const handleDeleted = () => {
+    setActive(null)
+    showToast('Member removed')
+    fetchMembers()
+  }
+
   const totalPages = Math.ceil(total / PAGE_SIZE)
   const start = page * PAGE_SIZE + 1
   const end   = Math.min(page * PAGE_SIZE + members.length, total)
@@ -255,7 +411,11 @@ export default function MembersPage() {
             </p>
           </div>
           <div className="flex items-center gap-2 flex-wrap">
-            {/* View toggle */}
+            <button onClick={() => router.push('/admin/dashboard')}
+              className="flex items-center gap-1.5 bg-white border border-[#c6c6cf] px-3 py-2 rounded-lg text-[12px] font-semibold text-[#45464e] hover:bg-[#eceef0] transition-all">
+              <span className="material-symbols-outlined text-[16px]">arrow_back</span>
+              <span className="hidden sm:inline">Dashboard</span>
+            </button>
             <div className="flex bg-[#f2f4f6] rounded-lg p-1 gap-1">
               {(['table', 'grid'] as const).map(v => (
                 <button key={v} onClick={() => setView(v)}
@@ -416,7 +576,6 @@ export default function MembersPage() {
               </table>
             </div>
 
-            {/* Pagination */}
             <div className="px-5 py-4 border-t border-[#f2f4f6] flex items-center justify-between bg-[#f7f9fb]">
               <span className="text-[12px] text-[#45464e]">
                 {loading ? '—' : total === 0 ? 'No results' : `${start}–${end} of ${total}`}
@@ -466,7 +625,6 @@ export default function MembersPage() {
                       className={`bg-white border rounded-xl p-5 cursor-pointer transition-all hover:shadow-md hover:-translate-y-0.5
                         ${isSelected ? 'border-[#081534] ring-2 ring-[#081534]/10' : 'border-[#c6c6cf]'}`}
                     >
-                      {/* Top row — checkbox + avatar */}
                       <div className="flex items-start justify-between mb-4">
                         <div className={`w-12 h-12 rounded-full ${avatarColor(m.first_name)} text-white flex items-center justify-center text-[14px] font-bold`}
                           onClick={() => setActive(m)}>
@@ -518,7 +676,34 @@ export default function MembersPage() {
       {/* Member detail drawer */}
       <AnimatePresence>
         {activeMember && (
-          <MemberDrawer member={activeMember} onClose={() => setActive(null)} />
+          <MemberDrawer
+            member={activeMember}
+            onClose={() => setActive(null)}
+            onEdit={handleEditFromDrawer}
+            onDeleted={handleDeleted}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Edit modal */}
+      <AnimatePresence>
+        {editTarget && (
+          <EditMemberModal
+            member={editTarget}
+            onClose={() => setEditTarget(null)}
+            onSaved={handleSaved}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Toast */}
+      <AnimatePresence>
+        {toast && (
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 20 }}
+            className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-[#081534] text-white px-5 py-3 rounded-full text-[13px] font-semibold shadow-lg flex items-center gap-2">
+            <span className="material-symbols-outlined text-[#fdc425] text-[16px]">check_circle</span>
+            {toast}
+          </motion.div>
         )}
       </AnimatePresence>
     </div>

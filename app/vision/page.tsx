@@ -63,7 +63,7 @@ export default function VisionPage() {
             variants={fadeUp} custom={1} initial="hidden" animate="show"
             className="text-[18px] leading-[28px] text-[#ffdf9a] italic mb-10 opacity-90"
           >
-            "Shining a Light on Purpose, Faith, and Community."
+            "Manifesting the Character of the Holy Spirit, Helping many find Purpose and through God's lifting Power Fulfilling It."
           </motion.p>
           <motion.div variants={fadeUp} custom={2} initial="hidden" animate="show">
             <span className="material-symbols-outlined text-[#ffdf9a] text-[40px] animate-bounce">expand_more</span>

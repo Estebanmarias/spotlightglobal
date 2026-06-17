@@ -1,240 +1,423 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import Link from 'next/link'
+import { getSupabaseClient } from '@/lib/supabase'
+
+// ── Types ─────────────────────────────────────────────────────────────
+type ChurchEvent = {
+  id: string
+  title: string
+  description: string | null
+  event_date: string
+  event_time: string | null
+  flyer_url: string | null
+  location: string
+  is_featured: boolean
+}
+
+type CommunityPhoto = {
+  id: string
+  image_url: string
+  caption: string | null
+}
+
+// ── Static link-stack content (edit here) ───────────────────────────
+const linkStack = [
+  {
+    icon: 'radio_button_checked', live: true,
+    title: 'Daily Prayer — Live Service',
+    meta: null,
+    href: 'https://t.me/thespotlightchurchLive',
+  },
+  {
+    icon: 'play_circle', live: false,
+    title: 'Sunday Sermons & Teachings',
+    meta: 'YouTube · @pstedetkingsley',
+    href: 'https://www.youtube.com/@pstedetkingsley',
+  },
+  {
+    icon: 'podcasts', live: false,
+    title: 'Audio Teachings',
+    meta: 'Sermons on the go',
+    href: 'https://t.me/companyoftheblessed',
+  },
+  {
+    icon: 'music_note', live: false,
+    title: 'Latest Worship Single',
+    meta: 'Listen on Spotify & Apple Music',
+    href: 'https://kingdomboiz.com/download-music-edet-kingsley-holy-spirit-oyoyo/',
+  },
+]
 
 const fadeUp = {
   hidden: { opacity: 0, y: 24 },
-  show: (i = 0) => ({ opacity: 1, y: 0, transition: { duration: 0.5, delay: i * 0.1, ease: 'easeOut' } }),
+  show: (i = 0) => ({ opacity: 1, y: 0, transition: { duration: 0.5, delay: i * 0.08, ease: 'easeOut' } }),
 }
 
-const ministries = [
-  {
-    tag: 'Youth', img: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCK507mzR68MALcnL_8egrGjDsyp43gDwFhO-8oXPGl-Up5wGpZmwTSJYoEnaRcRe5Ms9R3Uh-HjWzvNMIBh638HgbXpYT--966omEt5qk7D2FNloNjb-5AzEW8dUw1O1anHoGSC9azRS9_7of7xgKinSpTcy3qDgtnBsKo1cWxO7Y8b5TKlDzcvT5_x20GT2wknZBiHZPi788qpwkUXtT6X7UkuJ5Q5ORn7IjhHOxQsh1kBwDMLsxZIopQYtX3DTvmlTlzmkjkiPU',
-    title: 'Spotlight Youth', desc: 'Empowering the next generation to lead with faith and confidence. Grades 6-12.',
-  },
-  {
-    tag: 'Worship', img: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBXLp4A6zZ9-G3pLGEufW1ZXEE-dlibkPIx4lQv13aLe128yny4p38klc-X0elKx5epJB-PIMRBgJY6rIh2JpBlLDZk071FYW9NrziZUnTVn4v40S1HxuPSfWnxt2zvVXUR16GTQQMBH5BeHFvMXq0ZMKn1Nxlll90722Pb975oZMjDcLwDbO2A-e08KmmFXBafDQz0a93BuDkdNqeulsfW8SOsb_s0IfmX4D1-rx-UMGJU0rA_NPj5PmvrccLrIbI5gEr-u_5_ixc',
-    title: 'Creative Arts', desc: 'Expression through music, tech, and visual arts. Join our team of creatives.',
-  },
-  {
-    tag: 'Outreach', img: 'https://lh3.googleusercontent.com/aida-public/AB6AXuC2SSrY73OmUzore9TmB2GH0g4oRP7_3sZJQrzNhiXWSnwVm-33kr4MT9HPrJSX2CYl1vfa-rc_JWxBez',
-    title: 'Global Outreach', desc: 'Serving our neighbors and the world. Mission trips and local partnerships.',
-  },
-]
-
-const serveTeams = [
-  { icon: 'stars', title: 'Hospitality Team', desc: 'Be the first face people see. Help create a welcoming environment.' },
-  { icon: 'child_care', title: 'Spotlight Kids', desc: 'Invest in the lives of children through teaching and fun activities.' },
-  { icon: 'videocam', title: 'Production & Tech', desc: 'Run audio, video, and lights to create a seamless experience.' },
-]
-
 export default function CommunityPage() {
+  const supabase = getSupabaseClient()
+  const [events, setEvents]   = useState<ChurchEvent[]>([])
+  const [photos, setPhotos]   = useState<CommunityPhoto[]>([])
+  const [eventsLoading, setEventsLoading] = useState(true)
+  const [photosLoading, setPhotosLoading] = useState(true)
+
   useEffect(() => {
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          entry.target.classList.add('opacity-100', 'translate-y-0')
-          entry.target.classList.remove('opacity-0', 'translate-y-8')
-        }
-      })
-    }, { threshold: 0.1 })
-    document.querySelectorAll('.reveal').forEach(el => observer.observe(el))
-    return () => observer.disconnect()
+    const load = async () => {
+      // Upcoming events — today onward, soonest first
+      const today = new Date().toISOString().split('T')[0]
+      const { data: ev } = await supabase
+        .from('church_events')
+        .select('*')
+        .gte('event_date', today)
+        .order('event_date', { ascending: true })
+        .limit(4)
+      setEvents(ev || [])
+      setEventsLoading(false)
+
+      // Community photos
+      const { data: ph } = await supabase
+        .from('community_photos')
+        .select('*')
+        .order('sort_order', { ascending: true })
+        .limit(8)
+      setPhotos(ph || [])
+      setPhotosLoading(false)
+    }
+    load()
+
+    // Realtime — new events/photos show up without refresh
+    const ch = supabase
+      .channel('community-page-realtime')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'church_events' }, load)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'community_photos' }, load)
+      .subscribe()
+    return () => { supabase.removeChannel(ch) }
   }, [])
+
+  const formatDate = (d: string) => {
+    const date = new Date(d + 'T00:00:00')
+    return {
+      day: date.toLocaleDateString('en-NG', { day: 'numeric' }),
+      month: date.toLocaleDateString('en-NG', { month: 'short' }).toUpperCase(),
+      weekday: date.toLocaleDateString('en-NG', { weekday: 'long' }),
+    }
+  }
 
   return (
     <main className="bg-[#f7f9fb] text-[#191c1e]">
 
-      {/* ── Hero ── */}
-      <header className="relative h-[700px] flex items-center justify-center overflow-hidden">
+      {/* ══════════════════════════════════════════════════════════
+          HERO
+      ══════════════════════════════════════════════════════════ */}
+      <section className="relative min-h-[600px] flex items-center justify-center overflow-hidden bg-[#081534]">
         <div className="absolute inset-0 z-0">
           <img
-            className="w-full h-full object-cover"
-            src="https://lh3.googleusercontent.com/aida-public/AB6AXuABZ-M1tXcLTxRWYUxhqf7vVQu5Tehp6wRoZLqJKut6g-ElVG-7nKT-QhFX0OcMDZ-i4C5NxjlFrf5GbRtZIruinOPhgDuARx8QsXelygsaooxdR4UwCw6uhDmXssLo4ZwgzHp9xtXr3qjFncHxDP0clFIBjEZXdJ1OAhjbrWvK5G1J2NAFk3-l_yoHzxpRqZurDW-rSlHfg1iLb_9pyPny6b-fGgogMWUb1TthzaamWeOKBrtpW3Ix4CVS1ItYJokFU2kVkh46p6Q"
-            alt="Community gathering"
+            className="w-full h-full object-cover opacity-30"
+            src="https://images.unsplash.com/photo-1438232992991-995b7058bbb3?w=1600&h=900&fit=crop"
+            alt="Church sanctuary"
           />
-          <div className="absolute inset-0 bg-gradient-to-b from-[#081534]/40 to-[#081534]/85" />
+          <div className="absolute inset-0 bg-gradient-to-t from-[#081534] via-[#081534]/80 to-transparent" />
         </div>
-        <div className="relative z-10 text-center px-6">
+        <div className="relative z-10 text-center px-6 max-w-3xl mx-auto">
           <motion.h1 variants={fadeUp} initial="hidden" animate="show"
-            className="text-[48px] sm:text-[56px] font-bold leading-[1.1] text-white mb-6">
-            Grow Together in Community.
+            className="text-[40px] sm:text-[56px] font-bold leading-[1.1] text-white mb-6">
+            Welcome to the Family
           </motion.h1>
           <motion.p variants={fadeUp} custom={1} initial="hidden" animate="show"
-            className="text-[18px] leading-[28px] text-white/90 mb-10 max-w-xl mx-auto">
-            Finding your place in God's family shouldn't be hard. Join a group, discover your ministry, and let's shine together.
+            className="text-[16px] sm:text-[18px] leading-[28px] text-white/80 mb-10 max-w-2xl mx-auto">
+            Whether it's your first time here or you've been part of the family for years —
+            find everything you need to stay connected, watch live, and see what's happening this week.
           </motion.p>
           <motion.div variants={fadeUp} custom={2} initial="hidden" animate="show"
-            className="flex flex-col sm:flex-row justify-center gap-4">
-            <Link href="/join"
+            className="flex flex-col sm:flex-row gap-4 justify-center">
+            <a href="#first-timer"
               className="bg-[#fdc425] text-[#6d5200] px-8 py-4 rounded-full text-[14px] font-bold hover:brightness-110 transition-all active:scale-95">
-              Find a Group
-            </Link>
-            <button className="bg-white/10 backdrop-blur-md text-white border border-white/20 px-8 py-4 rounded-full text-[14px] font-bold hover:bg-white/20 transition-all active:scale-95">
-              Watch Stories
-            </button>
+              I'm New Here
+            </a>
+            <a href="#links"
+              className="border border-white/30 text-white px-8 py-4 rounded-full text-[14px] font-bold hover:bg-white/10 transition-all active:scale-95">
+              Watch Live
+            </a>
           </motion.div>
         </div>
-      </header>
+      </section>
 
-      {/* ── Small Groups Bento ── */}
-      <section className="py-24 px-6 md:px-16 max-w-[1280px] mx-auto">
-        <div className="mb-12 reveal opacity-0 translate-y-8 transition-all duration-700">
-          <span className="text-[#785a00] text-[12px] font-bold uppercase tracking-widest">Connect Closely</span>
-          <h2 className="text-[32px] font-bold leading-[40px] text-[#081534] mt-2">Small Groups</h2>
-          <p className="text-[16px] text-[#45464e] max-w-2xl mt-4">Localized gatherings that meet in homes and cafes across the city. Life is better when we walk together.</p>
+      {/* ══════════════════════════════════════════════════════════
+          FIRST-TIMER CARD
+      ══════════════════════════════════════════════════════════ */}
+      <section className="py-20 px-6" id="first-timer">
+        <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
+          className="max-w-4xl mx-auto bg-white rounded-2xl border-2 border-[#fdc425] p-8 sm:p-12 shadow-lg flex flex-col sm:flex-row items-center gap-8">
+          <div className="bg-[#fdc425]/20 p-6 rounded-full shrink-0">
+            <span className="material-symbols-outlined text-[56px] text-[#785a00]"
+              style={{ fontVariationSettings: "'FILL' 1" }}>person_add</span>
+          </div>
+          <div className="text-center sm:text-left">
+            <h2 className="text-[24px] sm:text-[28px] font-bold text-[#081534] mb-3">First Visit? Let's Get to Know You</h2>
+            <p className="text-[15px] text-[#45464e] mb-6">
+              We're so glad you're here. Fill out a quick form so we can welcome you properly
+              and share more about what makes theSpotlightChurch a home.
+            </p>
+            <Link href="/join"
+              className="inline-block bg-[#081534] text-white px-8 py-3 rounded-full text-[14px] font-bold hover:opacity-90 transition-all">
+              Tell Us About Yourself
+            </Link>
+          </div>
+        </motion.div>
+      </section>
+
+      {/* ══════════════════════════════════════════════════════════
+          UPCOMING SERVICES — live from Supabase
+      ══════════════════════════════════════════════════════════ */}
+      <section className="py-16 px-6 bg-white">
+        <div className="max-w-[1100px] mx-auto">
+          <motion.div initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
+            className="text-center mb-12">
+            <span className="text-[#785a00] text-[12px] font-bold uppercase tracking-widest">What's Happening</span>
+            <h2 className="text-[28px] sm:text-[32px] font-bold text-[#081534] mt-2">Upcoming Services</h2>
+            <p className="text-[15px] text-[#45464e] mt-3 max-w-xl mx-auto">Don't miss what's coming up — services, special events, and gatherings.</p>
+          </motion.div>
+
+          {eventsLoading ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+              {[...Array(4)].map((_, i) => (
+                <div key={i} className="h-64 bg-[#f2f4f6] rounded-xl animate-pulse" />
+              ))}
+            </div>
+          ) : events.length === 0 ? (
+            <div className="text-center py-12 bg-[#f7f9fb] rounded-xl border border-[#c6c6cf]">
+              <span className="material-symbols-outlined text-[48px] text-[#c6c6cf] block mb-3">event</span>
+              <p className="text-[#45464e] font-semibold">No upcoming services scheduled yet</p>
+              <p className="text-[13px] text-[#76777f] mt-1">Check back soon, or join us this Sunday</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+              {events.map((e, i) => {
+                const { day, month, weekday } = formatDate(e.event_date)
+                return (
+                  <motion.div key={e.id}
+                    initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
+                    transition={{ delay: i * 0.08 }}
+                    className={`rounded-xl overflow-hidden border transition-all hover:shadow-lg hover:-translate-y-1
+                      ${e.is_featured ? 'border-[#fdc425] ring-2 ring-[#fdc425]/20' : 'border-[#c6c6cf]'}`}>
+                    {e.flyer_url ? (
+                      <div className="h-40 overflow-hidden bg-[#eceef0]">
+                        <img src={e.flyer_url} alt={e.title} className="w-full h-full object-cover" />
+                      </div>
+                    ) : (
+                      <div className="h-40 bg-[#081534] flex flex-col items-center justify-center text-white">
+                        <span className="text-[32px] font-bold leading-none">{day}</span>
+                        <span className="text-[12px] font-bold uppercase tracking-widest text-[#fdc425] mt-1">{month}</span>
+                      </div>
+                    )}
+                    <div className="p-4 bg-white">
+                      {e.is_featured && (
+                        <span className="inline-block px-2 py-0.5 bg-[#fdc425] text-[#6d5200] rounded-full text-[9px] font-bold uppercase tracking-wider mb-2">
+                          Featured
+                        </span>
+                      )}
+                      <h3 className="text-[15px] font-bold text-[#081534] leading-snug mb-1">{e.title}</h3>
+                      <p className="text-[12px] text-[#45464e]">{weekday}{e.event_time ? ` · ${e.event_time}` : ''}</p>
+                      <p className="text-[11px] text-[#76777f] mt-0.5">{e.location}</p>
+                    </div>
+                  </motion.div>
+                )
+              })}
+            </div>
+          )}
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-6 md:h-[600px] reveal opacity-0 translate-y-8 transition-all duration-700">
-          {/* Large card */}
-          <div className="md:col-span-8 group relative overflow-hidden rounded-2xl bg-[#eceef0] border border-[#c6c6cf]/30">
-            <img className="w-full h-full object-cover group-hover:scale-105 transition-all duration-700"
-              src="https://lh3.googleusercontent.com/aida-public/AB6AXuBYd6hFSjKqzKqx5PuHPinN7kCmTr4in1pKAzPTSUKdwxE9TaJZMcG_-k3cIzFzM_NXBZ3ickivAVd_hwfpeWYp2_d8mQnREZlqPZVnv6FlU3-VFiO32qHiMni-TvQ8V9O936rXqn53k2Oc1J0JEEk1KIwm_7gAIr1ONOXKyQHVI5dvdM9Jlc2L6ocux6Sor_LaVjzyEai9ZqsBEXr56ciB2tgrGTPmaH7RJ-YszRoBafMYXuGtVhNMJ4bz1JxVXNnMWff5mUmSEFQ"
-              alt="Downtown Young Professionals" />
-            <div className="absolute inset-0 bg-gradient-to-t from-[#081534]/80 to-transparent flex flex-col justify-end p-8">
-              <h3 className="text-[24px] font-semibold text-white">Downtown Young Professionals</h3>
-              <p className="text-[16px] text-white/80 mt-2">Tuesday Nights · Coffee &amp; Connection</p>
-              <button className="mt-4 w-fit bg-[#fdc425] text-[#6d5200] px-6 py-2 rounded-full text-[14px] font-bold">Learn More</button>
+      </section>
+
+      {/* ══════════════════════════════════════════════════════════
+          COMMUNITY GALLERY — curated, swappable for IG API later
+      ══════════════════════════════════════════════════════════ */}
+      <section className="py-20 px-6 bg-[#f7f9fb]">
+        <div className="max-w-[1100px] mx-auto">
+          <motion.div initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
+            className="text-center mb-12">
+            <span className="text-[#785a00] text-[12px] font-bold uppercase tracking-widest">Moments</span>
+            <h2 className="text-[28px] sm:text-[32px] font-bold text-[#081534] mt-2">From Our Community</h2>
+            <p className="text-[15px] text-[#45464e] mt-3 max-w-xl mx-auto">A glimpse into life at theSpotlightChurch — worship, fellowship, and everything in between.</p>
+          </motion.div>
+
+          {photosLoading ? (
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              {[...Array(8)].map((_, i) => (
+                <div key={i} className="aspect-square bg-[#eceef0] rounded-xl animate-pulse" />
+              ))}
             </div>
-          </div>
-          {/* Small card 1 */}
-          <div className="md:col-span-4 group relative overflow-hidden rounded-2xl bg-[#eceef0] border border-[#c6c6cf]/30">
-            <img className="w-full h-full object-cover group-hover:scale-105 transition-all duration-700"
-              src="https://lh3.googleusercontent.com/aida-public/AB6AXuB1xcM7q-L7TTCBtWVYzesuGaHoSG5CeI1VCNEoZfU4FPD0NsVS1kHsrawjDbeLC7bo1wh9D8FTB7zgOutfquV_swYMIhChNFqH3714SctQp6w2SoHNDfLOo8wYmQdetfv_V8LCfA67D5JClxwH2RxbcT8huRBzgtZa-0IvBimfbCKsc4VDFTdQLhjClLhCrxOJBGwd0pFF6AuxNA9xTYIbwjsJEMX580ifKP3feygEXahDgfIZoLdpm-Jh4XwJK8ObOsYuSo-XpAg"
-              alt="Eastside Families" />
-            <div className="absolute inset-0 bg-gradient-to-t from-[#081534]/80 to-transparent flex flex-col justify-end p-8">
-              <h3 className="text-[24px] font-semibold text-white">Eastside Families</h3>
-              <p className="text-[16px] text-white/80 mt-2">Sunday Afternoons · For all ages</p>
-              <button className="mt-4 w-fit bg-[#fdc425] text-[#6d5200] px-6 py-2 rounded-full text-[14px] font-bold">Learn More</button>
+          ) : photos.length === 0 ? (
+            <div className="text-center py-12 bg-white rounded-xl border border-[#c6c6cf]">
+              <span className="material-symbols-outlined text-[48px] text-[#c6c6cf] block mb-3">photo_library</span>
+              <p className="text-[#45464e] font-semibold">Gallery coming soon</p>
+              <p className="text-[13px] text-[#76777f] mt-1">Follow us on Instagram for the latest moments</p>
             </div>
-          </div>
-          {/* Small card 2 */}
-          <div className="md:col-span-4 group relative overflow-hidden rounded-2xl bg-[#eceef0] border border-[#c6c6cf]/30">
-            <img className="w-full h-full object-cover group-hover:scale-105 transition-all duration-700"
-              src="https://lh3.googleusercontent.com/aida-public/AB6AXuBVqEgmmW2RRi7Zvlx5GiWIGqQUUEmLAVQPhLkGvaMBMB36ECUsXSXlv5p6vbuGM5vf1mCODPP8fHdln52jzkApCXSTL_8EiEdLaD3y6w6Zl739xYiOuLXMRPoNT7ZiSoJQSFOCsuLaX5BHnt2iR2oGZBDckNzMyXqnRoCpqEffAvYArHLpz0fvLmpQbaLrZVsmDzmZi5A5r1IJSwmtISYh8-H5ub0udZ0jht5z1HTDZYT2C6Oc0PwChD48ZOlmdm3exxyVc0v3ExI"
-              alt="West End Study" />
-            <div className="absolute inset-0 bg-gradient-to-t from-[#081534]/80 to-transparent flex flex-col justify-end p-8">
-              <h3 className="text-[24px] font-semibold text-white">West End Study</h3>
-              <p className="text-[16px] text-white/80 mt-2">Wednesday Evenings · Deep Dives</p>
-              <button className="mt-4 w-fit bg-[#fdc425] text-[#6d5200] px-6 py-2 rounded-full text-[14px] font-bold">Learn More</button>
+          ) : (
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              {photos.map((p, i) => (
+                <motion.div key={p.id}
+                  initial={{ opacity: 0, scale: 0.92 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }}
+                  transition={{ delay: i * 0.05 }}
+                  className="group relative aspect-square rounded-xl overflow-hidden cursor-pointer">
+                  <img src={p.image_url} alt={p.caption ?? 'Community photo'}
+                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#081534]/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-3">
+                    {p.caption && <p className="text-white text-[11px] font-semibold line-clamp-2">{p.caption}</p>}
+                  </div>
+                </motion.div>
+              ))}
             </div>
-          </div>
-          {/* Host CTA */}
-          <div className="md:col-span-8 flex items-center justify-center bg-[#1e2a4a] rounded-2xl p-12 text-center border border-[#c6c6cf]/30">
-            <div>
-              <h3 className="text-[32px] font-bold text-[#8691b7]">Can't find a group near you?</h3>
-              <p className="text-[18px] text-[#8691b7]/80 mt-4 mb-8">We are always launching new groups. Start one in your neighborhood today.</p>
-              <button className="bg-white text-[#081534] px-8 py-4 rounded-full text-[14px] font-bold hover:bg-[#fdc425] hover:text-[#6d5200] transition-colors">Host a Group</button>
-            </div>
+          )}
+
+          <div className="text-center mt-10">
+            <a href="#" target="_blank" rel="noreferrer"
+              className="inline-flex items-center gap-2 px-6 py-3 bg-white border border-[#c6c6cf] rounded-full text-[13px] font-bold text-[#081534] hover:border-[#081534] transition-all">
+              <svg viewBox="0 0 24 24" className="w-4 h-4" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                  <linearGradient id="igfollow" x1="0%" y1="100%" x2="100%" y2="0%">
+                    <stop offset="0%" stopColor="#f09433"/><stop offset="50%" stopColor="#dc2743"/><stop offset="100%" stopColor="#bc1888"/>
+                  </linearGradient>
+                </defs>
+                <path fill="url(#igfollow)" d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 1 0 0 12.324 6.162 6.162 0 0 0 0-12.324zM12 16a4 4 0 1 1 0-8 4 4 0 0 1 0 8zm6.406-11.845a1.44 1.44 0 1 0 0 2.881 1.44 1.44 0 0 0 0-2.881z"/>
+              </svg>
+              Follow us on Instagram for daily updates
+            </a>
           </div>
         </div>
       </section>
 
-      {/* ── Ministries ── */}
-      <section className="bg-[#f2f4f6] py-24">
-        <div className="px-6 md:px-16 max-w-[1280px] mx-auto">
-          <div className="text-center mb-16 reveal opacity-0 translate-y-8 transition-all duration-700">
-            <h2 className="text-[32px] font-bold leading-[40px] text-[#081534]">Explore Our Ministries</h2>
-            <p className="text-[16px] text-[#45464e] max-w-xl mx-auto mt-4">There's a place for everyone to belong and grow at theSpotlightChurch.</p>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {ministries.map((m, i) => (
-              <div key={m.title}
-                className="reveal opacity-0 translate-y-8 transition-all duration-700 bg-white rounded-xl overflow-hidden border border-[#c6c6cf] hover:shadow-lg hover:-translate-y-1"
-                style={{ transitionDelay: `${i * 80}ms` }}>
-                <div className="h-48 relative">
-                  <img className="w-full h-full object-cover" src={m.img} alt={m.title} />
-                  <div className="absolute top-4 left-4 bg-[#fdc425] text-[#6d5200] px-3 py-1 rounded-full text-[12px] font-bold">{m.tag}</div>
+      {/* ══════════════════════════════════════════════════════════
+          LINK STACK
+      ══════════════════════════════════════════════════════════ */}
+      <section className="py-20 px-6 bg-white" id="links">
+        <div className="max-w-[560px] mx-auto">
+          <motion.div initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
+            className="text-center mb-10">
+            <h2 className="text-[24px] sm:text-[28px] font-bold text-[#081534]">Watch, Listen & Stay Connected</h2>
+          </motion.div>
+          <div className="flex flex-col gap-3">
+            {linkStack.map((item, i) => (
+              <motion.a key={item.title} href={item.href}
+                initial={{ opacity: 0, x: -16 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }}
+                transition={{ delay: i * 0.08 }}
+                className="group flex items-center p-4 sm:p-5 bg-[#f7f9fb] rounded-xl border border-[#c6c6cf] hover:-translate-y-0.5 hover:shadow-md hover:bg-white transition-all">
+                <div className="relative mr-4 shrink-0">
+                  <span className="material-symbols-outlined text-[#081534] text-[28px]">{item.icon}</span>
+                  {item.live && (
+                    <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-[#ba1a1a] rounded-full border-2 border-[#f7f9fb] animate-pulse" />
+                  )}
                 </div>
-                <div className="p-6">
-                  <h3 className="text-[24px] font-semibold text-[#081534]">{m.title}</h3>
-                  <p className="text-[16px] text-[#45464e] mt-3 mb-6">{m.desc}</p>
-                  <a className="text-[#081534] font-bold hover:text-[#fdc425] transition-colors flex items-center gap-2 text-[14px]" href="#">
-                    Learn More <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
-                  </a>
+                <div className="flex-1">
+                  <div className="flex items-center gap-2">
+                    <span className="text-[14px] font-bold text-[#081534]">{item.title}</span>
+                    {item.live && (
+                      <span className="text-[9px] bg-[#ba1a1a] text-white px-1.5 py-0.5 rounded-full font-bold uppercase tracking-wider">Live</span>
+                    )}
+                  </div>
+                  {item.meta && <p className="text-[12px] text-[#45464e] mt-0.5">{item.meta}</p>}
                 </div>
-              </div>
+                <span className="material-symbols-outlined text-[#76777f] group-hover:translate-x-1 transition-transform">chevron_right</span>
+              </motion.a>
             ))}
           </div>
         </div>
       </section>
 
-      {/* ── Serve ── */}
-      <section className="py-24 px-6 md:px-16 max-w-[1280px] mx-auto">
-        <div className="flex flex-col md:flex-row items-center gap-16">
-          <div className="flex-1 reveal opacity-0 translate-y-8 transition-all duration-700">
-            <img className="rounded-2xl shadow-xl w-full aspect-square object-cover"
-              src="https://lh3.googleusercontent.com/aida-public/AB6AXuD1qgsr1RH8zwLXZTP889JOly-Pkhs9j8aSItN9OSNu67GizLZy3mHFe-vA-PNSyyK724ol82y1XSmjeaW7yT2P7wM5QOrc8TXxzOVDLBVgsl53ZiJ9AgunagGk3tsGt1YDBcxva4G03WVjfgwj4cMMvBfkjz3C6s1DotcCyFKYDRS5lG6kzJ4gK4soNt2Yaki0vQh3RJGkDCqm0PGLTlOy4RrecR9mxoCKnNznHeLHpriiHjO1RGtQsne03vRRR0lSpH_GXMJuxTs"
-              alt="Volunteers" />
-          </div>
-          <div className="flex-1 reveal opacity-0 translate-y-8 transition-all duration-700">
-            <span className="text-[#785a00] text-[12px] font-bold uppercase tracking-widest">Your Contribution Matters</span>
-            <h2 className="text-[32px] font-bold leading-[40px] text-[#081534] mt-4">Finding Your Place to Serve</h2>
-            <p className="text-[18px] leading-[28px] text-[#45464e] mt-6 mb-8">
-              We believe everyone has unique gifts. Whether you love meeting new people, working behind the scenes, or teaching kids, there is a role for you on our serve teams.
-            </p>
-            <ul className="space-y-6 mb-10">
-              {serveTeams.map(s => (
-                <li key={s.title} className="flex items-start gap-4">
-                  <span className="material-symbols-outlined text-[#785a00] text-[24px]" style={{ fontVariationSettings: "'FILL' 1" }}>{s.icon}</span>
-                  <div>
-                    <h4 className="text-[18px] font-semibold text-[#081534]">{s.title}</h4>
-                    <p className="text-[16px] text-[#45464e]">{s.desc}</p>
-                  </div>
-                </li>
-              ))}
-            </ul>
-            <Link href="/join"
-              className="inline-block bg-[#081534] text-white px-8 py-4 rounded-full text-[14px] font-bold hover:opacity-90 transition-all shadow-lg">
-              Join a Serve Team
-            </Link>
+      {/* ══════════════════════════════════════════════════════════
+          SOCIAL HUB
+      ══════════════════════════════════════════════════════════ */}
+      <section className="py-16 px-6 bg-[#f7f9fb]">
+        <div className="max-w-275 mx-auto text-center">
+          <h3 className="text-[12px] font-bold text-[#45464e] uppercase tracking-widest mb-8">Connect With Us</h3>
+          <div className="flex flex-wrap justify-center gap-4">
+            {[
+              { 
+                name: 'WhatsApp', 
+                href: 'https://wa.me/YOUR_NUMBER', // Add your WhatsApp link here
+                color: '#25D366', 
+                path: 'M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z' 
+              },
+              { 
+                name: 'Email', 
+                href: 'mailto:hello@thespotlightchurch.com', // Add your email address
+                color: '#081534', 
+                icon: 'mail' 
+              },
+              { 
+                name: 'YouTube', 
+                href: 'https://www.youtube.com/@pstedetkingsley', // Add your YouTube channel link
+                color: '#FF0000', 
+                path: 'M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z' 
+              },
+              { 
+                name: 'Instagram', 
+                href: 'https://instagram.com/thespotlightchurch', // Add your Instagram link
+                gradient: true,
+                path: 'M12 0C8.74 0 8.333.015 7.053.072 5.775.132 4.905.333 4.14.63c-.789.306-1.459.717-2.126 1.384S.935 3.35.63 4.14C.333 4.905.131 5.775.072 7.053.012 8.333 0 8.74 0 12s.015 3.667.072 4.947c.06 1.277.261 2.148.558 2.913.306.788.717 1.459 1.384 2.126.667.666 1.336 1.079 2.126 1.384.766.296 1.636.499 2.913.558C8.333 23.988 8.74 24 12 24s3.667-.015 4.947-.072c1.277-.06 2.148-.262 2.913-.558.788-.306 1.459-.718 2.126-1.384.666-.667 1.079-1.335 1.384-2.126.296-.765.499-1.636.558-2.913.06-1.28.072-1.687.072-4.947s-.015-3.667-.072-4.947c-.06-1.277-.262-2.149-.558-2.913-.306-.789-.718-1.459-1.384-2.126C21.319 1.347 20.651.935 19.863.63c-.765-.297-1.636-.499-2.913-.558C15.667.012 15.26 0 12 0zm0 2.16c3.203 0 3.585.016 4.85.071 1.17.055 1.805.249 2.227.415.562.217.96.477 1.382.896.419.42.679.819.896 1.381.164.422.36 1.057.413 2.227.057 1.266.07 1.646.07 4.85s-.015 3.585-.074 4.85c-.061 1.17-.256 1.805-.421 2.227-.224.562-.479.96-.899 1.382-.419.419-.824.679-1.38.896-.42.164-1.065.36-2.235.413-1.274.057-1.649.07-4.859.07-3.211 0-3.586-.015-4.859-.074-1.171-.061-1.816-.256-2.236-.421-.569-.224-.96-.479-1.379-.899-.421-.419-.69-.824-.9-1.38-.165-.42-.359-1.065-.42-2.235-.045-1.26-.061-1.649-.061-4.844 0-3.196.016-3.586.061-4.861.061-1.17.255-1.814.42-2.234.21-.57.479-.96.9-1.381.419-.419.81-.689 1.379-.898.42-.166 1.051-.361 2.221-.421 1.275-.045 1.65-.06 4.859-.06l.045.03zm0 3.678c-3.405 0-6.162 2.76-6.162 6.162 0 3.405 2.756 6.162 6.162 6.162 3.405 0 6.162-2.757 6.162-6.162 0-3.402-2.757-6.162-6.162-6.162zM12 16c-2.21 0-4-1.79-4-4s1.79-4 4-4 4 1.79 4 4-1.79 4-4 4zm7.846-10.405c0 .795-.646 1.44-1.44 1.44-.795 0-1.44-.646-1.44-1.44 0-.794.646-1.439 1.44-1.439.793-.001 1.44.645 1.44 1.439z'
+              },
+              { 
+                name: 'TikTok', 
+                href: 'https://tiktok.com/@yourhandle', // Add your TikTok link
+                color: '#ffffff', 
+                path: 'M12.525.02c1.31.036 2.512.335 3.6.855-.063 1.582.502 3.006 1.541 4.212.428.497 1.037.935 1.637 1.258V9.3c-1.347-.132-2.316-.62-3.18-1.428-.403-.377-.733-.825-1.025-1.304-.047 3.52-.008 7.04-.012 10.56-.017 1.83-.557 3.444-1.782 4.757-1.314 1.41-3.036 2.122-4.996 2.115-2.023-.007-3.738-.767-4.97-2.362-1.34-1.733-1.635-4.223-.526-6.196.887-1.577 2.408-2.673 4.195-2.816v3.253c-1.013.133-1.848.563-2.348 1.464-.492.886-.445 2.13.25 2.92.56.638 1.306.947 2.148.922 1.378-.04 2.378-1.002 2.457-2.378.03-1.843.015-3.687.015-5.53V.02h2.596z' 
+              },
+              { 
+                name: 'Spotify', 
+                href: 'https://open.spotify.com/show/75PSP2x3mArsPABn4KReUY?si=9pyOmuWlShORXAyODUEQTw', // Add your Spotify link
+                color: '#1DB954', 
+                path: 'M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.59 17.357c-.225.369-.706.488-1.074.263-2.905-1.776-6.561-2.176-10.866-1.192-.423.096-.84-.17-.937-.593-.096-.423.17-.84.593-.937 4.71-1.076 8.74-.622 11.981 1.359.37.224.489.706.263 1.074zm1.493-3.268c-.284.46-.884.61-1.344.327-3.325-2.044-8.391-2.636-12.32-1.443-.518.157-1.066-.142-1.223-.66-.157-.518.142-1.066.66-1.223 4.494-1.362 10.076-.704 13.9 1.649.46.284.61.884.327 1.344zm.13-3.4c-3.985-2.367-10.559-2.586-14.364-1.43-.612.185-1.258-.168-1.443-.779-.186-.612.168-1.258.779-1.443 4.36-1.323 11.602-1.063 16.205 1.669.551.327.734 1.036.407 1.587-.327.551-1.036.734-1.584.407z' 
+              },
+            ].map((s, i) => (
+              <motion.a 
+                key={s.name} 
+                href={s.href}     // <--- UPDATED: Dynamic link mapped from the array
+                target="_blank"   // <--- UPDATED: Opens in a new tab
+                rel="noreferrer"  // <--- UPDATED: Security best practice for target="_blank"
+                aria-label={s.name}
+                initial={{ opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
+                transition={{ delay: i * 0.06 }}
+                className="w-14 h-14 rounded-full bg-[#081534] flex items-center justify-center hover:bg-[#fdc425] transition-all active:scale-90 group">
+                
+                {s.icon ? (
+                  <span className="material-symbols-outlined text-white group-hover:text-[#6d5200] text-[22px]">{s.icon}</span>
+                ) : s.gradient ? (
+                  <svg viewBox="0 0 24 24" className="w-6 h-6"> {/* Unified to standard 24x24 viewBox */}
+                    <defs>
+                      <linearGradient id={`ig-${i}`} x1="0%" y1="100%" x2="100%" y2="0%">
+                        <stop offset="0%" stopColor="#f09433"/><stop offset="50%" stopColor="#dc2743"/><stop offset="100%" stopColor="#bc1888"/>
+                      </linearGradient>
+                    </defs>
+                    <path fill={`url(#ig-${i})`} d={s.path} /> {/* Path is now pulled dynamically */}
+                  </svg>
+                ) : (
+                  <svg viewBox="0 0 24 24" className="w-6 h-6"> {/* Unified to standard 24x24 viewBox */}
+                    <path fill={s.color} d={s.path} />
+                  </svg>
+                )}
+              </motion.a>
+            ))}
           </div>
         </div>
       </section>
 
-      {/* ── Stay Connected ── */}
-      <section className="bg-[#081534] py-20">
-        <div className="px-6 md:px-16 max-w-[1280px] mx-auto text-center reveal opacity-0 translate-y-8 transition-all duration-700">
-          <h2 className="text-[32px] font-bold text-white mb-6">Stay Connected</h2>
-          <p className="text-[18px] text-[#8691b7] mb-10 max-w-xl mx-auto">Sign up for our weekly community update to never miss a group gathering or event.</p>
-          <div className="flex flex-col md:flex-row justify-center gap-4 max-w-md mx-auto">
-            <input
-              className="flex-1 bg-white/10 border border-white/20 rounded-full px-6 py-4 text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-[#fdc425]"
-              placeholder="Enter your email" type="email" />
-            <button className="bg-[#fdc425] text-[#6d5200] px-8 py-4 rounded-full text-[14px] font-bold hover:brightness-110 transition-colors">Subscribe</button>
-          </div>
-
-          {/* Social links with proper SVG icons */}
-          <div className="flex justify-center gap-4 mt-12">
-            {/* WhatsApp */}
-            <a href="#" className="w-12 h-12 bg-white/10 rounded-full flex items-center justify-center hover:bg-white/20 transition-colors">
-              <svg viewBox="0 0 32 32" className="w-6 h-6" xmlns="http://www.w3.org/2000/svg">
-                <path d="M16 1C7.716 1 1 7.716 1 16c0 2.628.664 5.1 1.83 7.263L1 31l7.97-1.796A14.93 14.93 0 0 0 16 31c8.284 0 15-6.716 15-15S24.284 1 16 1zm6.733 19.083c-.369-.185-2.184-1.078-2.523-1.2-.34-.123-.587-.185-.834.185-.247.37-.957 1.2-1.173 1.447-.216.247-.432.277-.8.092-.37-.185-1.56-.575-2.972-1.833-1.098-.98-1.84-2.19-2.056-2.56-.216-.37-.023-.57.162-.754.167-.166.37-.432.554-.648.185-.216.247-.37.37-.617.123-.247.062-.463-.031-.648-.092-.185-.834-2.01-1.143-2.753-.3-.722-.606-.624-.834-.636l-.709-.012c-.247 0-.648.092-.988.463-.34.37-1.296 1.267-1.296 3.089s1.327 3.583 1.512 3.83c.185.247 2.61 3.986 6.326 5.59.884.382 1.573.61 2.11.78.886.282 1.692.242 2.329.147.71-.106 2.184-.893 2.492-1.756.308-.863.308-1.603.216-1.756-.092-.154-.339-.247-.709-.432z" fill="#25D366"/>
-              </svg>
-            </a>
-            {/* Instagram */}
-            <a href="#" className="w-12 h-12 bg-white/10 rounded-full flex items-center justify-center hover:bg-white/20 transition-colors">
-              <svg viewBox="0 0 32 32" className="w-6 h-6" xmlns="http://www.w3.org/2000/svg">
-                <defs>
-                  <linearGradient id="ig" x1="0%" y1="100%" x2="100%" y2="0%">
-                    <stop offset="0%" stopColor="#f09433"/>
-                    <stop offset="50%" stopColor="#dc2743"/>
-                    <stop offset="100%" stopColor="#bc1888"/>
-                  </linearGradient>
-                </defs>
-                <path d="M16 2.88c3.506 0 3.923.014 5.31.077 1.28.058 1.977.272 2.44.452.614.238 1.052.524 1.512.984.46.46.746.898.984 1.512.18.463.394 1.16.452 2.44.063 1.387.077 1.804.077 5.31s-.014 3.923-.077 5.31c-.058 1.28-.272 1.977-.452 2.44-.238.614-.524 1.052-.984 1.512-.46.46-.898.746-1.512.984-.463.18-1.16.394-2.44.452-1.387.063-1.804.077-5.31.077s-3.923-.014-5.31-.077c-1.28-.058-1.977-.272-2.44-.452a4.07 4.07 0 0 1-1.512-.984 4.07 4.07 0 0 1-.984-1.512c-.18-.463-.394-1.16-.452-2.44C2.894 19.923 2.88 19.506 2.88 16s.014-3.923.077-5.31c.058-1.28.272-1.977.452-2.44.238-.614.524-1.052.984-1.512.46-.46.898-.746 1.512-.984.463-.18 1.16-.394 2.44-.452C12.077 2.894 12.494 2.88 16 2.88zM16 1c-3.567 0-4.012.015-5.41.079-1.396.064-2.35.285-3.184.61a6.43 6.43 0 0 0-2.323 1.513A6.43 6.43 0 0 0 3.57 5.525c-.325.834-.546 1.788-.61 3.184C2.894 10.108 2.88 10.552 2.88 16s.015 5.892.079 7.291c.064 1.396.285 2.35.61 3.184a6.43 6.43 0 0 0 1.513 2.323 6.43 6.43 0 0 0 2.323 1.513c.834.325 1.788.546 3.184.61C10.988 30.985 11.432 31 16 31s5.012-.015 6.41-.079c1.396-.064 2.35-.285 3.184-.61a6.43 6.43 0 0 0 2.323-1.513 6.43 6.43 0 0 0 1.513-2.323c.325-.834.546-1.788.61-3.184.064-1.399.079-1.843.079-7.291s-.015-5.892-.079-7.291c-.064-1.396-.285-2.35-.61-3.184a6.43 6.43 0 0 0-1.513-2.323A6.43 6.43 0 0 0 25.594 1.69c-.834-.325-1.788-.546-3.184-.61C21.012 1.015 20.567 1 16 1z" fill="url(#ig)"/>
-                <path d="M16 8.27A7.73 7.73 0 1 0 16 23.73 7.73 7.73 0 0 0 16 8.27zm0 12.74A5.01 5.01 0 1 1 16 10.99 5.01 5.01 0 0 1 16 21.01zM23.845 6.595a1.805 1.805 0 1 0 0 3.61 1.805 1.805 0 0 0 0-3.61z" fill="url(#ig)"/>
-              </svg>
-            </a>
-            {/* YouTube */}
-            <a href="#" className="w-12 h-12 bg-white/10 rounded-full flex items-center justify-center hover:bg-white/20 transition-colors">
-              <svg viewBox="0 0 32 32" className="w-6 h-6" xmlns="http://www.w3.org/2000/svg">
-                <path d="M29.41 9.26a3.5 3.5 0 0 0-2.47-2.47C24.76 6.2 16 6.2 16 6.2s-8.76 0-10.94.59A3.5 3.5 0 0 0 2.59 9.26 36.6 36.6 0 0 0 2 16a36.6 36.6 0 0 0 .59 6.74 3.5 3.5 0 0 0 2.47 2.47C7.24 25.8 16 25.8 16 25.8s8.76 0 10.94-.59a3.5 3.5 0 0 0 2.47-2.47A36.6 36.6 0 0 0 30 16a36.6 36.6 0 0 0-.59-6.74zM13.2 20.2V11.8l7.3 4.2-7.3 4.2z" fill="#FF0000"/>
-              </svg>
-            </a>
-          </div>
-        </div>
+      {/* ══════════════════════════════════════════════════════════
+          CLOSING FOOTER
+      ══════════════════════════════════════════════════════════ */}
+      <section className="bg-[#081534] py-20 px-6">
+        <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
+          className="max-w-3xl mx-auto text-center">
+          <h2 className="text-[28px] sm:text-[32px] font-bold text-white mb-4 leading-snug">
+            We are one body, shining one light. We can't wait to see you soon.
+          </h2>
+          {/* <div className="flex gap-4 flex-wrap justify-center opacity-80 mt-8 text-[13px]">
+            <Link href="#" className="text-white/60 hover:text-[#fdc425] transition-colors">Privacy Policy</Link>
+            <Link href="#" className="text-white/60 hover:text-[#fdc425] transition-colors">Terms of Service</Link>
+            <Link href="#" className="text-white/60 hover:text-[#fdc425] transition-colors">Contact Us</Link>
+            <Link href="/giving" className="text-[#fdc425] font-bold hover:brightness-110 transition-all">Give</Link>
+          </div> */}
+        </motion.div>
       </section>
 
     </main>

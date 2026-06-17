@@ -142,14 +142,26 @@ export default function GivingPage() {
       {/* Header */}
       <div className="sticky top-0 z-30 bg-white border-b border-[#c6c6cf] px-4 sm:px-8 py-4">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-          <div className="pl-12 lg:pl-0">
-            <h2 className="text-[20px] sm:text-[24px] font-bold text-[#081534]">Giving & Partners</h2>
-            <p className="text-[12px] text-[#45464e]">Track donations, tithes, and partnership contributions.</p>
+          <div className="flex items-center gap-3 pl-12 lg:pl-0">
+            <button onClick={() => router.push('/admin/dashboard')}
+              className="hidden lg:flex items-center gap-1.5 px-3 py-2 border border-[#c6c6cf] text-[#45464e] rounded-lg text-[13px] font-semibold hover:bg-[#f2f4f6] hover:text-[#081534] transition-colors shrink-0">
+              <span className="material-symbols-outlined text-[18px]">arrow_back</span>
+            </button>
+            <div>
+              <h2 className="text-[20px] sm:text-[24px] font-bold text-[#081534]">Giving & Partners</h2>
+              <p className="text-[12px] text-[#45464e]">Track donations, tithes, and partnership contributions.</p>
+            </div>
           </div>
-          <button onClick={() => setShowModal(true)}
-            className="flex items-center gap-2 bg-[#081534] text-white px-5 py-2.5 rounded-xl text-[13px] font-semibold hover:opacity-90 transition-opacity shadow-sm w-fit">
-            <span className="material-symbols-outlined text-[18px]">add</span> Record Giving
-          </button>
+          <div className="flex items-center gap-2">
+            <button onClick={() => router.push('/admin/dashboard')}
+              className="lg:hidden flex items-center gap-1.5 px-3 py-2 border border-[#c6c6cf] text-[#45464e] rounded-lg text-[12px] font-semibold hover:bg-[#f2f4f6] hover:text-[#081534] transition-colors">
+              <span className="material-symbols-outlined text-[18px]">arrow_back</span>
+            </button>
+            <button onClick={() => setShowModal(true)}
+              className="flex items-center gap-2 bg-[#081534] text-white px-5 py-2.5 rounded-xl text-[13px] font-semibold hover:opacity-90 transition-opacity shadow-sm w-fit">
+              <span className="material-symbols-outlined text-[18px]">add</span> Record Giving
+            </button>
+          </div>
         </div>
       </div>
 
