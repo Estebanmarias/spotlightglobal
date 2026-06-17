@@ -4,8 +4,9 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { getSupabaseClient } from '@/lib/supabase'
 import { motion, AnimatePresence } from 'framer-motion'
+import { ALL_PAGES, PageKey } from '@/lib/use-admin-permissions'
 
-const ROLES = ['admin', 'super_admin']
+const ROLES = ['admin'] // Only one Setman (super_admin) can ever exist — not creatable from this form
 const roleLabel = (r: string) => r === 'super_admin' ? 'Setman' : 'Admin'
 
 type AdminRole = {
@@ -16,6 +17,7 @@ type AdminRole = {
   role: string
   status: 'pending' | 'approved' | 'rejected'
   created_at: string
+  permissions: PageKey[]
 }
 
 const tabs = ['My Account', 'Team & Access']
@@ -43,11 +45,19 @@ export default function SettingsPage() {
   const [inviteEmail, setInviteEmail] = useState('')
   const [inviteName, setInviteName] = useState('')
   const [inviteRole, setInviteRole] = useState('admin')
+  const [invitePermissions, setInvitePermissions] = useState<PageKey[]>(['dashboard'])
   const [inviting, setInviting] = useState(false)
+
+  // Editing permissions for an existing team member
+  const [editingPermsFor, setEditingPermsFor] = useState<AdminRole | null>(null)
+  const [editPermissions, setEditPermissions] = useState<PageKey[]>([])
+  const [savingPerms, setSavingPerms] = useState(false)
 
   // Approval result modal
   const [approvalResult, setApprovalResult] = useState<{ email: string; password: string } | null>(null)
   const [processingId, setProcessingId] = useState<string | null>(null)
+  const [removeTarget, setRemoveTarget] = useState<AdminRole | null>(null)
+  const [removing, setRemoving] = useState(false)
 
   const showToast = (msg: string) => { setToast(msg); setTimeout(() => setToast(null), 4000) }
 
@@ -91,12 +101,14 @@ export default function SettingsPage() {
   // Anyone with admin access can submit a request — it goes in as 'pending' until Setman approves
   const handleRequestTeamMember = async () => {
     if (!inviteEmail || !inviteName) return showToast('Fill in name and email')
+    if (invitePermissions.length === 0) return showToast('Select at least one page they can access')
     setInviting(true)
     const { error } = await supabase.from('admin_roles').insert([{
       email: inviteEmail.toLowerCase().trim(),
       full_name: inviteName,
       role: inviteRole,
       status: 'pending',
+      permissions: invitePermissions,
       invited_by: currentUserId,
     }] as any)
     setInviting(false)
@@ -105,7 +117,32 @@ export default function SettingsPage() {
       return showToast('Error submitting request')
     }
     showToast(isSuperAdmin ? 'Request submitted — approve it below' : 'Request sent to Setman for approval')
-    setInviteEmail(''); setInviteName(''); setInviteRole('admin')
+    setInviteEmail(''); setInviteName(''); setInviteRole('admin'); setInvitePermissions(['dashboard'])
+    fetchTeam()
+  }
+
+  const togglePermission = (page: PageKey, current: PageKey[], setter: (p: PageKey[]) => void) => {
+    if (current.includes(page)) {
+      setter(current.filter(p => p !== page))
+    } else {
+      setter([...current, page])
+    }
+  }
+
+  const openEditPermissions = (member: AdminRole) => {
+    setEditingPermsFor(member)
+    setEditPermissions(member.permissions || ['dashboard'])
+  }
+
+  const saveEditedPermissions = async () => {
+    if (!editingPermsFor) return
+    if (editPermissions.length === 0) return showToast('Select at least one page')
+    setSavingPerms(true)
+    const { error } = await supabase.from('admin_roles').update({ permissions: editPermissions } as any).eq('id', editingPermsFor.id)
+    setSavingPerms(false)
+    if (error) return showToast('Error updating permissions')
+    showToast(`${editingPermsFor.full_name}'s access updated`)
+    setEditingPermsFor(null)
     fetchTeam()
   }
 
@@ -116,12 +153,33 @@ export default function SettingsPage() {
     fetchTeam()
   }
 
-  const handleRemove = async (id: string, userId: string | null) => {
-    if (userId === currentUserId) return showToast("You can't remove your own access")
-    const { error } = await supabase.from('admin_roles').delete().eq('id', id)
-    if (error) return showToast('Error removing team member')
-    showToast('Team member removed')
-    fetchTeam()
+  const handleRemove = async (member: AdminRole) => {
+    if (member.user_id === currentUserId) return showToast("You can't remove your own access")
+    setRemoveTarget(member)
+  }
+
+  const confirmRemove = async () => {
+    if (!removeTarget) return
+    setRemoving(true)
+    try {
+      const res = await fetch('/api/admin/remove-admin', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ admin_role_id: removeTarget.id, approver_user_id: currentUserId }),
+      })
+      const data = await res.json()
+      setRemoving(false)
+      if (!res.ok) {
+        showToast(data.error || 'Error removing team member')
+        return
+      }
+      showToast(`${removeTarget.full_name} removed — login deleted`)
+      setRemoveTarget(null)
+      fetchTeam()
+    } catch {
+      setRemoving(false)
+      showToast('Network error — please try again')
+    }
   }
 
   const handleApproveReject = async (id: string, action: 'approve' | 'reject') => {
@@ -303,21 +361,23 @@ export default function SettingsPage() {
               </motion.div>
             )}
 
-            <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.04 }}
-              className="bg-white border border-[#c6c6cf] rounded-xl p-6 sm:p-8">
-              <h2 className="text-[16px] font-bold text-[#081534] mb-6">Access Levels</h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="p-4 rounded-xl border border-[#c6c6cf]">
-                  <span className="inline-block px-3 py-1 rounded-full text-[12px] font-bold mb-3 bg-[#081534] text-white">Setman</span>
-                  <p className="text-[13px] text-[#45464e]">Full access — members, settings, team approval, and Giving & Partners records.</p>
+            {isSuperAdmin && (
+              <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.04 }}
+                className="bg-white border border-[#c6c6cf] rounded-xl p-6 sm:p-8">
+                <h2 className="text-[16px] font-bold text-[#081534] mb-6">Access Levels</h2>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="p-4 rounded-xl border border-[#c6c6cf]">
+                    <span className="inline-block px-3 py-1 rounded-full text-[12px] font-bold mb-3 bg-[#081534] text-white">Setman</span>
+                    <p className="text-[13px] text-[#45464e]">Full access — members, settings, team approval, and Giving & Partners records.</p>
+                  </div>
+                  <div className="p-4 rounded-xl border border-[#c6c6cf]">
+                    <span className="inline-block px-3 py-1 rounded-full text-[12px] font-bold mb-3 bg-[#f2f4f6] text-[#45464e]">Admin</span>
+                    <p className="text-[13px] text-[#45464e]">Manage members, ministries, and attendance. Cannot access giving records or approve new admins.</p>
+                  </div>
                 </div>
-                <div className="p-4 rounded-xl border border-[#c6c6cf]">
-                  <span className="inline-block px-3 py-1 rounded-full text-[12px] font-bold mb-3 bg-[#f2f4f6] text-[#45464e]">Admin</span>
-                  <p className="text-[13px] text-[#45464e]">Manage members, ministries, and attendance. Cannot access giving records or approve new admins.</p>
-                </div>
-              </div>
-            </motion.div>
+              </motion.div>
+            )}
 
             <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.08 }}
@@ -343,16 +403,20 @@ export default function SettingsPage() {
                         </div>
                       </div>
                       <div className="flex items-center gap-3 shrink-0">
-                        {isSuperAdmin ? (
-                          <select value={m.role} onChange={e => handleRoleChange(m.id, e.target.value)}
-                            className="text-[12px] font-bold bg-white border border-[#c6c6cf] rounded-lg px-3 py-1.5 focus:outline-none focus:border-[#081534]">
-                            {ROLES.map(r => <option key={r} value={r}>{roleLabel(r)}</option>)}
-                          </select>
-                        ) : (
-                          <span className={`px-2.5 py-1 text-[11px] font-bold rounded-full ${roleColor(m.role)}`}>{roleLabel(m.role)}</span>
+                        {m.role === 'admin' && (
+                          <span className="hidden sm:inline-block px-2 py-0.5 text-[10px] font-bold rounded-full bg-[#f2f4f6] text-[#45464e]">
+                            {(m.permissions || []).length} page{(m.permissions || []).length === 1 ? '' : 's'}
+                          </span>
                         )}
+                        {isSuperAdmin && m.role === 'admin' && (
+                          <button onClick={() => openEditPermissions(m)}
+                            className="text-[11px] font-bold text-[#785a00] hover:underline">
+                            Manage Access
+                          </button>
+                        )}
+                        <span className={`px-2.5 py-1 text-[11px] font-bold rounded-full ${roleColor(m.role)}`}>{roleLabel(m.role)}</span>
                         {isSuperAdmin && m.user_id !== currentUserId && (
-                          <button onClick={() => handleRemove(m.id, m.user_id)} className="text-[#45464e] hover:text-[#ba1a1a] transition-colors">
+                          <button onClick={() => handleRemove(m)} className="text-[#45464e] hover:text-[#ba1a1a] transition-colors">
                             <span className="material-symbols-outlined text-[20px]">person_remove</span>
                           </button>
                         )}
@@ -393,6 +457,28 @@ export default function SettingsPage() {
                   </select>
                 </div>
               </div>
+
+              {inviteRole === 'admin' && (
+                <div className="mt-5">
+                  <label className="text-[12px] font-bold text-[#45464e] uppercase tracking-wide mb-2 block">Page Access</label>
+                  <p className="text-[12px] text-[#76777f] mb-3">Choose which pages this admin can see and use.</p>
+                  <div className="flex flex-wrap gap-2">
+                    {ALL_PAGES.filter(p => p.key !== 'giving').map(p => {
+                      const active = invitePermissions.includes(p.key)
+                      return (
+                        <button key={p.key} type="button"
+                          onClick={() => togglePermission(p.key, invitePermissions, setInvitePermissions)}
+                          className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-[12px] font-semibold border transition-all
+                            ${active ? 'bg-[#081534] text-white border-[#081534]' : 'bg-white text-[#45464e] border-[#c6c6cf] hover:border-[#081534]'}`}>
+                          <span className="material-symbols-outlined text-[16px]">{p.icon}</span>
+                          {p.label}
+                        </button>
+                      )
+                    })}
+                  </div>
+                </div>
+              )}
+
               <div className="mt-6">
                 <button onClick={handleRequestTeamMember} disabled={inviting}
                   className="bg-[#081534] text-white px-6 py-2.5 rounded-lg text-[13px] font-bold hover:opacity-90 transition-opacity disabled:opacity-60 flex items-center gap-2">
@@ -437,6 +523,90 @@ export default function SettingsPage() {
                   className="w-full mt-6 py-3 bg-[#081534] text-white rounded-xl text-[13px] font-bold hover:opacity-90 transition-opacity">
                   Done
                 </button>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
+      {/* Manage access (permissions) modal */}
+      <AnimatePresence>
+        {editingPermsFor && (
+          <>
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/50 z-50 backdrop-blur-sm" onClick={() => setEditingPermsFor(null)} />
+            <motion.div initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }} transition={{ type: 'spring', damping: 25, stiffness: 280 }}
+              className="fixed inset-0 z-50 flex items-center justify-center p-4">
+              <div className="bg-white rounded-2xl w-full max-w-[480px] shadow-2xl">
+                <div className="flex items-center justify-between px-6 py-5 border-b border-[#c6c6cf]">
+                  <div>
+                    <h3 className="text-[18px] font-bold text-[#081534]">Manage Access</h3>
+                    <p className="text-[12px] text-[#45464e] mt-0.5">{editingPermsFor.full_name} · {editingPermsFor.email}</p>
+                  </div>
+                  <button onClick={() => setEditingPermsFor(null)} className="w-8 h-8 flex items-center justify-center rounded-lg text-[#45464e] hover:bg-[#f2f4f6]">
+                    <span className="material-symbols-outlined text-[20px]">close</span>
+                  </button>
+                </div>
+                <div className="px-6 py-6">
+                  <p className="text-[12px] text-[#76777f] mb-4">Choose which pages this admin can see and use.</p>
+                  <div className="flex flex-wrap gap-2">
+                    {ALL_PAGES.filter(p => p.key !== 'giving').map(p => {
+                      const active = editPermissions.includes(p.key)
+                      return (
+                        <button key={p.key} type="button"
+                          onClick={() => togglePermission(p.key, editPermissions, setEditPermissions)}
+                          className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-[12px] font-semibold border transition-all
+                            ${active ? 'bg-[#081534] text-white border-[#081534]' : 'bg-white text-[#45464e] border-[#c6c6cf] hover:border-[#081534]'}`}>
+                          <span className="material-symbols-outlined text-[16px]">{p.icon}</span>
+                          {p.label}
+                        </button>
+                      )
+                    })}
+                  </div>
+                </div>
+                <div className="px-6 py-4 border-t border-[#c6c6cf] flex gap-3">
+                  <button onClick={() => setEditingPermsFor(null)}
+                    className="flex-1 py-3 border border-[#c6c6cf] text-[#45464e] rounded-xl text-[13px] font-semibold hover:bg-[#f2f4f6]">
+                    Cancel
+                  </button>
+                  <button onClick={saveEditedPermissions} disabled={savingPerms}
+                    className="flex-1 py-3 bg-[#081534] text-white rounded-xl text-[13px] font-bold hover:opacity-90 disabled:opacity-40">
+                    {savingPerms ? 'Saving...' : 'Save Access'}
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
+      {/* Remove confirm modal */}
+      <AnimatePresence>
+        {removeTarget && (
+          <>
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/50 z-50 backdrop-blur-sm" onClick={() => setRemoveTarget(null)} />
+            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }}
+              className="fixed inset-0 z-50 flex items-center justify-center p-4">
+              <div className="bg-white rounded-2xl w-full max-w-[400px] p-6 shadow-2xl">
+                <div className="w-12 h-12 bg-[#ffdad6] rounded-full flex items-center justify-center mx-auto mb-4">
+                  <span className="material-symbols-outlined text-[#ba1a1a] text-[24px]">person_remove</span>
+                </div>
+                <h3 className="text-[18px] font-bold text-[#081534] text-center mb-2">Remove Team Access</h3>
+                <p className="text-[13px] text-[#45464e] text-center mb-6">
+                  This will permanently remove <span className="font-bold text-[#081534]">{removeTarget.full_name}</span>'s access to the admin portal. This cannot be undone.
+                </p>
+                <div className="flex gap-3">
+                  <button onClick={() => setRemoveTarget(null)}
+                    className="flex-1 py-3 border border-[#c6c6cf] rounded-xl text-[13px] font-semibold text-[#45464e] hover:bg-[#f2f4f6] transition-colors">
+                    Cancel
+                  </button>
+                  <button onClick={confirmRemove} disabled={removing}
+                    className="flex-1 py-3 bg-[#ba1a1a] text-white rounded-xl text-[13px] font-bold hover:opacity-90 transition-opacity disabled:opacity-60">
+                    {removing ? 'Removing...' : 'Yes, Remove'}
+                  </button>
+                </div>
               </div>
             </motion.div>
           </>

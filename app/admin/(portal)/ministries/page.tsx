@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { getSupabaseClient } from '@/lib/supabase'
+import { useAdminAccess } from '@/lib/use-admin-permissions'
 
 type Ministry = {
   id: string
@@ -46,6 +47,7 @@ const emptyForm = {
 
 export default function MinistriesPage() {
   const supabase = getSupabaseClient()
+  const access = useAdminAccess('ministries')
   const [ministries, setMinistries] = useState<Ministry[]>([])
   const [loading, setLoading] = useState(true)
   const [hovered, setHovered] = useState<string | null>(null)
@@ -55,6 +57,16 @@ export default function MinistriesPage() {
   const [editMinistry, setEdit] = useState<Ministry | null>(null)
   const [saving, setSaving] = useState(false)
   const [toast, setToast] = useState<string | null>(null)
+
+  // Assign leader
+  const [assignTarget, setAssignTarget] = useState<Ministry | null>(null)
+  const [existingAdmins, setExistingAdmins] = useState<{ id: string; user_id: string | null; full_name: string; email: string; status: string }[]>([])
+  const [currentLeaders, setCurrentLeaders] = useState<{ user_id: string; full_name: string; email: string }[]>([])
+  const [assignMode, setAssignMode] = useState<'existing' | 'new'>('existing')
+  const [selectedAdminId, setSelectedAdminId] = useState('')
+  const [newLeaderName, setNewLeaderName] = useState('')
+  const [newLeaderEmail, setNewLeaderEmail] = useState('')
+  const [assigning, setAssigning] = useState(false)
   const [form, setForm] = useState(emptyForm)
 
   const showToast = (msg: string) => {
@@ -73,7 +85,84 @@ export default function MinistriesPage() {
     setLoading(false)
   }
 
-  useEffect(() => { fetchMinistries() }, [])
+  useEffect(() => { if (!access.loading) fetchMinistries() }, [access.loading])
+
+  // ── Assign Leader logic ──
+  const openAssignLeader = async (m: Ministry) => {
+    setAssignTarget(m)
+    setAssignMode('existing')
+    setSelectedAdminId('')
+    setNewLeaderName('')
+    setNewLeaderEmail('')
+
+    const { data: admins } = await supabase
+      .from('admin_roles')
+      .select('id, user_id, full_name, email, status')
+      .eq('role', 'admin')
+      .eq('status', 'approved') as { data: { id: string; user_id: string | null; full_name: string; email: string; status: string }[] | null }
+    setExistingAdmins(admins || [])
+
+    const { data: leaderLinks } = await supabase
+      .from('ministry_leaders')
+      .select('user_id')
+      .eq('ministry_id', m.id) as { data: { user_id: string }[] | null }
+
+    if (leaderLinks && leaderLinks.length > 0) {
+      const userIds = leaderLinks.map(l => l.user_id)
+      const { data: leaderProfiles } = await supabase
+        .from('admin_roles')
+        .select('user_id, full_name, email')
+        .in('user_id', userIds) as { data: { user_id: string; full_name: string; email: string }[] | null }
+      setCurrentLeaders(leaderProfiles || [])
+    } else {
+      setCurrentLeaders([])
+    }
+  }
+
+  const handleAssignExisting = async () => {
+    if (!assignTarget || !selectedAdminId) return showToast('Select an admin first')
+    const admin = existingAdmins.find(a => a.id === selectedAdminId)
+    if (!admin || !admin.user_id) return showToast('This admin has no active login yet')
+
+    setAssigning(true)
+    const { error: linkError } = await supabase.from('ministry_leaders').insert([{
+      ministry_id: assignTarget.id,
+      user_id: admin.user_id,
+    }] as any)
+
+    if (linkError) {
+      setAssigning(false)
+      if (linkError.code === '23505') return showToast('This admin already leads this ministry')
+      return showToast('Error assigning leader')
+    }
+
+    await supabase.from('admin_roles').update({ is_ministry_leader: true } as any).eq('id', admin.id)
+    setAssigning(false)
+    showToast('Leader assigned')
+    setAssignTarget(null)
+    fetchMinistries()
+  }
+
+  const handleCreateNewLeader = async () => {
+    if (!assignTarget || !newLeaderName || !newLeaderEmail) return showToast('Fill in name and email')
+    setAssigning(true)
+    const { error } = await supabase.from('admin_roles').insert([{
+      email: newLeaderEmail.toLowerCase().trim(),
+      full_name: newLeaderName,
+      role: 'admin',
+      status: 'pending',
+      permissions: ['dashboard'],
+      is_ministry_leader: true,
+      pending_ministry_id: assignTarget.id,
+    }] as any)
+    setAssigning(false)
+    if (error) {
+      if (error.code === '23505') return showToast('This email already has a request or account')
+      return showToast('Error creating leader request')
+    }
+    showToast('Leader request submitted — approve it in Settings to activate their login')
+    setAssignTarget(null)
+  }
 
   // ── Open modals ──
   const openAdd = () => {

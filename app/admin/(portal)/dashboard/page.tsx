@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { getSupabaseClient } from "@/lib/supabase";
 import { motion } from "framer-motion";
+import { useAdminAccess, ALL_PAGES, PageKey } from "@/lib/use-admin-permissions";
 
 type Member = {
   id: string;
@@ -22,6 +23,7 @@ type StatusCounts = {
 export default function AdminDashboard() {
   const router = useRouter();
   const supabase = getSupabaseClient();
+  const access = useAdminAccess('dashboard');
 
   const [total, setTotal] = useState(0);
   const [thisWeek, setThisWeek] = useState(0);
@@ -31,33 +33,9 @@ export default function AdminDashboard() {
     First_Timer: 0, Attending: 0, Member: 0,
   });
   const [loading, setLoading] = useState(true);
-  const [adminName, setAdminName] = useState("Admin");
-  const [isSuperAdmin, setIsSuperAdmin] = useState(false);
 
   useEffect(() => {
-    supabase.auth.getSession().then(async ({ data }) => {
-      if (!data.session) { router.replace("/admin"); return; }
-      const email = data.session.user.email ?? "";
-
-      // Check role + full_name from admin_roles
-      const { data: roleData } = await supabase
-        .from("admin_roles")
-        .select("role, full_name")
-        .eq("user_id", data.session.user.id)
-        .single() as { data: { role: string; full_name: string } | null };
-
-      if (roleData?.role === "super_admin") {
-        setIsSuperAdmin(true);
-        setAdminName("Setman");
-      } else if (roleData?.full_name) {
-        setAdminName(roleData.full_name.split(" ")[0]);
-      } else {
-        setAdminName(email.split("@")[0]);
-      }
-    });
-  }, [router]);
-
-  useEffect(() => {
+    if (access.loading) return;
     const load = async () => {
       setLoading(true);
 
@@ -97,7 +75,7 @@ export default function AdminDashboard() {
       setLoading(false);
     };
     load();
-  }, []);
+  }, [access.loading]);
 
   const now = new Date();
   const greeting =
@@ -108,18 +86,22 @@ export default function AdminDashboard() {
     weekday: "long", day: "numeric", month: "long", year: "numeric",
   });
 
+  const displayName = access.isSuperAdmin ? "Setman" : (access.fullName?.split(" ")[0] || access.email.split("@")[0]);
+
   const statusConfig = [
     { key: "First_Timer", label: "First Timers", color: "bg-green-500", light: "bg-green-50 text-green-700" },
     { key: "Attending", label: "Attending", color: "bg-blue-500", light: "bg-blue-50 text-blue-700" },
     { key: "Member", label: "Members", color: "bg-[#fdc425]", light: "bg-[#fdc425]/20 text-[#785a00]" },
   ];
 
-  const quickActions = [
-    { icon: "person_add", label: "Add Member", desc: "Register someone new", href: "/admin/add-member", bg: "bg-[#081534]", text: "text-white" },
-    { icon: "group", label: "View Members", desc: "Browse congregation", href: "/admin/members", bg: "bg-[#fdc425]", text: "text-[#6d5200]" },
-    { icon: "fact_check", label: "Attendance", desc: "Log Sunday headcount", href: "/admin/attendance", bg: "bg-white", text: "text-[#081534]" },
-    { icon: "church", label: "Ministries", desc: "Manage departments", href: "/admin/ministries", bg: "bg-white", text: "text-[#081534]" },
+  const allQuickActions: { icon: string; label: string; desc: string; href: string; bg: string; text: string; page: PageKey }[] = [
+    { icon: "person_add", label: "Add Member", desc: "Register someone new", href: "/admin/add-member", bg: "bg-[#081534]", text: "text-white", page: "members" },
+    { icon: "group", label: "View Members", desc: "Browse congregation", href: "/admin/members", bg: "bg-[#fdc425]", text: "text-[#6d5200]", page: "members" },
+    { icon: "fact_check", label: "Attendance", desc: "Log Sunday headcount", href: "/admin/attendance", bg: "bg-white", text: "text-[#081534]", page: "attendance" },
+    { icon: "church", label: "Ministries", desc: "Manage departments", href: "/admin/ministries", bg: "bg-white", text: "text-[#081534]", page: "ministries" },
   ];
+
+  const quickActions = allQuickActions.filter(a => access.canAccess(a.page));
 
   const totalForBar = total || 1;
 
@@ -128,6 +110,10 @@ export default function AdminDashboard() {
     if (status === "Attending") return "bg-blue-50 text-blue-700";
     return "bg-green-50 text-green-700";
   };
+
+  if (access.loading) {
+    return <div className="min-h-screen bg-[#f7f9fb] flex items-center justify-center"><p className="text-[#45464e]">Loading...</p></div>;
+  }
 
   return (
     <div className="bg-[#f7f9fb] min-h-screen">
@@ -141,11 +127,11 @@ export default function AdminDashboard() {
         <div className="relative z-10 pl-12 lg:pl-0">
           <p className="text-[#fdc425] text-[12px] font-semibold uppercase tracking-widest mb-1">{today}</p>
           <h1 className="text-white text-[24px] sm:text-[30px] font-bold mb-1">
-            {greeting}, <span className="text-[#fdc425]">{adminName}</span> 👋
+            {greeting}, <span className="text-[#fdc425]">{displayName}</span> 👋
           </h1>
           <p className="text-white/60 text-[13px] flex items-center gap-2">
             Here's what's happening at theSpotlightChurch today.
-            {isSuperAdmin && <span className="px-2 py-0.5 bg-[#fdc425] text-[#6d5200] rounded-full text-[10px] font-bold uppercase">Setman</span>}
+            {access.isSuperAdmin && <span className="px-2 py-0.5 bg-[#fdc425] text-[#6d5200] rounded-full text-[10px] font-bold uppercase">Setman</span>}
           </p>
         </div>
 
@@ -174,25 +160,27 @@ export default function AdminDashboard() {
       <div className="p-4 sm:p-6 lg:p-8 space-y-6">
 
         {/* ── Quick Actions ── */}
-        <div>
-          <h2 className="text-[13px] font-bold text-[#45464e] uppercase tracking-widest mb-3">Quick Actions</h2>
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-            {quickActions.map((a, i) => (
-              <motion.button key={a.label}
-                initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.08 }}
-                onClick={() => router.push(a.href)}
-                className={`${a.bg} ${a.text} border border-[#c6c6cf] rounded-xl p-4 sm:p-5 text-left hover:shadow-md hover:-translate-y-0.5 transition-all group`}>
-                <span className="material-symbols-outlined text-[24px] mb-3 block"
-                  style={{ fontVariationSettings: "'FILL' 1" }}>{a.icon}</span>
-                <p className="font-bold text-[14px]">{a.label}</p>
-                <p className={`text-[11px] mt-0.5 ${a.bg === 'bg-[#081534]' ? 'text-white/60' : a.bg === 'bg-[#fdc425]' ? 'text-[#6d5200]/70' : 'text-[#45464e]'}`}>
-                  {a.desc}
-                </p>
-              </motion.button>
-            ))}
+        {quickActions.length > 0 && (
+          <div>
+            <h2 className="text-[13px] font-bold text-[#45464e] uppercase tracking-widest mb-3">Quick Actions</h2>
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+              {quickActions.map((a, i) => (
+                <motion.button key={a.label}
+                  initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: i * 0.08 }}
+                  onClick={() => router.push(a.href)}
+                  className={`${a.bg} ${a.text} border border-[#c6c6cf] rounded-xl p-4 sm:p-5 text-left hover:shadow-md hover:-translate-y-0.5 transition-all group`}>
+                  <span className="material-symbols-outlined text-[24px] mb-3 block"
+                    style={{ fontVariationSettings: "'FILL' 1" }}>{a.icon}</span>
+                  <p className="font-bold text-[14px]">{a.label}</p>
+                  <p className={`text-[11px] mt-0.5 ${a.bg === 'bg-[#081534]' ? 'text-white/60' : a.bg === 'bg-[#fdc425]' ? 'text-[#6d5200]/70' : 'text-[#45464e]'}`}>
+                    {a.desc}
+                  </p>
+                </motion.button>
+              ))}
+            </div>
           </div>
-        </div>
+        )}
 
         {/* ── Middle row ── */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -203,10 +191,12 @@ export default function AdminDashboard() {
             className="lg:col-span-1 bg-white border border-[#c6c6cf] rounded-xl p-5 sm:p-6">
             <div className="flex items-center justify-between mb-5">
               <h3 className="text-[15px] font-bold text-[#081534]">Congregation Breakdown</h3>
-              <button onClick={() => router.push("/admin/members")}
-                className="text-[11px] font-semibold text-[#785a00] hover:underline">
-                View all
-              </button>
+              {access.canAccess('members') && (
+                <button onClick={() => router.push("/admin/members")}
+                  className="text-[11px] font-semibold text-[#785a00] hover:underline">
+                  View all
+                </button>
+              )}
             </div>
 
             <div className="space-y-4">
@@ -245,10 +235,12 @@ export default function AdminDashboard() {
             className="lg:col-span-2 bg-white border border-[#c6c6cf] rounded-xl p-5 sm:p-6">
             <div className="flex items-center justify-between mb-5">
               <h3 className="text-[15px] font-bold text-[#081534]">Recent Sign-ups</h3>
-              <button onClick={() => router.push("/admin/members")}
-                className="text-[11px] font-semibold text-[#785a00] hover:underline flex items-center gap-1">
-                See all <span className="material-symbols-outlined text-[14px]">arrow_forward</span>
-              </button>
+              {access.canAccess('members') && (
+                <button onClick={() => router.push("/admin/members")}
+                  className="text-[11px] font-semibold text-[#785a00] hover:underline flex items-center gap-1">
+                  See all <span className="material-symbols-outlined text-[14px]">arrow_forward</span>
+                </button>
+              )}
             </div>
 
             {loading ? (
@@ -262,10 +254,12 @@ export default function AdminDashboard() {
                 <span className="material-symbols-outlined text-[48px] text-[#c6c6cf] mb-2">group_add</span>
                 <p className="text-[#45464e] font-semibold text-[14px]">No members yet</p>
                 <p className="text-[12px] text-[#76777f] mt-1">Register your first member to get started</p>
-                <button onClick={() => router.push("/admin/add-member")}
-                  className="mt-4 px-4 py-2 bg-[#081534] text-white text-[12px] font-bold rounded-lg hover:opacity-90">
-                  Add First Member
-                </button>
+                {access.canAccess('members') && (
+                  <button onClick={() => router.push("/admin/add-member")}
+                    className="mt-4 px-4 py-2 bg-[#081534] text-white text-[12px] font-bold rounded-lg hover:opacity-90">
+                    Add First Member
+                  </button>
+                )}
               </div>
             ) : (
               <div className="space-y-2">
@@ -301,38 +295,42 @@ export default function AdminDashboard() {
 
         {/* ── Bottom row — page links ── */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-            onClick={() => router.push("/admin/ministries")}
-            className="bg-white border border-[#c6c6cf] rounded-xl p-5 cursor-pointer hover:shadow-md hover:-translate-y-0.5 transition-all group">
-            <div className="w-10 h-10 bg-[#002960] text-[#adc6ff] rounded-xl flex items-center justify-center mb-4">
-              <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>church</span>
-            </div>
-            <h3 className="text-[15px] font-bold text-[#081534] mb-1">Ministries</h3>
-            <p className="text-[12px] text-[#45464e] mb-4">Manage departments, leaders, and programs.</p>
-            <div className="flex items-center gap-1 text-[#785a00] text-[12px] font-semibold group-hover:gap-2 transition-all">
-              Open <span className="material-symbols-outlined text-[14px]">arrow_forward</span>
-            </div>
-          </motion.div>
+          {access.canAccess('ministries') && (
+            <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+              onClick={() => router.push("/admin/ministries")}
+              className="bg-white border border-[#c6c6cf] rounded-xl p-5 cursor-pointer hover:shadow-md hover:-translate-y-0.5 transition-all group">
+              <div className="w-10 h-10 bg-[#002960] text-[#adc6ff] rounded-xl flex items-center justify-center mb-4">
+                <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>church</span>
+              </div>
+              <h3 className="text-[15px] font-bold text-[#081534] mb-1">Ministries</h3>
+              <p className="text-[12px] text-[#45464e] mb-4">Manage departments, leaders, and programs.</p>
+              <div className="flex items-center gap-1 text-[#785a00] text-[12px] font-semibold group-hover:gap-2 transition-all">
+                Open <span className="material-symbols-outlined text-[14px]">arrow_forward</span>
+              </div>
+            </motion.div>
+          )}
 
-          <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.35 }}
-            onClick={() => router.push("/admin/analytics")}
-            className="bg-[#081534] rounded-xl p-5 cursor-pointer hover:shadow-md hover:-translate-y-0.5 transition-all group relative overflow-hidden">
-            <div className="absolute -right-4 -bottom-4 opacity-10">
-              <span className="material-symbols-outlined text-[100px] text-white">analytics</span>
-            </div>
-            <div className="w-10 h-10 bg-[#fdc425] text-[#6d5200] rounded-xl flex items-center justify-center mb-4 relative z-10">
-              <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>analytics</span>
-            </div>
-            <h3 className="text-[15px] font-bold text-white mb-1 relative z-10">Analytics</h3>
-            <p className="text-[12px] text-white/60 mb-4 relative z-10">Growth trends, attendance & impact.</p>
-            <div className="flex items-center gap-1 text-[#fdc425] text-[12px] font-semibold group-hover:gap-2 transition-all relative z-10">
-              Open <span className="material-symbols-outlined text-[14px]">arrow_forward</span>
-            </div>
-          </motion.div>
+          {access.canAccess('analytics') && (
+            <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.35 }}
+              onClick={() => router.push("/admin/analytics")}
+              className="bg-[#081534] rounded-xl p-5 cursor-pointer hover:shadow-md hover:-translate-y-0.5 transition-all group relative overflow-hidden">
+              <div className="absolute -right-4 -bottom-4 opacity-10">
+                <span className="material-symbols-outlined text-[100px] text-white">analytics</span>
+              </div>
+              <div className="w-10 h-10 bg-[#fdc425] text-[#6d5200] rounded-xl flex items-center justify-center mb-4 relative z-10">
+                <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>analytics</span>
+              </div>
+              <h3 className="text-[15px] font-bold text-white mb-1 relative z-10">Analytics</h3>
+              <p className="text-[12px] text-white/60 mb-4 relative z-10">Growth trends, attendance & impact.</p>
+              <div className="flex items-center gap-1 text-[#fdc425] text-[12px] font-semibold group-hover:gap-2 transition-all relative z-10">
+                Open <span className="material-symbols-outlined text-[14px]">arrow_forward</span>
+              </div>
+            </motion.div>
+          )}
 
-          {isSuperAdmin ? (
+          {access.isSuperAdmin ? (
             <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.4 }}
               onClick={() => router.push("/admin/giving")}
@@ -374,10 +372,12 @@ export default function AdminDashboard() {
               Keep growing the family. 🙏
             </p>
           </div>
-          <button onClick={() => router.push("/admin/add-member")}
-            className="ml-auto shrink-0 bg-[#081534] text-white px-4 py-2 rounded-lg text-[12px] font-bold hover:opacity-90 transition-opacity hidden sm:block">
-            + Add Member
-          </button>
+          {access.canAccess('members') && (
+            <button onClick={() => router.push("/admin/add-member")}
+              className="ml-auto shrink-0 bg-[#081534] text-white px-4 py-2 rounded-lg text-[12px] font-bold hover:opacity-90 transition-opacity hidden sm:block">
+              + Add Member
+            </button>
+          )}
         </div>
 
       </div>

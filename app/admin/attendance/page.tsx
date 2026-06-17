@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import { getSupabaseClient } from '@/lib/supabase'
+import { useAdminAccess } from '@/lib/use-admin-permissions'
 
 type AttendanceRecord = {
   id: string
@@ -58,12 +59,11 @@ export default function AttendancePage() {
     setLoading(false)
   }
 
+  const access = useAdminAccess('attendance')
+
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
-      if (!data.session) router.replace('/admin')
-    })
-    fetchRecords()
-  }, [])
+    if (!access.loading) fetchRecords()
+  }, [access.loading])
 
   const resetForm = () => {
     setForm({ service_date: getLastSunday(), male_count: '', female_count: '', children_count: '', notes: '' })

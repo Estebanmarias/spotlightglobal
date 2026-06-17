@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { getSupabaseClient } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
+import { useAdminAccess } from '@/lib/use-admin-permissions'
 
 type StatusCounts = {
   First_Timer: number
@@ -38,12 +39,11 @@ export default function AnalyticsPage() {
   const [attendanceWeeks, setAttendanceWeeks] = useState<AttendanceWeek[]>([])
   const [lastAttendance, setLastAttendance] = useState<AttendanceWeek | null>(null)
 
+  const access = useAdminAccess('analytics')
+
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
-      if (!data.session) router.replace('/admin')
-    })
-    loadData()
-  }, [])
+    if (!access.loading) loadData()
+  }, [access.loading])
 
   const loadData = async () => {
     setLoading(true)
@@ -261,9 +261,9 @@ export default function AnalyticsPage() {
               <p className="text-[12px] text-[#45464e]">Last {attendanceWeeks.length} recorded services — male, female, children.</p>
             </div>
             <div className="flex gap-4">
-              <div className="flex items-center gap-2"><span className="w-3 h-3 rounded-full bg-[#4572ee]" /><span className="text-[12px] font-semibold">Male</span></div>
-              <div className="flex items-center gap-2"><span className="w-3 h-3 rounded-full bg-[#fd25eb]" /><span className="text-[12px] font-semibold">Female</span></div>
-              <div className="flex items-center gap-2"><span className="w-3 h-3 rounded-full bg-[#ddec88]" /><span className="text-[12px] font-semibold">Children</span></div>
+              <div className="flex items-center gap-2"><span className="w-3 h-3 rounded-full bg-[#081534]" /><span className="text-[12px] font-semibold">Male</span></div>
+              <div className="flex items-center gap-2"><span className="w-3 h-3 rounded-full bg-[#fdc425]" /><span className="text-[12px] font-semibold">Female</span></div>
+              <div className="flex items-center gap-2"><span className="w-3 h-3 rounded-full bg-[#adc6ff]" /><span className="text-[12px] font-semibold">Children</span></div>
             </div>
           </div>
 

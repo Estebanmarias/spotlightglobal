@@ -43,7 +43,7 @@ export async function POST(req: NextRequest) {
       .from("admin_roles")
       .select("*")
       .eq("id", admin_role_id)
-      .single() as { data: { id: string; email: string; full_name: string; role: string; status: string } | null; error: any };
+      .single() as { data: { id: string; email: string; full_name: string; role: string; status: string; is_ministry_leader?: boolean; pending_ministry_id?: string } | null; error: any };
 
     if (fetchError || !pendingRecord) {
       return NextResponse.json({ error: "Request not found" }, { status: 404 });
@@ -91,6 +91,18 @@ export async function POST(req: NextRequest) {
     if (updateError) {
       console.error("[APPROVE USER] Failed to link user_id:", updateError);
       return NextResponse.json({ error: "User created but failed to link role record" }, { status: 500 });
+    }
+
+    // 5b. If this was a ministry leader request, link them to their ministry now that we have a real user_id
+    const pendingRecordAny = pendingRecord as any;
+    if (pendingRecordAny.is_ministry_leader && pendingRecordAny.pending_ministry_id) {
+      const { error: linkError } = await supabaseAdmin
+        .from("ministry_leaders")
+        .insert([{ ministry_id: pendingRecordAny.pending_ministry_id, user_id: newUser.user.id }] as any);
+      if (linkError) {
+        console.error("[APPROVE USER] Failed to link ministry leader:", linkError);
+        // Don't fail the whole approval over this — the role/login still works, just flag it
+      }
     }
 
     // 6. Send credentials via Brevo (best-effort — doesn't block the response)

@@ -1,42 +1,3 @@
-// ROUTING FIX INSTRUCTIONS:
-// 
-// The sidebar shows on the login page because AdminLayout wraps ALL /admin routes.
-// To fix this, reorganize your admin folder like this:
-//
-//  app/admin/
-//  ├── (auth)/
-//  │   ├── layout.tsx        ← blank layout (no sidebar)
-//  │   └── page.tsx          ← this login page
-//  ├── (portal)/
-//  │   ├── layout.tsx        ← AdminLayout with sidebar
-//  │   ├── dashboard/page.tsx
-//  │   ├── add-member/page.tsx
-//  │   ├── ministries/page.tsx
-//  │   ├── analytics/page.tsx
-//  │   └── settings/page.tsx
-//
-// The (auth) and (portal) folders are "route groups" — parentheses mean
-// Next.js ignores them in the URL. So /admin still works as login,
-// and /admin/dashboard still works. They just get different layouts.
-//
-// ── app/admin/(auth)/layout.tsx ──────────────────────────────────────
-// export default function AuthLayout({ children }: { children: React.ReactNode }) {
-//   return <>{children}</>
-// }
-//
-// ── app/admin/(portal)/layout.tsx ────────────────────────────────────
-// import AdminSidebar from '@/components/AdminSidebar'
-// export default function AdminLayout({ children }: { children: React.ReactNode }) {
-//   return (
-//     <div className="flex bg-[#f7f9fb] min-h-screen overflow-hidden">
-//       <AdminSidebar />
-//       <div className="flex-1 lg:ml-64 overflow-y-auto min-h-screen">
-//         {children}
-//       </div>
-//     </div>
-//   )
-// }
-
 "use client";
 
 import { useState } from "react";
@@ -58,18 +19,31 @@ export default function AdminLoginPage() {
     setError("");
 
     const supabase = getSupabaseClient();
-    const { error: authError } = await supabase.auth.signInWithPassword({
+    const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
 
-    if (authError) {
+    if (authError || !authData.session) {
       setError("Invalid credentials. Please try again.");
       setLoading(false);
       return;
     }
 
-    router.push("/admin/dashboard");
+    // Check if this user is a ministry leader — route them to their scoped dashboard instead
+    const { data: roleData } = await supabase
+      .from("admin_roles")
+      .select("is_ministry_leader, role")
+      .eq("user_id", authData.session.user.id)
+      .single() as { data: { is_ministry_leader: boolean; role: string } | null };
+
+    setLoading(false);
+
+    if (roleData?.is_ministry_leader && roleData.role !== "super_admin") {
+      router.push("/admin/ministry-dashboard");
+    } else {
+      router.push("/admin/dashboard");
+    }
   };
 
   return (

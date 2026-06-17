@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import { getSupabaseClient } from '@/lib/supabase'
+import { useAdminAccess } from '@/lib/use-admin-permissions'
 
 type GivingRecord = {
   id: string
@@ -41,8 +42,7 @@ export default function GivingPage() {
   const router = useRouter()
   const supabase = getSupabaseClient()
 
-  const [authChecked, setAuthChecked] = useState(false)
-  const [isSuperAdmin, setIsSuperAdmin] = useState(false)
+  const access = useAdminAccess()
   const [records, setRecords] = useState<GivingRecord[]>([])
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -55,17 +55,9 @@ export default function GivingPage() {
   const showToast = (msg: string) => { setToast(msg); setTimeout(() => setToast(null), 3000) }
 
   useEffect(() => {
-    supabase.auth.getSession().then(async ({ data }) => {
-      if (!data.session) { router.replace('/admin'); return }
-      const { data: roleData } = await supabase
-        .from('admin_roles').select('role').eq('user_id', data.session.user.id).single() as { data: { role: string } | null }
-      if (roleData?.role === 'super_admin') {
-        setIsSuperAdmin(true)
-        fetchRecords()
-      }
-      setAuthChecked(true)
-    })
-  }, [])
+    if (access.loading) return
+    if (access.isSuperAdmin) fetchRecords()
+  }, [access.loading])
 
   const fetchRecords = async () => {
     setLoading(true)
@@ -116,11 +108,11 @@ export default function GivingPage() {
   const formatCurrency = (amount: number, currency: string) =>
     new Intl.NumberFormat('en-NG', { style: 'currency', currency: currency || 'NGN', maximumFractionDigits: 0 }).format(amount)
 
-  if (!authChecked) {
+  if (access.loading) {
     return <div className="min-h-screen bg-[#f7f9fb] flex items-center justify-center"><p className="text-[#45464e]">Loading...</p></div>
   }
 
-  if (!isSuperAdmin) {
+  if (!access.isSuperAdmin) {
     return (
       <div className="min-h-screen bg-[#f7f9fb] flex items-center justify-center p-6">
         <div className="text-center max-w-sm">
