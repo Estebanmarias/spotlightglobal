@@ -145,12 +145,15 @@ export default function SettingsPage() {
     fetchTeam()
   }
 
-  const handleRoleChange = async (id: string, newRole: string) => {
-    const { error } = await supabase.from('admin_roles').update({ role: newRole } as any).eq('id', id)
-    if (error) return showToast('Error updating role')
-    showToast('Role updated')
-    fetchTeam()
-  }
+ const handleRoleChange = async (id: string, newRole: string) => {
+  const { error } = await (supabase
+    .from('admin_roles') as any)
+    .update({ role: newRole })
+    .eq('id', id)
+  if (error) return showToast('Error updating role')
+  showToast('Role updated')
+  fetchTeam()
+}
 
   const handleRemove = async (member: AdminRole) => {
     if (member.user_id === currentUserId) return showToast("You can't remove your own access")
