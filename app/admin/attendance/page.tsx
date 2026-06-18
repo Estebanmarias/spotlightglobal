@@ -94,12 +94,12 @@ export default function AttendancePage() {
     }
 
     if (editTarget) {
-      const { error } = await supabase.from('attendance_records').update(payload as any).eq('id', editTarget.id)
+     const { error } = await (supabase.from('attendance_records') as any).update(payload).eq('id', editTarget.id)
       setSaving(false)
       if (error) return showToast('Error updating record')
       showToast('Attendance updated')
     } else {
-      const { error } = await supabase.from('attendance_records').insert([payload] as any)
+      const { error } = await (supabase.from('attendance_records') as any).insert([payload])
       setSaving(false)
       if (error) {
         if (error.code === '23505') return showToast('A record for this date already exists — edit it instead')
