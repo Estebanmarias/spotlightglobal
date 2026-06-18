@@ -230,10 +230,10 @@ function EditMemberModal({
     setSaving(true)
     setError('')
 
-    const { error: updateError } = await supabase
-      .from('members')
-      .update({ ...form } as any)
-      .eq('id', member.id) as any   // ← This cast fixes the TS error
+      const { error: updateError } = await (supabase
+      .from('members') as any)
+      .update({ ...form })
+      .eq('id', member.id)
 
     setSaving(false)
     if (updateError) {
