@@ -222,17 +222,19 @@ function EditMemberModal({
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
 
-  const handleSave = async () => {
+    const handleSave = async () => {
     if (!form.first_name || !form.last_name || !form.email) {
       setError('First name, last name, and email are required.')
       return
     }
     setSaving(true)
     setError('')
-        const { error: updateError } = await supabase
+
+    const { error: updateError } = await supabase
       .from('members')
       .update({ ...form } as any)
-      .eq('id', member.id)
+      .eq('id', member.id) as any   // ← This cast fixes the TS error
+
     setSaving(false)
     if (updateError) {
       setError(updateError.code === '23505' ? 'This email is already in use.' : 'Error saving changes.')
