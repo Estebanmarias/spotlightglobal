@@ -102,14 +102,14 @@ export default function SettingsPage() {
     if (!inviteEmail || !inviteName) return showToast('Fill in name and email')
     if (invitePermissions.length === 0) return showToast('Select at least one page they can access')
     setInviting(true)
-    const { error } = await supabase.from('admin_roles').insert([{
+    const { error } = await (supabase.from('admin_roles') as any).insert([{
       email: inviteEmail.toLowerCase().trim(),
       full_name: inviteName,
       role: inviteRole,
       status: 'pending',
       permissions: invitePermissions,
       invited_by: currentUserId,
-    }] as any)
+    }])
     setInviting(false)
     if (error) {
       if (error.code === '23505') return showToast('This email already has a request or account')
@@ -137,7 +137,7 @@ export default function SettingsPage() {
     if (!editingPermsFor) return
     if (editPermissions.length === 0) return showToast('Select at least one page')
     setSavingPerms(true)
-    const { error } = await supabase.from('admin_roles').update({ permissions: editPermissions } as any).eq('id', editingPermsFor.id)
+    const { error } = await (supabase.from('admin_roles') as any).update({ permissions: editPermissions }).eq('id', editingPermsFor.id)
     setSavingPerms(false)
     if (error) return showToast('Error updating permissions')
     showToast(`${editingPermsFor.full_name}'s access updated`)
