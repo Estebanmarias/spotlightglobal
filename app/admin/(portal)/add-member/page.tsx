@@ -233,7 +233,7 @@ function EditMemberModal({
     const { error: updateError } = await (supabase
     .from('members') as any)
     .update(form)
-    .eq('id', member.id)
+    .eq('id', member.id) as any
     setSaving(false)
     if (updateError) {
       setError(updateError.code === '23505' ? 'This email is already in use.' : 'Error saving changes.')
