@@ -1,10 +1,12 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { getSupabaseClient } from '@/lib/supabase'
 import { useAdminAccess } from '@/lib/use-admin-permissions'
+import { useEffect } from 'react'
 
+// ── Types ─────────────────────────────────────────────────────────────
 type Ministry = {
   id: string
   name: string
@@ -45,9 +47,12 @@ const emptyForm = {
   tag: '', tag_color: 'bg-[#fdc425] text-[#6d5200]', image: '',
 }
 
+type AssignMode = 'record' | 'existing' | 'new'
+
 export default function MinistriesPage() {
   const supabase = getSupabaseClient()
   const access = useAdminAccess('ministries')
+
   const [ministries, setMinistries] = useState<Ministry[]>([])
   const [loading, setLoading] = useState(true)
   const [hovered, setHovered] = useState<string | null>(null)
@@ -57,24 +62,25 @@ export default function MinistriesPage() {
   const [editMinistry, setEdit] = useState<Ministry | null>(null)
   const [saving, setSaving] = useState(false)
   const [toast, setToast] = useState<string | null>(null)
+  const [form, setForm] = useState(emptyForm)
 
-  // Assign leader
+  // ── Assign Leader state ──
   const [assignTarget, setAssignTarget] = useState<Ministry | null>(null)
-  const [existingAdmins, setExistingAdmins] = useState<{ id: string; user_id: string | null; full_name: string; email: string; status: string }[]>([])
+  const [assignMode, setAssignMode] = useState<AssignMode>('record')
+  const [existingAdmins, setExistingAdmins] = useState<{ id: string; user_id: string | null; full_name: string; email: string }[]>([])
   const [currentLeaders, setCurrentLeaders] = useState<{ user_id: string; full_name: string; email: string }[]>([])
-  const [assignMode, setAssignMode] = useState<'existing' | 'new'>('existing')
   const [selectedAdminId, setSelectedAdminId] = useState('')
   const [newLeaderName, setNewLeaderName] = useState('')
   const [newLeaderEmail, setNewLeaderEmail] = useState('')
+  const [recordLeaderName, setRecordLeaderName] = useState('')
   const [assigning, setAssigning] = useState(false)
-  const [form, setForm] = useState(emptyForm)
 
   const showToast = (msg: string) => {
     setToast(msg)
     setTimeout(() => setToast(null), 3000)
   }
 
-  // ── Fetch ──
+  // ── Fetch ministries ──
   const fetchMinistries = async () => {
     setLoading(true)
     const { data, error } = await supabase
@@ -87,84 +93,7 @@ export default function MinistriesPage() {
 
   useEffect(() => { if (!access.loading) fetchMinistries() }, [access.loading])
 
-  // ── Assign Leader logic ──
-  const openAssignLeader = async (m: Ministry) => {
-    setAssignTarget(m)
-    setAssignMode('existing')
-    setSelectedAdminId('')
-    setNewLeaderName('')
-    setNewLeaderEmail('')
-
-    const { data: admins } = await supabase
-      .from('admin_roles')
-      .select('id, user_id, full_name, email, status')
-      .eq('role', 'admin')
-      .eq('status', 'approved') as { data: { id: string; user_id: string | null; full_name: string; email: string; status: string }[] | null }
-    setExistingAdmins(admins || [])
-
-    const { data: leaderLinks } = await supabase
-      .from('ministry_leaders')
-      .select('user_id')
-      .eq('ministry_id', m.id) as { data: { user_id: string }[] | null }
-
-    if (leaderLinks && leaderLinks.length > 0) {
-      const userIds = leaderLinks.map(l => l.user_id)
-      const { data: leaderProfiles } = await supabase
-        .from('admin_roles')
-        .select('user_id, full_name, email')
-        .in('user_id', userIds) as { data: { user_id: string; full_name: string; email: string }[] | null }
-      setCurrentLeaders(leaderProfiles || [])
-    } else {
-      setCurrentLeaders([])
-    }
-  }
-
-  const handleAssignExisting = async () => {
-    if (!assignTarget || !selectedAdminId) return showToast('Select an admin first')
-    const admin = existingAdmins.find(a => a.id === selectedAdminId)
-    if (!admin || !admin.user_id) return showToast('This admin has no active login yet')
-
-    setAssigning(true)
-    const { error: linkError } = await supabase.from('ministry_leaders').insert([{
-      ministry_id: assignTarget.id,
-      user_id: admin.user_id,
-    }] as any)
-
-    if (linkError) {
-      setAssigning(false)
-      if (linkError.code === '23505') return showToast('This admin already leads this ministry')
-      return showToast('Error assigning leader')
-    }
-
-    await supabase.from('admin_roles').update({ is_ministry_leader: true } as any).eq('id', admin.id)
-    setAssigning(false)
-    showToast('Leader assigned')
-    setAssignTarget(null)
-    fetchMinistries()
-  }
-
-  const handleCreateNewLeader = async () => {
-    if (!assignTarget || !newLeaderName || !newLeaderEmail) return showToast('Fill in name and email')
-    setAssigning(true)
-    const { error } = await supabase.from('admin_roles').insert([{
-      email: newLeaderEmail.toLowerCase().trim(),
-      full_name: newLeaderName,
-      role: 'admin',
-      status: 'pending',
-      permissions: ['dashboard'],
-      is_ministry_leader: true,
-      pending_ministry_id: assignTarget.id,
-    }] as any)
-    setAssigning(false)
-    if (error) {
-      if (error.code === '23505') return showToast('This email already has a request or account')
-      return showToast('Error creating leader request')
-    }
-    showToast('Leader request submitted — approve it in Settings to activate their login')
-    setAssignTarget(null)
-  }
-
-  // ── Open modals ──
+  // ── Add / Edit ministry ──
   const openAdd = () => {
     setForm(emptyForm)
     setEdit(null)
@@ -184,7 +113,6 @@ export default function MinistriesPage() {
     setShowModal(true)
   }
 
-  // ── Save ──
   const handleSave = async () => {
     if (!form.name || !form.leader) return
     setSaving(true)
@@ -204,11 +132,11 @@ export default function MinistriesPage() {
     }
 
     if (editMinistry) {
-      const { error } = await supabase.from('ministries').update(payload as any).eq('id', editMinistry.id)
+      const { error } = await (supabase.from('ministries') as any).update(payload).eq('id', editMinistry.id)
       if (error) { showToast('Error updating ministry'); setSaving(false); return }
       showToast('Ministry updated')
     } else {
-      const { error } = await supabase.from('ministries').insert([payload] as any)
+      const { error } = await (supabase.from('ministries') as any).insert([payload])
       if (error) { showToast('Error adding ministry'); setSaving(false); return }
       showToast('Ministry added')
     }
@@ -219,7 +147,6 @@ export default function MinistriesPage() {
     fetchMinistries()
   }
 
-  // ── Delete ──
   const handleDelete = async () => {
     if (!deleteTarget) return
     const { error } = await supabase.from('ministries').delete().eq('id', deleteTarget.id)
@@ -227,6 +154,104 @@ export default function MinistriesPage() {
     setDeleteTarget(null)
     if (detailMinistry?.id === deleteTarget.id) setDetail(null)
     showToast('Ministry removed')
+    fetchMinistries()
+  }
+
+  // ── Assign Leader logic ──
+  const openAssignLeader = async (m: Ministry) => {
+    setAssignTarget(m)
+    setAssignMode('record')
+    setSelectedAdminId('')
+    setNewLeaderName('')
+    setNewLeaderEmail('')
+    setRecordLeaderName(m.leader || '')
+
+    const { data: admins } = await supabase
+      .from('admin_roles')
+      .select('id, user_id, full_name, email')
+      .eq('role', 'admin')
+      .eq('status', 'approved') as { data: { id: string; user_id: string | null; full_name: string; email: string }[] | null }
+    setExistingAdmins(admins || [])
+
+    const { data: leaderLinks } = await supabase
+      .from('ministry_leaders')
+      .select('user_id')
+      .eq('ministry_id', m.id) as { data: { user_id: string }[] | null }
+
+    if (leaderLinks && leaderLinks.length > 0) {
+      const userIds = leaderLinks.map(l => l.user_id)
+      const { data: leaderProfiles } = await supabase
+        .from('admin_roles')
+        .select('user_id, full_name, email')
+        .in('user_id', userIds) as { data: { user_id: string; full_name: string; email: string }[] | null }
+      setCurrentLeaders(leaderProfiles || [])
+    } else {
+      setCurrentLeaders([])
+    }
+  }
+
+  // Option 1: just a name on record — no login, no admin_roles row, just updates the
+  // ministry's display "leader" text field.
+  const handleSaveRecordOnly = async () => {
+    if (!assignTarget || !recordLeaderName.trim()) return showToast('Enter a name')
+    setAssigning(true)
+    const { error } = await (supabase.from('ministries') as any)
+      .update({ leader: recordLeaderName.trim() })
+      .eq('id', assignTarget.id)
+    setAssigning(false)
+    if (error) return showToast('Error saving leader name')
+    showToast('Leader name updated \u2014 no portal access granted')
+    setAssignTarget(null)
+    fetchMinistries()
+  }
+
+  // Option 2: link an existing approved admin as a real portal-access leader
+  const handleAssignExisting = async () => {
+    if (!assignTarget || !selectedAdminId) return showToast('Select an admin first')
+    const admin = existingAdmins.find(a => a.id === selectedAdminId)
+    if (!admin || !admin.user_id) return showToast('This admin has no active login yet')
+
+    setAssigning(true)
+    const { error: linkError } = await (supabase.from('ministry_leaders') as any).insert([{
+      ministry_id: assignTarget.id,
+      user_id: admin.user_id,
+    }])
+
+    if (linkError) {
+      setAssigning(false)
+      if (linkError.code === '23505') return showToast('This admin already leads this ministry')
+      return showToast('Error assigning leader')
+    }
+
+    await (supabase.from('admin_roles') as any).update({ is_ministry_leader: true }).eq('id', admin.id)
+    await (supabase.from('ministries') as any).update({ leader: admin.full_name }).eq('id', assignTarget.id)
+    setAssigning(false)
+    showToast('Leader assigned with portal access')
+    setAssignTarget(null)
+    fetchMinistries()
+  }
+
+  // Option 3: create a brand new admin request scoped to this ministry, pending Setman approval
+  const handleCreateNewLeader = async () => {
+    if (!assignTarget || !newLeaderName || !newLeaderEmail) return showToast('Fill in name and email')
+    setAssigning(true)
+    const { error } = await (supabase.from('admin_roles') as any).insert([{
+      email: newLeaderEmail.toLowerCase().trim(),
+      full_name: newLeaderName,
+      role: 'admin',
+      status: 'pending',
+      permissions: ['dashboard'],
+      is_ministry_leader: true,
+      pending_ministry_id: assignTarget.id,
+    }])
+    setAssigning(false)
+    if (error) {
+      if (error.code === '23505') return showToast('This email already has a request or account')
+      return showToast('Error creating leader request')
+    }
+    await (supabase.from('ministries') as any).update({ leader: newLeaderName }).eq('id', assignTarget.id)
+    showToast('Leader request submitted \u2014 approve it in Settings to activate their login')
+    setAssignTarget(null)
     fetchMinistries()
   }
 
@@ -241,7 +266,7 @@ export default function MinistriesPage() {
           <div className="pl-12 lg:pl-0">
             <h2 className="text-[20px] sm:text-[24px] font-bold text-[#081534]">Ministries</h2>
             <p className="text-[12px] text-[#45464e]">
-              {loading ? 'Loading...' : `${ministries.length} active ministries · ${totalMembers.toLocaleString()} total participants`}
+              {loading ? 'Loading...' : `${ministries.length} active ministries \u00b7 ${totalMembers.toLocaleString()} total participants`}
             </p>
           </div>
           <button onClick={openAdd}
@@ -322,13 +347,16 @@ export default function MinistriesPage() {
                           <div><p className="text-[10px] text-[#45464e] font-semibold">Meeting</p><p className="text-[13px] text-[#081534] font-bold truncate">{m.meeting_day}</p></div>
                         </div>
                         <div className="flex items-center justify-end gap-1 pt-2 border-t border-[#f2f4f6]">
-                          <button onClick={() => setDetail(m)} className="p-2 text-[#45464e] hover:text-[#081534] hover:bg-[#f2f4f6] rounded-lg transition-all shrink-0">
+                          <button type="button" onClick={() => openAssignLeader(m)} className="p-2 text-[#45464e] hover:text-[#081534] hover:bg-[#f2f4f6] rounded-lg transition-all shrink-0" title="Assign Leader">
+                            <span className="material-symbols-outlined text-[18px]">badge</span>
+                          </button>
+                          <button type="button" onClick={() => setDetail(m)} className="p-2 text-[#45464e] hover:text-[#081534] hover:bg-[#f2f4f6] rounded-lg transition-all shrink-0">
                             <span className="material-symbols-outlined text-[18px]">open_in_new</span>
                           </button>
-                          <button onClick={() => openEdit(m)} className="p-2 text-[#45464e] hover:text-[#081534] hover:bg-[#f2f4f6] rounded-lg transition-all shrink-0">
+                          <button type="button" onClick={() => openEdit(m)} className="p-2 text-[#45464e] hover:text-[#081534] hover:bg-[#f2f4f6] rounded-lg transition-all shrink-0">
                             <span className="material-symbols-outlined text-[18px]">edit</span>
                           </button>
-                          <button onClick={() => setDeleteTarget(m)} className="p-2 text-[#45464e] hover:text-[#ba1a1a] hover:bg-[#ffdad6] rounded-lg transition-all shrink-0">
+                          <button type="button" onClick={() => setDeleteTarget(m)} className="p-2 text-[#45464e] hover:text-[#ba1a1a] hover:bg-[#ffdad6] rounded-lg transition-all shrink-0">
                             <span className="material-symbols-outlined text-[18px]">delete</span>
                           </button>
                         </div>
@@ -354,13 +382,16 @@ export default function MinistriesPage() {
                         </div>
                       </div>
                       <div className="mt-5 flex gap-2">
-                        <button onClick={() => setDetail(m)} className="flex-1 bg-[#f2f4f6] text-[#081534] text-[12px] py-2.5 rounded-lg hover:bg-[#eceef0] transition-colors font-semibold">
+                        <button type="button" onClick={() => setDetail(m)} className="flex-1 bg-[#f2f4f6] text-[#081534] text-[12px] py-2.5 rounded-lg hover:bg-[#eceef0] transition-colors font-semibold">
                           View Details
                         </button>
-                        <button onClick={() => openEdit(m)} className="px-3 bg-[#f2f4f6] text-[#45464e] rounded-lg hover:bg-[#eceef0] transition-colors">
+                        <button type="button" onClick={() => openAssignLeader(m)} className="px-3 bg-[#f2f4f6] text-[#45464e] rounded-lg hover:bg-[#eceef0] transition-colors" title="Assign Leader">
+                          <span className="material-symbols-outlined text-[18px]">badge</span>
+                        </button>
+                        <button type="button" onClick={() => openEdit(m)} className="px-3 bg-[#f2f4f6] text-[#45464e] rounded-lg hover:bg-[#eceef0] transition-colors">
                           <span className="material-symbols-outlined text-[18px]">edit</span>
                         </button>
-                        <button onClick={() => setDeleteTarget(m)} className="px-3 bg-[#f2f4f6] text-[#45464e] rounded-lg hover:bg-[#ffdad6] hover:text-[#ba1a1a] transition-colors">
+                        <button type="button" onClick={() => setDeleteTarget(m)} className="px-3 bg-[#f2f4f6] text-[#45464e] rounded-lg hover:bg-[#ffdad6] hover:text-[#ba1a1a] transition-colors">
                           <span className="material-symbols-outlined text-[18px]">delete</span>
                         </button>
                       </div>
@@ -526,7 +557,7 @@ export default function MinistriesPage() {
                     </div>
                     <div>
                       <p className="text-[14px] font-bold text-[#081534]">{form.name || 'Ministry Name'}</p>
-                      <p className="text-[12px] text-[#45464e]">{form.leader || 'Leader name'} · {form.meeting_day}</p>
+                      <p className="text-[12px] text-[#45464e]">{form.leader || 'Leader name'} \u00b7 {form.meeting_day}</p>
                     </div>
                   </div>
                 </div>
@@ -538,6 +569,124 @@ export default function MinistriesPage() {
                   <button onClick={handleSave} disabled={!form.name || !form.leader || saving}
                     className="flex-1 py-3 bg-[#081534] text-white rounded-xl text-[13px] font-bold hover:opacity-90 disabled:opacity-40">
                     {saving ? 'Saving...' : editMinistry ? 'Save Changes' : 'Add Ministry'}
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
+      {/* Assign Leader Modal */}
+      <AnimatePresence>
+        {assignTarget && (
+          <>
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/50 z-[60] backdrop-blur-sm" onClick={() => setAssignTarget(null)} />
+            <motion.div initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }} transition={{ type: 'spring', damping: 25, stiffness: 280 }}
+              className="fixed inset-0 z-[70] flex items-center justify-center p-4">
+              <div className="bg-white rounded-2xl w-full max-w-[480px] max-h-[85vh] overflow-y-auto shadow-2xl">
+                <div className="flex items-center justify-between px-6 py-5 border-b border-[#c6c6cf]">
+                  <div>
+                    <h3 className="text-[18px] font-bold text-[#081534]">Assign Leader</h3>
+                    <p className="text-[12px] text-[#45464e] mt-0.5">{assignTarget.name}</p>
+                  </div>
+                  <button onClick={() => setAssignTarget(null)} className="w-8 h-8 flex items-center justify-center rounded-lg text-[#45464e] hover:bg-[#f2f4f6]">
+                    <span className="material-symbols-outlined text-[20px]">close</span>
+                  </button>
+                </div>
+
+                <div className="px-6 py-6 space-y-5">
+                  {currentLeaders.length > 0 && (
+                    <div>
+                      <p className="text-[12px] font-bold text-[#45464e] uppercase tracking-wide mb-2">Leaders with Portal Access</p>
+                      <div className="space-y-2">
+                        {currentLeaders.map(l => (
+                          <div key={l.user_id} className="flex items-center gap-3 p-3 bg-[#f7f9fb] rounded-lg">
+                            <div className="w-8 h-8 rounded-full bg-[#081534] text-white flex items-center justify-center text-[11px] font-bold">
+                              {l.full_name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0,2)}
+                            </div>
+                            <div>
+                              <p className="text-[13px] font-semibold text-[#191c1e]">{l.full_name}</p>
+                              <p className="text-[11px] text-[#45464e]">{l.email}</p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="flex bg-[#f2f4f6] rounded-lg p-1 gap-1">
+                    <button type="button" onClick={() => setAssignMode('record')}
+                      className={`flex-1 py-2 px-1 rounded-md text-[10px] sm:text-[11px] font-semibold transition-all leading-tight ${assignMode === 'record' ? 'bg-white text-[#081534] shadow-sm' : 'text-[#45464e]'}`}>
+                      Name Only
+                    </button>
+                    <button type="button" onClick={() => setAssignMode('existing')}
+                      className={`flex-1 py-2 px-1 rounded-md text-[10px] sm:text-[11px] font-semibold transition-all leading-tight ${assignMode === 'existing' ? 'bg-white text-[#081534] shadow-sm' : 'text-[#45464e]'}`}>
+                      Existing
+                    </button>
+                    <button type="button" onClick={() => setAssignMode('new')}
+                      className={`flex-1 py-2 px-1 rounded-md text-[10px] sm:text-[11px] font-semibold transition-all leading-tight ${assignMode === 'new' ? 'bg-white text-[#081534] shadow-sm' : 'text-[#45464e]'}`}>
+                      New Leader
+                    </button>
+                  </div>
+
+                  {assignMode === 'record' && (
+                    <div className="space-y-3">
+                      <p className="text-[12px] text-[#76777f]">
+                        Just record who leads this department on paper. They will not get a login or any portal access.
+                      </p>
+                      <div className="flex flex-col gap-2">
+                        <label className="text-[12px] font-bold text-[#45464e] uppercase tracking-wide">Leader Name</label>
+                        <input value={recordLeaderName} onChange={e => setRecordLeaderName(e.target.value)}
+                          placeholder="e.g. Sarah Jenkins" className={inputCls} />
+                      </div>
+                    </div>
+                  )}
+
+                  {assignMode === 'existing' && (
+                    <div className="flex flex-col gap-2">
+                      <label className="text-[12px] font-bold text-[#45464e] uppercase tracking-wide">Select Admin</label>
+                      {existingAdmins.length === 0 ? (
+                        <p className="text-[13px] text-[#76777f]">No approved admins yet. Try "New Leader" instead.</p>
+                      ) : (
+                        <select value={selectedAdminId} onChange={e => setSelectedAdminId(e.target.value)} className={inputCls}>
+                          <option value="">Choose an admin...</option>
+                          {existingAdmins.map(a => (
+                            <option key={a.id} value={a.id}>{a.full_name} ({a.email})</option>
+                          ))}
+                        </select>
+                      )}
+                      <p className="text-[11px] text-[#76777f] mt-1">This grants them portal access and a Ministry Dashboard login for this department.</p>
+                    </div>
+                  )}
+
+                  {assignMode === 'new' && (
+                    <div className="space-y-4">
+                      <div className="flex flex-col gap-2">
+                        <label className="text-[12px] font-bold text-[#45464e] uppercase tracking-wide">Full Name</label>
+                        <input value={newLeaderName} onChange={e => setNewLeaderName(e.target.value)} placeholder="e.g. Sarah Jenkins" className={inputCls} />
+                      </div>
+                      <div className="flex flex-col gap-2">
+                        <label className="text-[12px] font-bold text-[#45464e] uppercase tracking-wide">Email Address</label>
+                        <input type="email" value={newLeaderEmail} onChange={e => setNewLeaderEmail(e.target.value)} placeholder="leader@thespotlightchurch.org" className={inputCls} />
+                      </div>
+                      <p className="text-[12px] text-[#76777f]">This creates a pending admin request scoped to this ministry. Approve it in Settings \u2192 Team & Access to activate their login.</p>
+                    </div>
+                  )}
+                </div>
+
+                <div className="px-6 py-4 border-t border-[#c6c6cf] flex gap-3">
+                  <button onClick={() => setAssignTarget(null)}
+                    className="flex-1 py-3 border border-[#c6c6cf] text-[#45464e] rounded-xl text-[13px] font-semibold hover:bg-[#f2f4f6]">
+                    Cancel
+                  </button>
+                  <button
+                    onClick={assignMode === 'record' ? handleSaveRecordOnly : assignMode === 'existing' ? handleAssignExisting : handleCreateNewLeader}
+                    disabled={assigning}
+                    className="flex-1 py-3 bg-[#081534] text-white rounded-xl text-[13px] font-bold hover:opacity-90 disabled:opacity-40">
+                    {assigning ? 'Saving...' : assignMode === 'record' ? 'Save Name' : assignMode === 'existing' ? 'Assign Leader' : 'Submit Request'}
                   </button>
                 </div>
               </div>

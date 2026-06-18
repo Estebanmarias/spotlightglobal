@@ -32,14 +32,30 @@ type MinistryMember = {
 
 const inputCls = 'w-full bg-[#f2f4f6] border-b-2 border-transparent focus:border-[#081534] outline-none px-4 py-3 rounded-t-lg text-[14px] transition-colors'
 
-const waLink = (number: string) => {
+const waLink = (number: string, message: string) => {
   const clean = number.replace(/[^\d]/g, '')
-  return `https://wa.me/${clean}`
+  return `https://wa.me/${clean}?text=${encodeURIComponent(message)}`
 }
 
 const tgLink = (handle: string) => {
   const clean = handle.replace('@', '')
   return `https://t.me/${clean}`
+}
+
+const formatReminderDate = (dateStr: string) => {
+  const date = new Date(dateStr + 'T00:00:00')
+  return date.toLocaleDateString('en-NG', { weekday: 'long', month: 'long', day: 'numeric' })
+}
+
+const getNextWeekday = (weekdayName: string) => {
+  const days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday']
+  const targetDay = days.indexOf(weekdayName.replace(/s$/, '').replace(/^./, c => c.toUpperCase()))
+  if (targetDay === -1) return new Date().toISOString().split('T')[0]
+  const today = new Date()
+  const diff = (targetDay + 7 - today.getDay()) % 7
+  const next = new Date(today)
+  next.setDate(today.getDate() + (diff === 0 ? 7 : diff))
+  return next.toISOString().split('T')[0]
 }
 
 export default function MinistryDashboardPage() {
@@ -58,6 +74,10 @@ export default function MinistryDashboardPage() {
   const [adding, setAdding] = useState(false)
   const [toast, setToast] = useState<string | null>(null)
   const [removeTarget, setRemoveTarget] = useState<MinistryMember | null>(null)
+
+  // Reminder state
+  const [showReminderBar, setShowReminderBar] = useState(false)
+  const [reminderDate, setReminderDate] = useState('')
 
   const showToast = (msg: string) => { setToast(msg); setTimeout(() => setToast(null), 3000) }
 
@@ -89,7 +109,10 @@ export default function MinistryDashboardPage() {
       .in('id', ministryIds)
 
     setMyMinistries(ministries || [])
-    if (ministries && ministries.length > 0) setActiveMinistry(ministries[0])
+    if (ministries && ministries.length > 0) {
+      setActiveMinistry(ministries[0])
+      setReminderDate(getNextWeekday(ministries[0].meeting_day || 'Sunday'))
+    }
     setLoading(false)
   }
 
@@ -117,7 +140,10 @@ export default function MinistryDashboardPage() {
   }
 
   useEffect(() => {
-    if (activeMinistry) loadMinistryMembers(activeMinistry.id)
+    if (activeMinistry) {
+      loadMinistryMembers(activeMinistry.id)
+      setReminderDate(getNextWeekday(activeMinistry.meeting_day || 'Sunday'))
+    }
   }, [activeMinistry])
 
   const openAddMember = async () => {
@@ -129,11 +155,11 @@ export default function MinistryDashboardPage() {
   const handleAddMember = async (memberId: string) => {
     if (!activeMinistry) return
     setAdding(true)
-    const { error } = await supabase.from('ministry_members').insert([{
+    const { error } = await (supabase.from('ministry_members') as any).insert([{
       ministry_id: activeMinistry.id,
       member_id: memberId,
       added_by: access.userId,
-    }] as any)
+    }])
     setAdding(false)
     if (error) {
       if (error.code === '23505') return showToast('This member is already in this ministry')
@@ -158,6 +184,17 @@ export default function MinistryDashboardPage() {
     loadMinistryMembers(activeMinistry.id)
   }
 
+  const handleSignOut = async () => {
+    await supabase.auth.signOut()
+    router.replace('/admin')
+  }
+
+  const reminderMessage = (firstName: string) => {
+    if (!activeMinistry || !reminderDate) return ''
+    const dateLabel = formatReminderDate(reminderDate)
+    return `Hello ${firstName}, this is a reminder that ${activeMinistry.name} has a meeting on ${dateLabel}. We look forward to seeing you there!`
+  }
+
   const filteredAllMembers = allMembers.filter(m =>
     `${m.first_name} ${m.last_name}`.toLowerCase().includes(addMemberSearch.toLowerCase()) &&
     !ministryMembers.some(mm => mm.id === m.id)
@@ -173,7 +210,11 @@ export default function MinistryDashboardPage() {
         <div className="text-center max-w-sm">
           <span className="material-symbols-outlined text-[56px] text-[#c6c6cf] block mb-3">church</span>
           <h2 className="text-[18px] font-bold text-[#081534] mb-2">No Ministry Assigned</h2>
-          <p className="text-[13px] text-[#45464e]">You haven't been linked to a ministry yet. Contact Setman to get set up.</p>
+          <p className="text-[13px] text-[#45464e] mb-6">You haven't been linked to a ministry yet. Contact Setman to get set up.</p>
+          <button onClick={handleSignOut}
+            className="px-6 py-2.5 border border-[#c6c6cf] text-[#45464e] rounded-lg text-[13px] font-bold hover:bg-white transition-colors">
+            Sign Out
+          </button>
         </div>
       </div>
     )
@@ -189,14 +230,21 @@ export default function MinistryDashboardPage() {
             <h2 className="text-[20px] sm:text-[24px] font-bold text-[#081534]">Ministry Dashboard</h2>
             <p className="text-[12px] text-[#45464e]">Manage your department's members and details.</p>
           </div>
-          {myMinistries.length > 1 && (
-            <select
-              value={activeMinistry?.id}
-              onChange={e => setActiveMinistry(myMinistries.find(m => m.id === e.target.value) || null)}
-              className="bg-white border border-[#c6c6cf] rounded-lg px-3 py-2 text-[13px] font-semibold text-[#081534] focus:outline-none focus:border-[#081534]">
-              {myMinistries.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
-            </select>
-          )}
+          <div className="flex items-center gap-2">
+            {myMinistries.length > 1 && (
+              <select
+                value={activeMinistry?.id}
+                onChange={e => setActiveMinistry(myMinistries.find(m => m.id === e.target.value) || null)}
+                className="bg-white border border-[#c6c6cf] rounded-lg px-3 py-2 text-[13px] font-semibold text-[#081534] focus:outline-none focus:border-[#081534]">
+                {myMinistries.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
+              </select>
+            )}
+            <button onClick={handleSignOut}
+              className="flex items-center gap-1.5 px-3 py-2 border border-[#c6c6cf] text-[#45464e] rounded-lg text-[12px] font-semibold hover:bg-[#f2f4f6] hover:text-[#ba1a1a] transition-colors">
+              <span className="material-symbols-outlined text-[16px]">logout</span>
+              <span className="hidden sm:inline">Sign Out</span>
+            </button>
+          </div>
         </div>
       </div>
 
@@ -231,6 +279,39 @@ export default function MinistryDashboardPage() {
             </div>
           </motion.div>
 
+          {/* Reminder bar */}
+          <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.04 }}
+            className="bg-white border border-[#fdc425] rounded-xl p-5 sm:p-6">
+            <div className="flex items-center justify-between gap-3 flex-wrap">
+              <div className="flex items-center gap-3">
+                <span className="material-symbols-outlined text-[#785a00] text-[22px]">notifications_active</span>
+                <div>
+                  <p className="text-[14px] font-bold text-[#081534]">Send Meeting Reminders</p>
+                  <p className="text-[12px] text-[#45464e]">Pick a date, then message each member individually.</p>
+                </div>
+              </div>
+              <button onClick={() => setShowReminderBar(!showReminderBar)}
+                className="px-4 py-2 bg-[#fdc425] text-[#6d5200] rounded-lg text-[12px] font-bold hover:brightness-105 transition-all">
+                {showReminderBar ? 'Hide' : 'Set Up Reminder'}
+              </button>
+            </div>
+
+            {showReminderBar && (
+              <div className="mt-4 pt-4 border-t border-[#f2f4f6] flex flex-col sm:flex-row sm:items-end gap-3">
+                <div className="flex flex-col gap-1.5 flex-1 max-w-xs">
+                  <label className="text-[11px] font-bold text-[#45464e] uppercase tracking-wide">Meeting Date</label>
+                  <input type="date" value={reminderDate} onChange={e => setReminderDate(e.target.value)} className={inputCls} />
+                </div>
+                {reminderDate && (
+                  <p className="text-[12px] text-[#785a00] font-semibold pb-3">
+                    Reminders will mention: <span className="font-bold">{formatReminderDate(reminderDate)}</span>
+                  </p>
+                )}
+              </div>
+            )}
+          </motion.div>
+
           {/* Members list */}
           <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.08 }}
@@ -254,7 +335,7 @@ export default function MinistryDashboardPage() {
             ) : (
               <div className="space-y-2">
                 {ministryMembers.map(m => (
-                  <div key={m.id} className="flex items-center justify-between p-4 bg-[#f7f9fb] rounded-xl gap-3">
+                  <div key={m.id} className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-4 bg-[#f7f9fb] rounded-xl gap-3">
                     <div className="flex items-center gap-3 min-w-0">
                       <div className="w-10 h-10 rounded-full bg-[#081534] text-white flex items-center justify-center text-[12px] font-bold shrink-0">
                         {m.first_name[0]}{m.last_name[0]}
@@ -264,19 +345,35 @@ export default function MinistryDashboardPage() {
                         <p className="text-[11px] text-[#45464e] truncate">{m.email}</p>
                       </div>
                     </div>
-                    <div className="flex items-center gap-2 shrink-0">
-                      {m.whatsapp && (
-                        <a href={waLink(m.whatsapp)} target="_blank" rel="noopener noreferrer"
-                          className="p-2 rounded-lg bg-green-50 text-green-700 hover:bg-green-100 transition-colors" title="Message on WhatsApp">
-                          <span className="material-symbols-outlined text-[18px]">chat</span>
-                        </a>
-                      )}
-                      {m.telegram && (
-                        <a href={tgLink(m.telegram)} target="_blank" rel="noopener noreferrer"
-                          className="p-2 rounded-lg bg-blue-50 text-blue-700 hover:bg-blue-100 transition-colors" title="Message on Telegram">
-                          <span className="material-symbols-outlined text-[18px]">send</span>
-                        </a>
-                      )}
+                    <div className="flex items-center gap-2 shrink-0 sm:justify-end">
+                      {(() => {
+                        const waNumber = m.whatsapp || m.phone
+                        return (
+                          <>
+                            {showReminderBar && reminderDate && waNumber && (
+                              <a href={waLink(waNumber, reminderMessage(m.first_name))} target="_blank" rel="noopener noreferrer"
+                                className="p-2 rounded-lg bg-[#fdc425]/20 text-[#785a00] hover:bg-[#fdc425]/30 transition-colors" title="Send reminder via WhatsApp">
+                                <span className="material-symbols-outlined text-[18px]">notifications_active</span>
+                              </a>
+                            )}
+                            {waNumber && (
+                              <a href={waLink(waNumber, '')} target="_blank" rel="noopener noreferrer"
+                                className="p-2 rounded-lg bg-green-50 text-green-700 hover:bg-green-100 transition-colors" title={m.whatsapp ? 'Message on WhatsApp' : 'Message on WhatsApp (using phone number)'}>
+                                <span className="material-symbols-outlined text-[18px]">chat</span>
+                              </a>
+                            )}
+                            {m.telegram && (
+                              <a href={tgLink(m.telegram)} target="_blank" rel="noopener noreferrer"
+                                className="p-2 rounded-lg bg-blue-50 text-blue-700 hover:bg-blue-100 transition-colors" title="Message on Telegram">
+                                <span className="material-symbols-outlined text-[18px]">send</span>
+                              </a>
+                            )}
+                            {!waNumber && !m.telegram && (
+                              <span className="text-[10px] text-[#76777f] italic px-2">No contact on file</span>
+                            )}
+                          </>
+                        )
+                      })()}
                       <button onClick={() => setRemoveTarget(m)}
                         className="p-2 rounded-lg text-[#45464e] hover:text-[#ba1a1a] hover:bg-[#ffdad6] transition-colors">
                         <span className="material-symbols-outlined text-[18px]">person_remove</span>

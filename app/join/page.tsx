@@ -49,7 +49,7 @@ export default function JoinPage() {
   }
 
   return (
-    <main className="flex-grow flex items-center justify-center py-16 px-4 relative overflow-hidden min-h-screen">
+    <main className="flex-grow flex items-center justify-center py-12 sm:py-16 px-4 relative overflow-hidden min-h-screen">
       {/* Ambient blobs */}
       <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-[#ffdf9a]/10 rounded-full blur-[100px] translate-x-1/4 -translate-y-1/2 pointer-events-none" />
       <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-[#081534]/5 rounded-full blur-[80px] -translate-x-1/4 translate-y-1/2 pointer-events-none" />
@@ -59,10 +59,10 @@ export default function JoinPage() {
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4 }}
-          className="text-center mb-10"
+          className="text-center mb-8 sm:mb-10"
         >
-          <h1 className="text-[40px] md:text-[56px] font-bold text-[#081534] mb-4">Join the Family</h1>
-          <p className="text-[18px] leading-[28px] text-[#45464e] max-w-lg mx-auto">
+          <h1 className="text-[32px] sm:text-[44px] md:text-[56px] font-bold text-[#081534] mb-3 sm:mb-4">Join the Family</h1>
+          <p className="text-[15px] sm:text-[18px] leading-[24px] sm:leading-[28px] text-[#45464e] max-w-lg mx-auto">
             We are thrilled that you've chosen to grow with us. Fill out the form below to start your journey.
           </p>
         </motion.div>
@@ -72,20 +72,20 @@ export default function JoinPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, delay: 0.1 }}
-          className="bg-white rounded-xl border border-[#c6c6cf] p-8 md:p-12"
+          className="bg-white rounded-xl border border-[#c6c6cf] p-5 sm:p-8 md:p-12"
           style={{ boxShadow: '0 4px 60px -12px rgba(8,21,52,0.08)' }}
         >
-          <form onSubmit={handleSubmit} className="space-y-8">
+          <form onSubmit={handleSubmit} className="space-y-6 sm:space-y-8">
 
             {/* Personal Info */}
-            <div className="space-y-6">
+            <div className="space-y-5 sm:space-y-6">
               <div className="flex items-center gap-2">
                 <span className="material-symbols-outlined text-[#081534]"
                   style={{ fontVariationSettings: "'FILL' 1" }}>person</span>
-                <h2 className="text-[24px] font-semibold text-[#081534]">Personal Info</h2>
+                <h2 className="text-[20px] sm:text-[24px] font-semibold text-[#081534]">Personal Info</h2>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5 sm:gap-6">
                 <div>
                   <label className={labelClass}>First Name</label>
                   <input name="first_name" type="text" placeholder="Jane" required
@@ -129,16 +129,16 @@ export default function JoinPage() {
               <div className="flex items-center gap-2">
                 <span className="material-symbols-outlined text-[#081534]"
                   style={{ fontVariationSettings: "'FILL' 1" }}>favorite</span>
-                <h2 className="text-[24px] font-semibold text-[#081534]">Interests</h2>
+                <h2 className="text-[20px] sm:text-[24px] font-semibold text-[#081534]">Interests</h2>
               </div>
-              <p className="text-[16px] text-[#45464e]">Select the areas where you'd like to get involved:</p>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <p className="text-[14px] sm:text-[16px] text-[#45464e]">Select the areas where you'd like to get involved:</p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                 {interests.map(interest => (
                   <label key={interest}
-                    className="flex items-center p-4 rounded-lg bg-[#f7f9fb] hover:bg-[#e6e8ea] transition-colors cursor-pointer group border border-[#c6c6cf]">
+                    className="flex items-center p-3.5 sm:p-4 rounded-lg bg-[#f7f9fb] hover:bg-[#e6e8ea] transition-colors cursor-pointer group border border-[#c6c6cf]">
                     <input type="checkbox" name="interests" value={interest}
-                      className="w-5 h-5 rounded border-[#76777f] text-[#081534] mr-3" />
-                    <span className="text-[16px] text-[#191c1e] group-hover:text-[#081534] transition-colors">
+                      className="w-5 h-5 rounded border-[#76777f] text-[#081534] mr-3 shrink-0" />
+                    <span className="text-[14px] sm:text-[16px] text-[#191c1e] group-hover:text-[#081534] transition-colors">
                       {interest}
                     </span>
                   </label>
@@ -154,12 +154,12 @@ export default function JoinPage() {
               <motion.button
                 whileTap={{ scale: 0.97 }}
                 type="submit" disabled={loading}
-                className="w-full bg-[#fdc425] text-[#6d5200] text-[24px] font-bold py-5 rounded-xl shadow-lg hover:brightness-110 transition-all disabled:opacity-70 flex items-center justify-center gap-3"
+                className="w-full bg-[#fdc425] text-[#6d5200] text-[16px] sm:text-[20px] md:text-[24px] font-bold py-4 sm:py-5 rounded-xl shadow-lg hover:brightness-110 transition-all disabled:opacity-70 flex items-center justify-center gap-3"
               >
                 {loading ? 'Processing...' : 'Join the Community'}
                 {!loading && <span className="material-symbols-outlined">arrow_forward</span>}
               </motion.button>
-              <p className="text-center text-[12px] text-[#45464e] mt-6">
+              <p className="text-center text-[12px] text-[#45464e] mt-5 sm:mt-6">
                 By joining, you agree to receive inspirational updates from theSpotlightChurch.
               </p>
             </div>

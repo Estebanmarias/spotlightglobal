@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { getSupabaseClient } from '@/lib/supabase'
 import { motion, AnimatePresence } from 'framer-motion'
-import { ALL_PAGES, PageKey } from '@/lib/use-admin-permissions'
+import { ALL_PAGES, PageKey, useAdminAccess } from '@/lib/use-admin-permissions'
 
 const ROLES = ['admin'] // Only one Setman (super_admin) can ever exist — not creatable from this form
 const roleLabel = (r: string) => r === 'super_admin' ? 'Setman' : 'Admin'
@@ -61,22 +61,21 @@ export default function SettingsPage() {
 
   const showToast = (msg: string) => { setToast(msg); setTimeout(() => setToast(null), 4000) }
 
+  // Settings is open to every real admin (for their own account/password) — only
+  // pure ministry leaders are blocked here, handled by passing no requirePage and
+  // checking isPureMinistryLeader directly instead of gating on a 'settings' permission
+  // that's intentionally never assignable via the checkbox list.
+  const access = useAdminAccess()
+
   useEffect(() => {
-    supabase.auth.getSession().then(async ({ data }) => {
-      if (!data.session) { router.replace('/admin'); return }
-      setAdminEmail(data.session.user.email ?? '')
-      setCurrentUserId(data.session.user.id)
-
-      const { data: roleData } = await supabase
-        .from('admin_roles').select('role').eq('user_id', data.session.user.id).single() as { data: { role: string } | null }
-      if (roleData?.role) {
-        setCurrentRole(roleData.role)
-        setIsSuperAdmin(roleData.role === 'super_admin')
-      }
-
-      fetchTeam()
-    })
-  }, [])
+    if (access.loading) return
+    if (access.isPureMinistryLeader) { router.replace('/admin/ministry-dashboard'); return }
+    setAdminEmail(access.email)
+    setCurrentUserId(access.userId)
+    setCurrentRole(access.role || 'admin')
+    setIsSuperAdmin(access.isSuperAdmin)
+    fetchTeam()
+  }, [access.loading])
 
   const fetchTeam = async () => {
     setLoadingTeam(true)
@@ -219,7 +218,7 @@ export default function SettingsPage() {
       <div className="bg-white border-b border-[#c6c6cf] px-4 sm:px-8 lg:px-10 py-6">
         <div className="flex items-center justify-between gap-3">
           <div className="pl-12 lg:pl-0">
-            <h1 className="text-[24px] font-bold text-[#081534]">theSpotlightChurch — Settings</h1>
+            <h1 className="text-[24px] font-bold text-[#081534]">Settings</h1>
             <p className="text-[13px] text-[#45464e] mt-1">Manage your account, admin access, and team permissions.</p>
           </div>
           {isSuperAdmin && pendingRequests.length > 0 && (
@@ -390,7 +389,7 @@ export default function SettingsPage() {
               ) : (
                 <div className="space-y-3">
                   {activeTeam.map(m => (
-                    <div key={m.id} className="flex items-center justify-between p-4 bg-[#f2f4f6] rounded-xl gap-3">
+                    <div key={m.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-[#f2f4f6] rounded-xl gap-3">
                       <div className="flex items-center gap-3 min-w-0">
                         <div className="w-10 h-10 rounded-full bg-[#081534] text-white flex items-center justify-center text-[12px] font-bold shrink-0">
                           {m.full_name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
@@ -402,7 +401,7 @@ export default function SettingsPage() {
                           <p className="text-[11px] text-[#45464e] truncate">{m.email}</p>
                         </div>
                       </div>
-                      <div className="flex items-center gap-3 shrink-0">
+                      <div className="flex items-center justify-between sm:justify-end gap-3 sm:shrink-0">
                         {m.role === 'admin' && (
                           <span className="hidden sm:inline-block px-2 py-0.5 text-[10px] font-bold rounded-full bg-[#f2f4f6] text-[#45464e]">
                             {(m.permissions || []).length} page{(m.permissions || []).length === 1 ? '' : 's'}

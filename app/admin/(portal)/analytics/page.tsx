@@ -114,7 +114,7 @@ export default function AnalyticsPage() {
   }
 
   const handleExport = async () => {
-    const { data } = await supabase.from('members').select('*').order('created_at', { ascending: false })
+    const { data } = await supabase.from('members').select('*').order('created_at', { ascending: false }) as { data: any[] | null }
     if (!data) return
     const headers = ['First Name','Last Name','Email','Phone','DOB','Guest Status','Registered']
     const rows = data.map(m => [
@@ -202,10 +202,10 @@ export default function AnalyticsPage() {
               <div className="h-40 bg-[#f2f4f6] rounded-lg animate-pulse" />
             ) : (
               <>
-                <div className="relative h-40 sm:h-48 flex items-end gap-2 px-1">
+                <div className="relative h-40 sm:h-48 flex items-end gap-1.5 sm:gap-2 px-1">
                   {weeklyData.map((w, i) => (
                     <div key={i} className="flex-1 flex flex-col items-center gap-1 group">
-                      <span className="text-[10px] text-[#45464e] font-bold opacity-0 group-hover:opacity-100 transition-opacity">{w.count}</span>
+                      <span className="text-[9px] sm:text-[10px] text-[#45464e] font-bold opacity-60 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">{w.count}</span>
                       <div className="w-full bg-[#f2f4f6] rounded-t overflow-hidden" style={{ height: '160px' }}>
                         <div className="w-full bg-[#fdc425] rounded-t transition-all group-hover:brightness-110"
                           style={{ height: `${(w.count / maxWeekly) * 100}%`, marginTop: `${100 - (w.count / maxWeekly) * 100}%` }} />
@@ -213,7 +213,7 @@ export default function AnalyticsPage() {
                     </div>
                   ))}
                 </div>
-                <div className="flex justify-between mt-3 px-1 text-[11px] text-[#45464e] font-semibold">
+                <div className="flex justify-between mt-3 px-1 text-[9px] sm:text-[11px] text-[#45464e] font-semibold">
                   {weeklyData.map(w => <span key={w.week}>{w.week}</span>)}
                 </div>
               </>

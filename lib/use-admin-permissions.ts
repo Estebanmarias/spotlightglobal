@@ -28,12 +28,23 @@ type AdminAccess = {
   isSuperAdmin: boolean
   permissions: PageKey[]
   isMinistryLeader: boolean
+  isPureMinistryLeader: boolean
   canAccess: (page: PageKey) => boolean
 }
+
+// A "pure" ministry leader is someone flagged is_ministry_leader = true who was never
+// given real general-admin permissions by Setman — their permissions array is empty or
+// just the default placeholder. These users get locked to /admin/ministry-dashboard only,
+// and should never be aware the general admin portal exists.
+const isPermissionsEmpty = (perms: PageKey[]) =>
+  !perms || perms.length === 0 || (perms.length === 1 && perms[0] === 'dashboard')
 
 /**
  * Use this hook at the top of any /admin/* page.
  * - Redirects to /admin if not logged in.
+ * - If the user is a "pure" ministry leader (leader-only, no general admin permissions),
+ *   they are locked to /admin/ministry-dashboard and redirected away from every other page,
+ *   including this hook's own host page if it isn't ministry-dashboard itself.
  * - If `requirePage` is given and the admin lacks that permission (and isn't super_admin),
  *   redirects to /admin/dashboard.
  */
@@ -68,7 +79,17 @@ export function useAdminAccess(requirePage?: PageKey): AdminAccess {
         setIsMinistryLeader(roleData.is_ministry_leader || false)
 
         const isSuper = roleData.role === 'super_admin'
-        if (requirePage && !isSuper && !(roleData.permissions || []).includes(requirePage)) {
+        const pureLeader = !isSuper && roleData.is_ministry_leader && isPermissionsEmpty(roleData.permissions || [])
+
+        // Pure ministry leaders are locked to /admin/ministry-dashboard, full stop.
+        // Any page guarded by this hook (other than ministry-dashboard itself, which
+        // never passes a requirePage of a general PageKey) redirects them away.
+        if (pureLeader && requirePage) {
+          router.replace('/admin/ministry-dashboard')
+          return
+        }
+
+        if (requirePage && !isSuper && !pureLeader && !(roleData.permissions || []).includes(requirePage)) {
           router.replace('/admin/dashboard')
           return
         }
@@ -82,6 +103,8 @@ export function useAdminAccess(requirePage?: PageKey): AdminAccess {
     })
   }, [])
 
+  const pureMinistryLeader = role !== 'super_admin' && isMinistryLeader && isPermissionsEmpty(permissions)
+
   return {
     loading,
     userId,
@@ -91,6 +114,7 @@ export function useAdminAccess(requirePage?: PageKey): AdminAccess {
     isSuperAdmin: role === 'super_admin',
     permissions,
     isMinistryLeader,
-    canAccess: (page: PageKey) => role === 'super_admin' || permissions.includes(page),
+    isPureMinistryLeader: pureMinistryLeader,
+    canAccess: (page: PageKey) => role === 'super_admin' || (!pureMinistryLeader && permissions.includes(page)),
   }
 }

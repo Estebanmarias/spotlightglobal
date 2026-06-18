@@ -129,13 +129,13 @@ export default function AdminDashboard() {
           <h1 className="text-white text-[24px] sm:text-[30px] font-bold mb-1">
             {greeting}, <span className="text-[#fdc425]">{displayName}</span> 👋
           </h1>
-          <p className="text-white/60 text-[13px] flex items-center gap-2">
+          <p className="text-white/60 text-[12px] sm:text-[13px] flex items-center gap-2 flex-wrap">
             Here's what's happening at theSpotlightChurch today.
-            {access.isSuperAdmin && <span className="px-2 py-0.5 bg-[#fdc425] text-[#6d5200] rounded-full text-[10px] font-bold uppercase">Setman</span>}
+            {access.isSuperAdmin && <span className="px-2 py-0.5 bg-[#fdc425] text-[#6d5200] rounded-full text-[10px] font-bold uppercase shrink-0">Setman</span>}
           </p>
         </div>
 
-        <div className="relative z-10 mt-6 grid grid-cols-3 gap-3 pl-12 lg:pl-0">
+        <div className="relative z-10 mt-6 grid grid-cols-3 gap-2 sm:gap-3 pl-12 lg:pl-0">
           {[
             { label: "Total Members", value: total, icon: "group" },
             { label: "This Week", value: thisWeek, icon: "person_add" },
@@ -144,12 +144,12 @@ export default function AdminDashboard() {
             <motion.div key={s.label}
               initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.1 }}
-              className="bg-white/10 backdrop-blur-sm border border-white/10 rounded-xl p-3 sm:p-4">
-              <div className="flex items-center gap-2 mb-1">
-                <span className="material-symbols-outlined text-[#fdc425] text-[16px]">{s.icon}</span>
-                <span className="text-white/60 text-[11px] font-semibold">{s.label}</span>
+              className="bg-white/10 backdrop-blur-sm border border-white/10 rounded-xl p-2.5 sm:p-4 min-w-0">
+              <div className="flex items-center gap-1 sm:gap-2 mb-1">
+                <span className="material-symbols-outlined text-[#fdc425] text-[14px] sm:text-[16px] shrink-0">{s.icon}</span>
+                <span className="text-white/60 text-[9px] sm:text-[11px] font-semibold truncate">{s.label}</span>
               </div>
-              <p className="text-white text-[22px] sm:text-[28px] font-bold">
+              <p className="text-white text-[18px] sm:text-[28px] font-bold">
                 {loading ? "—" : s.value.toLocaleString()}
               </p>
             </motion.div>

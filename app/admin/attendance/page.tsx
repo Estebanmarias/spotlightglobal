@@ -186,21 +186,22 @@ export default function AttendancePage() {
             </div>
           </div>
 
-          <div className="grid grid-cols-3 gap-4 mt-5">
+          <div className="grid grid-cols-3 gap-2 sm:gap-4 mt-5">
             {[
               { key: 'male_count', label: 'Male', icon: 'man' },
               { key: 'female_count', label: 'Female', icon: 'woman' },
               { key: 'children_count', label: 'Children', icon: 'child_care' },
             ].map(f => (
-              <div key={f.key} className="flex flex-col gap-2">
-                <label className="text-[12px] font-bold text-[#45464e] uppercase tracking-wide flex items-center gap-1.5">
-                  <span className="material-symbols-outlined text-[14px]">{f.icon}</span>{f.label}
+              <div key={f.key} className="flex flex-col gap-1.5 sm:gap-2">
+                <label className="text-[10px] sm:text-[12px] font-bold text-[#45464e] uppercase tracking-wide flex items-center gap-1 sm:gap-1.5">
+                  <span className="material-symbols-outlined text-[12px] sm:text-[14px]">{f.icon}</span>
+                  <span className="truncate">{f.label}</span>
                 </label>
                 <input type="number" min="0"
                   value={form[f.key as keyof typeof form]}
                   onChange={e => setForm(p => ({ ...p, [f.key]: e.target.value }))}
                   placeholder="0"
-                  className="bg-[#f2f4f6] border-b-2 border-transparent focus:border-[#081534] outline-none px-4 py-3 rounded-t-lg text-[20px] font-bold text-center transition-colors" />
+                  className="bg-[#f2f4f6] border-b-2 border-transparent focus:border-[#081534] outline-none px-2 sm:px-4 py-3 rounded-t-lg text-[16px] sm:text-[20px] font-bold text-center transition-colors w-full" />
               </div>
             ))}
           </div>
@@ -247,27 +248,39 @@ export default function AttendancePage() {
               {records.map(r => {
                 const pct = Math.round((r.total_count / maxTotal) * 100)
                 return (
-                  <div key={r.id} className="flex items-center gap-4 p-3 hover:bg-[#f7f9fb] rounded-lg transition-colors group">
-                    <div className="w-24 shrink-0">
-                      <p className="text-[13px] font-bold text-[#081534]">
-                        {new Date(r.service_date).toLocaleDateString('en-NG', { month: 'short', day: 'numeric' })}
-                      </p>
-                      <p className="text-[10px] text-[#45464e]">{new Date(r.service_date).getFullYear()}</p>
+                  <div key={r.id} className="flex flex-col sm:flex-row sm:items-center gap-3 p-3 hover:bg-[#f7f9fb] rounded-lg transition-colors group">
+                    <div className="flex items-center justify-between sm:contents">
+                      <div className="w-20 sm:w-24 shrink-0">
+                        <p className="text-[13px] font-bold text-[#081534]">
+                          {new Date(r.service_date).toLocaleDateString('en-NG', { month: 'short', day: 'numeric' })}
+                        </p>
+                        <p className="text-[10px] text-[#45464e]">{new Date(r.service_date).getFullYear()}</p>
+                      </div>
+                      <div className="flex sm:hidden gap-1 shrink-0">
+                        <button onClick={() => openEdit(r)} className="p-1.5 text-[#45464e] hover:text-[#081534] hover:bg-[#f2f4f6] rounded">
+                          <span className="material-symbols-outlined text-[16px]">edit</span>
+                        </button>
+                        <button onClick={() => setDeleteTarget(r)} className="p-1.5 text-[#45464e] hover:text-[#ba1a1a] hover:bg-[#ffdad6] rounded">
+                          <span className="material-symbols-outlined text-[16px]">delete</span>
+                        </button>
+                      </div>
                     </div>
-                    <div className="flex-1">
+                    <div className="flex-1 min-w-0">
                       <div className="w-full bg-[#f2f4f6] rounded-full h-2">
                         <div className="bg-[#fdc425] h-2 rounded-full" style={{ width: `${pct}%` }} />
                       </div>
                     </div>
-                    <div className="flex gap-3 text-[11px] text-[#45464e] shrink-0">
-                      <span title="Male">M:{r.male_count}</span>
-                      <span title="Female">F:{r.female_count}</span>
-                      <span title="Children">C:{r.children_count}</span>
+                    <div className="flex items-center justify-between sm:justify-start gap-3">
+                      <div className="flex gap-3 text-[11px] text-[#45464e] shrink-0">
+                        <span title="Male">M:{r.male_count}</span>
+                        <span title="Female">F:{r.female_count}</span>
+                        <span title="Children">C:{r.children_count}</span>
+                      </div>
+                      <div className="w-12 text-right shrink-0">
+                        <span className="text-[16px] font-bold text-[#081534]">{r.total_count}</span>
+                      </div>
                     </div>
-                    <div className="w-12 text-right shrink-0">
-                      <span className="text-[16px] font-bold text-[#081534]">{r.total_count}</span>
-                    </div>
-                    <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+                    <div className="hidden sm:flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
                       <button onClick={() => openEdit(r)} className="p-1.5 text-[#45464e] hover:text-[#081534] hover:bg-[#f2f4f6] rounded">
                         <span className="material-symbols-outlined text-[16px]">edit</span>
                       </button>
