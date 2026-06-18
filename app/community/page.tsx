@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { motion } from 'framer-motion'
+import { motion, Variants } from 'framer-motion'
 import Link from 'next/link'
 import { getSupabaseClient } from '@/lib/supabase'
 
@@ -51,7 +51,7 @@ const linkStack = [
   },
 ]
 
-const fadeUp = {
+const fadeUp: Variants = {
   hidden: { opacity: 0, y: 24 },
   show: (i = 0) => ({ opacity: 1, y: 0, transition: { duration: 0.5, delay: i * 0.08, ease: 'easeOut' } }),
 }
