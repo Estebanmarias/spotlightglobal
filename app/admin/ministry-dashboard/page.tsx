@@ -1,10 +1,11 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import { getSupabaseClient } from '@/lib/supabase'
 import { useAdminAccess } from '@/lib/use-admin-permissions'
+import MediaManagement from '@/components/MediaManagement'
 
 type Ministry = {
   id: string
@@ -29,6 +30,9 @@ type MinistryMember = {
   telegram: string | null
   guest_status: string
 }
+
+const isMediaMinistry = (name?: string) =>
+  !!name && name.toLowerCase().includes('media')
 
 const inputCls = 'w-full bg-[#f2f4f6] border-b-2 border-transparent focus:border-[#081534] outline-none px-4 py-3 rounded-t-lg text-[14px] transition-colors'
 
@@ -58,10 +62,20 @@ const getNextWeekday = (weekdayName: string) => {
   return next.toISOString().split('T')[0]
 }
 
+// A "pure" ministry leader has no real general-admin permissions — same rule
+// as lib/use-admin-permissions.ts. Used here to decide which empty-state and
+// which back/sign-out control to show.
+const isPermissionsEmpty = (perms: string[] | null | undefined) =>
+  !perms || perms.length === 0 || (perms.length === 1 && perms[0] === 'dashboard')
+
 export default function MinistryDashboardPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const supabase = getSupabaseClient()
   const access = useAdminAccess()
+
+  // ?ministry=<id> — set when Setman or an Admin jumps here from the Ministries page
+  const requestedMinistryId = searchParams.get('ministry')
 
   const [myMinistries, setMyMinistries] = useState<Ministry[]>([])
   const [activeMinistry, setActiveMinistry] = useState<Ministry | null>(null)
@@ -74,6 +88,7 @@ export default function MinistryDashboardPage() {
   const [adding, setAdding] = useState(false)
   const [toast, setToast] = useState<string | null>(null)
   const [removeTarget, setRemoveTarget] = useState<MinistryMember | null>(null)
+  const [isPureLeader, setIsPureLeader] = useState(false)
 
   // Reminder state
   const [showReminderBar, setShowReminderBar] = useState(false)
@@ -83,26 +98,71 @@ export default function MinistryDashboardPage() {
 
   useEffect(() => {
     if (access.loading) return
-    if (!access.isMinistryLeader && !access.isSuperAdmin) {
-      router.replace('/admin/dashboard')
+
+    const pureLeader = !access.isSuperAdmin && access.isMinistryLeader && isPermissionsEmpty(access.permissions)
+    setIsPureLeader(pureLeader)
+
+    loadMinistries(pureLeader)
+  }, [access.loading, access.isSuperAdmin, access.isMinistryLeader, requestedMinistryId])
+
+  const loadMinistries = async (pureLeader: boolean) => {
+    setLoading(true)
+
+    // ── Setman — can view ANY ministry freely, no restriction. ─────────
+    if (access.isSuperAdmin) {
+      if (requestedMinistryId) {
+        const { data: ministry } = await supabase
+          .from('ministries').select('*').eq('id', requestedMinistryId).single()
+        if (ministry) {
+          setMyMinistries([ministry])
+          setActiveMinistry(ministry)
+          setReminderDate(getNextWeekday(ministry.meeting_day || 'Sunday'))
+          setLoading(false)
+          return
+        }
+      }
+      const { data: ministries } = await supabase
+        .from('ministries').select('*').order('name', { ascending: true })
+      setMyMinistries(ministries || [])
+      if (ministries && ministries.length > 0) {
+        setActiveMinistry(ministries[0])
+        setReminderDate(getNextWeekday(ministries[0].meeting_day || 'Sunday'))
+      }
+      setLoading(false)
       return
     }
-    loadMyMinistries()
-  }, [access.loading])
 
-  const loadMyMinistries = async () => {
-    setLoading(true)
+    // ── Everyone else (regular admins AND pure leaders) — only ministries
+    // they are PERSONALLY listed as a leader for in ministry_leaders.
+    // Having the general 'ministries' CRUD permission does NOT grant access
+    // to other people's ministry dashboards — that stays Setman-only. ──
     const { data: links } = await supabase
       .from('ministry_leaders')
       .select('ministry_id')
       .eq('user_id', access.userId) as { data: { ministry_id: string }[] | null }
 
     if (!links || links.length === 0) {
+      setMyMinistries([])
       setLoading(false)
       return
     }
 
     const ministryIds = links.map(l => l.ministry_id)
+
+    // If they came in via ?ministry=<id>, only honor it if it's actually
+    // one of their own ministries — otherwise fall back to their full list.
+    if (requestedMinistryId && ministryIds.includes(requestedMinistryId)) {
+      const { data: ministry } = await supabase
+        .from('ministries').select('*').eq('id', requestedMinistryId).single()
+      if (ministry) {
+        setMyMinistries([ministry])
+        setActiveMinistry(ministry)
+        setReminderDate(getNextWeekday(ministry.meeting_day || 'Sunday'))
+        setLoading(false)
+        return
+      }
+    }
+
     const { data: ministries } = await supabase
       .from('ministries')
       .select('*')
@@ -200,21 +260,55 @@ export default function MinistryDashboardPage() {
     !ministryMembers.some(mm => mm.id === m.id)
   )
 
+  // Non-pure-leaders (Setman or Admins with ministries access) always have a
+  // way back to the normal admin portal — never just Sign Out, since they DO
+  // have a real dashboard to return to.
+  const BackControl = () => (
+    isPureLeader ? (
+      <button onClick={handleSignOut}
+        className="flex items-center gap-1.5 px-3 py-2 border border-[#c6c6cf] text-[#45464e] rounded-lg text-[12px] font-semibold hover:bg-[#f2f4f6] hover:text-[#ba1a1a] transition-colors">
+        <span className="material-symbols-outlined text-[16px]">logout</span>
+        <span className="hidden sm:inline">Sign Out</span>
+      </button>
+    ) : (
+      <button onClick={() => router.push(requestedMinistryId ? '/admin/ministries' : '/admin/dashboard')}
+        className="flex items-center gap-1.5 px-3 py-2 border border-[#c6c6cf] text-[#45464e] rounded-lg text-[12px] font-semibold hover:bg-[#f2f4f6] transition-colors">
+        <span className="material-symbols-outlined text-[16px]">arrow_back</span>
+        <span className="hidden sm:inline">{requestedMinistryId ? 'Back to Ministries' : 'Back to Dashboard'}</span>
+      </button>
+    )
+  )
+
   if (access.loading || loading) {
     return <div className="min-h-screen bg-[#f7f9fb] flex items-center justify-center"><p className="text-[#45464e]">Loading...</p></div>
   }
 
   if (myMinistries.length === 0) {
+    // Setman should structurally never hit this branch — they always have
+    // every ministry available. This covers: pure leaders not yet linked,
+    // AND regular admins who aren't a leader of anything (general ministries
+    // CRUD permission does not grant ministry dashboard access by itself).
     return (
       <div className="min-h-screen bg-[#f7f9fb] flex items-center justify-center p-6">
         <div className="text-center max-w-sm">
           <span className="material-symbols-outlined text-[56px] text-[#c6c6cf] block mb-3">church</span>
           <h2 className="text-[18px] font-bold text-[#081534] mb-2">No Ministry Assigned</h2>
-          <p className="text-[13px] text-[#45464e] mb-6">You haven't been linked to a ministry yet. Contact Setman to get set up.</p>
-          <button onClick={handleSignOut}
-            className="px-6 py-2.5 border border-[#c6c6cf] text-[#45464e] rounded-lg text-[13px] font-bold hover:bg-white transition-colors">
-            Sign Out
-          </button>
+          <p className="text-[13px] text-[#45464e] mb-6">
+            You haven't been assigned as a leader of any ministry yet. Contact Setman to get set up.
+          </p>
+          <div className="flex gap-3 justify-center">
+            {isPureLeader ? (
+              <button onClick={handleSignOut}
+                className="px-6 py-2.5 border border-[#c6c6cf] text-[#45464e] rounded-lg text-[13px] font-bold hover:bg-white transition-colors">
+                Sign Out
+              </button>
+            ) : (
+              <button onClick={() => router.push('/admin/dashboard')}
+                className="px-6 py-2.5 bg-[#081534] text-white rounded-lg text-[13px] font-bold hover:opacity-90 transition-colors">
+                Back to Dashboard
+              </button>
+            )}
+          </div>
         </div>
       </div>
     )
@@ -227,7 +321,14 @@ export default function MinistryDashboardPage() {
       <div className="sticky top-0 z-30 bg-white border-b border-[#c6c6cf] px-4 sm:px-8 py-4">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div className="pl-12 lg:pl-0">
-            <h2 className="text-[20px] sm:text-[24px] font-bold text-[#081534]">Ministry Dashboard</h2>
+            <h2 className="text-[20px] sm:text-[24px] font-bold text-[#081534]">
+              Ministry Dashboard
+              {!isPureLeader && (
+                <span className="ml-2 text-[11px] font-bold text-[#785a00] bg-[#fdc425]/20 px-2 py-0.5 rounded-full align-middle">
+                  {access.isSuperAdmin ? 'Setman View' : 'Admin View'}
+                </span>
+              )}
+            </h2>
             <p className="text-[12px] text-[#45464e]">Manage your department's members and details.</p>
           </div>
           <div className="flex items-center gap-2">
@@ -239,11 +340,7 @@ export default function MinistryDashboardPage() {
                 {myMinistries.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
               </select>
             )}
-            <button onClick={handleSignOut}
-              className="flex items-center gap-1.5 px-3 py-2 border border-[#c6c6cf] text-[#45464e] rounded-lg text-[12px] font-semibold hover:bg-[#f2f4f6] hover:text-[#ba1a1a] transition-colors">
-              <span className="material-symbols-outlined text-[16px]">logout</span>
-              <span className="hidden sm:inline">Sign Out</span>
-            </button>
+            <BackControl />
           </div>
         </div>
       </div>
@@ -278,6 +375,13 @@ export default function MinistryDashboardPage() {
               </div>
             </div>
           </motion.div>
+
+          {/* Media ministry — Events & Gallery */}
+          {isMediaMinistry(activeMinistry.name) && (
+            <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.02 }}>
+              <MediaManagement viewerRole={access.isSuperAdmin ? 'super_admin' : isPureLeader ? 'ministry_leader' : 'admin'} />
+            </motion.div>
+          )}
 
           {/* Reminder bar */}
           <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}

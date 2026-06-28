@@ -9,9 +9,24 @@ const fadeUp: Variants = {
 }
 
 const pillars = [
-  { icon: 'savings', title: 'Tithes & Offerings', desc: 'Honoring God with our first and our tenth, and worshipping Him with our freewill offerings.' },
-  { icon: 'energy_savings_leaf', title: 'Prophetic Seeds', desc: 'Sowing purposefully into the anointing, specific kingdom instructions, and thanksgiving for a supernatural harvest.' },
-  { icon: 'handshake', title: 'Kingdom Partnership', desc: 'Joining forces to fund church projects, welfare, and taking the gospel to the ends of the earth.' },
+  {
+    icon: 'savings',
+    title: 'Tithes & Offerings',
+    desc: 'Honoring God with our first and our tenth, and worshipping Him with our freewill offerings.',
+    href: '#accounts',
+  },
+  {
+    icon: 'energy_savings_leaf',
+    title: 'Prophetic Seeds',
+    desc: 'Sowing purposefully into the anointing, specific kingdom instructions, and thanksgiving for a supernatural harvest.',
+    href: '#accounts',
+  },
+  {
+    icon: 'handshake',
+    title: 'Kingdom Partnership',
+    desc: 'Joining forces to fund church projects, welfare, and taking the gospel to the ends of the earth.',
+    href: '/partner',
+  },
 ]
 
 // ── Account data ─────────────────────────────────────────────────────
@@ -146,7 +161,8 @@ export default function GivingPage() {
                 </div>
                 <h3 className="text-[20px] sm:text-[22px] font-semibold text-[#081534] mb-3">{p.title}</h3>
                 <p className="text-[14px] sm:text-[15px] text-[#45464e] mb-6">{p.desc}</p>
-                <a className="inline-flex items-center gap-2 text-[13px] sm:text-[14px] font-bold text-[#785a00] group-hover:underline" href="#">
+                <a className="inline-flex items-center gap-2 text-[13px] sm:text-[14px] font-bold text-[#785a00] group-hover:underline"
+                  href={p.href}>
                   Learn more <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
                 </a>
               </div>
@@ -158,7 +174,7 @@ export default function GivingPage() {
       {/* ══════════════════════════════════════════════════════════
           ACCOUNT NUMBERS — replaces the old Giving Portal
       ══════════════════════════════════════════════════════════ */}
-      <section className="py-20 sm:py-24 bg-[#f7f9fb]">
+      <section id="accounts" className="py-20 sm:py-24 bg-[#f7f9fb]">
         <div className="max-w-[1100px] mx-auto px-6 md:px-16">
 
           <motion.div initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}

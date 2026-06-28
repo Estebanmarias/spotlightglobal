@@ -33,6 +33,8 @@ export default function AdminDashboard() {
     First_Timer: 0, Attending: 0, Member: 0,
   });
   const [loading, setLoading] = useState(true);
+  const [partnerCount, setPartnerCount] = useState(0);
+  const [newPartnerCount, setNewPartnerCount] = useState(0);
 
   useEffect(() => {
     if (access.loading) return;
@@ -71,6 +73,17 @@ export default function AdminDashboard() {
         if (m.guest_status in counts) counts[m.guest_status as keyof StatusCounts]++;
       });
       setStatusCounts(counts);
+
+      // Partner submissions — Setman only
+      if (access.isSuperAdmin) {
+        const { count: pTotal } = await supabase
+          .from('partner_submissions').select('id', { count: 'exact', head: true })
+        setPartnerCount(pTotal || 0)
+
+        const { count: pNew } = await (supabase.from('partner_submissions') as any)
+          .select('id', { count: 'exact', head: true }).eq('status', 'new')
+        setNewPartnerCount(pNew || 0)
+      }
 
       setLoading(false);
     };
@@ -360,6 +373,32 @@ export default function AdminDashboard() {
             </motion.div>
           )}
         </div>
+
+        {/* ── Partners snapshot — Setman only ── */}
+        {access.isSuperAdmin && (
+          <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.45 }}
+            onClick={() => router.push('/admin/partner')}
+            className="bg-white border border-[#c6c6cf] rounded-xl p-5 cursor-pointer hover:shadow-md hover:-translate-y-0.5 transition-all group">
+            <div className="flex items-center justify-between mb-4">
+              <div className="w-10 h-10 bg-[#081534] text-[#fdc425] rounded-xl flex items-center justify-center">
+                <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>handshake</span>
+              </div>
+              {!loading && newPartnerCount > 0 && (
+                <span className="px-2.5 py-1 bg-[#fdc425] text-[#6d5200] text-[11px] font-bold rounded-full">
+                  {newPartnerCount} new
+                </span>
+              )}
+            </div>
+            <h3 className="text-[15px] font-bold text-[#081534] mb-1">Partnership Submissions</h3>
+            <p className="text-[12px] text-[#45464e] mb-3">
+              {loading ? '—' : `${partnerCount} total submission${partnerCount !== 1 ? 's' : ''}`}
+            </p>
+            <div className="flex items-center gap-1 text-[#785a00] text-[12px] font-semibold group-hover:gap-2 transition-all">
+              View all <span className="material-symbols-outlined text-[14px]">arrow_forward</span>
+            </div>
+          </motion.div>
+        )}
 
         {/* ── Footer note ── */}
         <div className="bg-[#ffdf9a] border border-[#fdc425] rounded-xl p-4 sm:p-5 flex items-start sm:items-center gap-4">

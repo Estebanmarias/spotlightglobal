@@ -5,6 +5,14 @@ import { useRouter } from "next/navigation";
 import { getSupabaseClient } from "@/lib/supabase";
 import { motion } from "framer-motion";
 
+// Mirrors the "pure ministry leader" rule in lib/use-admin-permissions.ts —
+// only someone with NO real general-admin permissions (empty or just the
+// default ['dashboard'] placeholder) gets routed to the scoped Ministry
+// Dashboard on login. An admin who also happens to lead a ministry keeps
+// landing on the normal dashboard like any other admin.
+const isPermissionsEmpty = (perms: string[] | null | undefined) =>
+  !perms || perms.length === 0 || (perms.length === 1 && perms[0] === 'dashboard')
+
 export default function AdminLoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
@@ -30,16 +38,18 @@ export default function AdminLoginPage() {
       return;
     }
 
-    // Check if this user is a ministry leader — route them to their scoped dashboard instead
     const { data: roleData } = await supabase
       .from("admin_roles")
-      .select("is_ministry_leader, role")
+      .select("is_ministry_leader, role, permissions")
       .eq("user_id", authData.session.user.id)
-      .single() as { data: { is_ministry_leader: boolean; role: string } | null };
+      .single() as { data: { is_ministry_leader: boolean; role: string; permissions: string[] } | null };
 
     setLoading(false);
 
-    if (roleData?.is_ministry_leader && roleData.role !== "super_admin") {
+    const isSuper = roleData?.role === "super_admin";
+    const isPureLeader = !isSuper && roleData?.is_ministry_leader && isPermissionsEmpty(roleData?.permissions);
+
+    if (isPureLeader) {
       router.push("/admin/ministry-dashboard");
     } else {
       router.push("/admin/dashboard");
@@ -102,7 +112,7 @@ export default function AdminLoginPage() {
                 <label className="text-[14px] font-semibold text-[#081534]">
                   Security Password
                 </label>
-                <button type="button" className="text-[12px] text-[#785a00] hover:underline">
+                <button type="button" onClick={() => router.push('/admin/forgot-password')} className="text-[12px] text-[#785a00] hover:underline">
                   Forgot password?
                 </button>
               </div>

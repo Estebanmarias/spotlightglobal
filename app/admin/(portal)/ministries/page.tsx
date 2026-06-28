@@ -1,10 +1,10 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import { getSupabaseClient } from '@/lib/supabase'
 import { useAdminAccess } from '@/lib/use-admin-permissions'
-import { useEffect } from 'react'
 
 // ── Types ─────────────────────────────────────────────────────────────
 type Ministry = {
@@ -52,8 +52,10 @@ type AssignMode = 'record' | 'existing' | 'new'
 export default function MinistriesPage() {
   const supabase = getSupabaseClient()
   const access = useAdminAccess('ministries')
+  const router = useRouter()
 
   const [ministries, setMinistries] = useState<Ministry[]>([])
+  const [realMemberCounts, setRealMemberCounts] = useState<Record<string, number>>({})
   const [loading, setLoading] = useState(true)
   const [hovered, setHovered] = useState<string | null>(null)
   const [detailMinistry, setDetail] = useState<Ministry | null>(null)
@@ -89,6 +91,23 @@ export default function MinistriesPage() {
       .order('created_at', { ascending: false })
     if (!error && data) setMinistries(data)
     setLoading(false)
+    fetchRealMemberCounts()
+  }
+
+  // Live count of how many people are actually linked via ministry_members,
+  // shown alongside the manually-entered member_count field for comparison —
+  // these can drift apart since member_count is hand-edited while this reflects
+  // additions made from the Ministry Leader Dashboard.
+  const fetchRealMemberCounts = async () => {
+    const { data } = await supabase
+      .from('ministry_members')
+      .select('ministry_id') as { data: { ministry_id: string }[] | null }
+    if (!data) return
+    const counts: Record<string, number> = {}
+    data.forEach(row => {
+      counts[row.ministry_id] = (counts[row.ministry_id] || 0) + 1
+    })
+    setRealMemberCounts(counts)
   }
 
   useEffect(() => { if (!access.loading) fetchMinistries() }, [access.loading])
@@ -200,7 +219,7 @@ export default function MinistriesPage() {
       .eq('id', assignTarget.id)
     setAssigning(false)
     if (error) return showToast('Error saving leader name')
-    showToast('Leader name updated \u2014 no portal access granted')
+    showToast('Leader name updated — no portal access granted')
     setAssignTarget(null)
     fetchMinistries()
   }
@@ -212,6 +231,15 @@ export default function MinistriesPage() {
     if (!admin || !admin.user_id) return showToast('This admin has no active login yet')
 
     setAssigning(true)
+
+    // Remove any existing link first — prevents the 23505 unique constraint
+    // error when reassigning someone who was previously a leader here.
+    await supabase
+      .from('ministry_leaders')
+      .delete()
+      .eq('ministry_id', assignTarget.id)
+      .eq('user_id', admin.user_id)
+
     const { error: linkError } = await (supabase.from('ministry_leaders') as any).insert([{
       ministry_id: assignTarget.id,
       user_id: admin.user_id,
@@ -219,7 +247,6 @@ export default function MinistriesPage() {
 
     if (linkError) {
       setAssigning(false)
-      if (linkError.code === '23505') return showToast('This admin already leads this ministry')
       return showToast('Error assigning leader')
     }
 
@@ -250,7 +277,7 @@ export default function MinistriesPage() {
       return showToast('Error creating leader request')
     }
     await (supabase.from('ministries') as any).update({ leader: newLeaderName }).eq('id', assignTarget.id)
-    showToast('Leader request submitted \u2014 approve it in Settings to activate their login')
+    showToast('Leader request submitted — approve it in Settings to activate their login')
     setAssignTarget(null)
     fetchMinistries()
   }
@@ -266,7 +293,7 @@ export default function MinistriesPage() {
           <div className="pl-12 lg:pl-0">
             <h2 className="text-[20px] sm:text-[24px] font-bold text-[#081534]">Ministries</h2>
             <p className="text-[12px] text-[#45464e]">
-              {loading ? 'Loading...' : `${ministries.length} active ministries \u00b7 ${totalMembers.toLocaleString()} total participants`}
+              {loading ? 'Loading...' : `${ministries.length} active ministries · ${totalMembers.toLocaleString()} total participants`}
             </p>
           </div>
           <button onClick={openAdd}
@@ -343,10 +370,24 @@ export default function MinistriesPage() {
                       <div className="p-4 sm:p-5">
                         <div className="grid grid-cols-3 gap-3 mb-3">
                           <div><p className="text-[10px] text-[#45464e] font-semibold">Leader</p><p className="text-[13px] text-[#081534] font-bold truncate">{m.leader}</p></div>
-                          <div><p className="text-[10px] text-[#45464e] font-semibold">Members</p><p className="text-[13px] text-[#081534] font-bold">{m.member_count}</p></div>
+                          <div>
+                            <p className="text-[10px] text-[#45464e] font-semibold">Members</p>
+                            <p className="text-[13px] text-[#081534] font-bold">
+                              {m.member_count}
+                              {realMemberCounts[m.id] !== undefined && (
+                                <span className="text-[10px] text-[#76777f] font-normal ml-1">({realMemberCounts[m.id]} linked)</span>
+                              )}
+                            </p>
+                          </div>
                           <div><p className="text-[10px] text-[#45464e] font-semibold">Meeting</p><p className="text-[13px] text-[#081534] font-bold truncate">{m.meeting_day}</p></div>
                         </div>
                         <div className="flex items-center justify-end gap-1 pt-2 border-t border-[#f2f4f6]">
+                          {access.isSuperAdmin && (
+                            <button type="button" onClick={() => router.push(`/admin/ministry-dashboard?ministry=${m.id}`)}
+                              className="p-2 text-[#45464e] hover:text-[#081534] hover:bg-[#f2f4f6] rounded-lg transition-all shrink-0" title="View Dashboard">
+                              <span className="material-symbols-outlined text-[18px]">dashboard</span>
+                            </button>
+                          )}
                           <button type="button" onClick={() => openAssignLeader(m)} className="p-2 text-[#45464e] hover:text-[#081534] hover:bg-[#f2f4f6] rounded-lg transition-all shrink-0" title="Assign Leader">
                             <span className="material-symbols-outlined text-[18px]">badge</span>
                           </button>
@@ -377,7 +418,12 @@ export default function MinistriesPage() {
                           </div>
                           <div className="flex justify-between py-1.5">
                             <span className="text-[12px] text-[#45464e] font-semibold">Members</span>
-                            <span className="text-[12px] text-[#081534] font-bold">{m.member_count}</span>
+                            <span className="text-[12px] text-[#081534] font-bold">
+                              {m.member_count}
+                              {realMemberCounts[m.id] !== undefined && (
+                                <span className="text-[10px] text-[#76777f] font-normal ml-1">({realMemberCounts[m.id]} linked)</span>
+                              )}
+                            </span>
                           </div>
                         </div>
                       </div>
@@ -385,6 +431,12 @@ export default function MinistriesPage() {
                         <button type="button" onClick={() => setDetail(m)} className="flex-1 bg-[#f2f4f6] text-[#081534] text-[12px] py-2.5 rounded-lg hover:bg-[#eceef0] transition-colors font-semibold">
                           View Details
                         </button>
+                        {access.isSuperAdmin && (
+                          <button type="button" onClick={() => router.push(`/admin/ministry-dashboard?ministry=${m.id}`)}
+                            className="px-3 bg-[#f2f4f6] text-[#45464e] rounded-lg hover:bg-[#eceef0] transition-colors" title="View Dashboard">
+                            <span className="material-symbols-outlined text-[18px]">dashboard</span>
+                          </button>
+                        )}
                         <button type="button" onClick={() => openAssignLeader(m)} className="px-3 bg-[#f2f4f6] text-[#45464e] rounded-lg hover:bg-[#eceef0] transition-colors" title="Assign Leader">
                           <span className="material-symbols-outlined text-[18px]">badge</span>
                         </button>
@@ -435,9 +487,9 @@ export default function MinistriesPage() {
                 <div className="grid grid-cols-2 gap-4">
                   {[
                     { label: 'Leader', value: detailMinistry.leader, icon: 'person' },
-                    { label: 'Members', value: detailMinistry.member_count, icon: 'group' },
+                    { label: 'Members (manual)', value: detailMinistry.member_count, icon: 'group' },
+                    { label: 'Members (linked)', value: realMemberCounts[detailMinistry.id] ?? 0, icon: 'link' },
                     { label: 'Meeting Day', value: detailMinistry.meeting_day || '—', icon: 'calendar_today' },
-                    { label: 'Status', value: 'Active', icon: 'check_circle' },
                   ].map(f => (
                     <div key={f.label} className="bg-[#f7f9fb] rounded-xl p-4">
                       <div className="flex items-center gap-1.5 mb-1">
@@ -557,7 +609,7 @@ export default function MinistriesPage() {
                     </div>
                     <div>
                       <p className="text-[14px] font-bold text-[#081534]">{form.name || 'Ministry Name'}</p>
-                      <p className="text-[12px] text-[#45464e]">{form.leader || 'Leader name'} \u00b7 {form.meeting_day}</p>
+                      <p className="text-[12px] text-[#45464e]">{form.leader || 'Leader name'} · {form.meeting_day}</p>
                     </div>
                   </div>
                 </div>
@@ -672,7 +724,7 @@ export default function MinistriesPage() {
                         <label className="text-[12px] font-bold text-[#45464e] uppercase tracking-wide">Email Address</label>
                         <input type="email" value={newLeaderEmail} onChange={e => setNewLeaderEmail(e.target.value)} placeholder="leader@thespotlightchurch.org" className={inputCls} />
                       </div>
-                      <p className="text-[12px] text-[#76777f]">This creates a pending admin request scoped to this ministry. Approve it in Settings \u2192 Team & Access to activate their login.</p>
+                      <p className="text-[12px] text-[#76777f]">This creates a pending admin request scoped to this ministry. Approve it in Settings → Team & Access to activate their login.</p>
                     </div>
                   )}
                 </div>

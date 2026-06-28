@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { getSupabaseClient } from '@/lib/supabase'
 import { motion, AnimatePresence } from 'framer-motion'
+import { useAdminAccess } from '@/lib/use-admin-permissions'
 
 type Member = {
   id: string
@@ -12,6 +13,7 @@ type Member = {
   last_name: string
   email: string
   phone: string
+  address: string | null
   dob: string
   guest_status: string
 }
@@ -114,6 +116,7 @@ function MemberDrawer({
               {[
                 { icon: 'mail', label: 'Email', value: member.email },
                 { icon: 'call', label: 'Phone', value: member.phone || '—' },
+                { icon: 'home', label: 'Address', value: member.address || '—' },
               ].map(item => (
                 <div key={item.label} className="flex items-start gap-3 p-3 bg-[#f7f9fb] rounded-xl">
                   <div className="w-9 h-9 rounded-lg bg-[#081534]/5 flex items-center justify-center shrink-0">
@@ -216,25 +219,24 @@ function EditMemberModal({
     last_name: member.last_name,
     email: member.email,
     phone: member.phone,
+    address: member.address || '',
     dob: member.dob,
     guest_status: member.guest_status,
   })
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
 
-    const handleSave = async () => {
+  const handleSave = async () => {
     if (!form.first_name || !form.last_name || !form.email) {
       setError('First name, last name, and email are required.')
       return
     }
     setSaving(true)
     setError('')
-
-      const { error: updateError } = await (supabase
+    const { error: updateError } = await (supabase
       .from('members') as any)
-      .update({ ...form })
+      .update(form)
       .eq('id', member.id)
-
     setSaving(false)
     if (updateError) {
       setError(updateError.code === '23505' ? 'This email is already in use.' : 'Error saving changes.')
@@ -284,6 +286,10 @@ function EditMemberModal({
               </div>
             </div>
             <div className="flex flex-col gap-1.5">
+              <label className="text-[12px] font-bold text-[#45464e] uppercase tracking-wide">Home Address</label>
+              <input value={form.address} onChange={e => setForm(p => ({ ...p, address: e.target.value }))} className={inputCls} />
+            </div>
+            <div className="flex flex-col gap-1.5">
               <label className="text-[12px] font-bold text-[#45464e] uppercase tracking-wide">Guest Status</label>
               <select value={form.guest_status} onChange={e => setForm(p => ({ ...p, guest_status: e.target.value }))} className={inputCls}>
                 <option value="First_Timer">First Timer</option>
@@ -328,11 +334,7 @@ export default function MembersPage() {
 
   const showToast = (msg: string) => { setToast(msg); setTimeout(() => setToast(null), 3000) }
 
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
-      if (!data.session) router.replace('/admin')
-    })
-  }, [router])
+  const access = useAdminAccess('members')
 
   const fetchMembers = useCallback(async () => {
     setLoading(true)
