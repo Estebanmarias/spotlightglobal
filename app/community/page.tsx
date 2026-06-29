@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useCallback, useRef } from 'react'
+import { useEffect, useState, useCallback, useRef, Suspense } from 'react'
 import { motion, Variants, AnimatePresence } from 'framer-motion'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
@@ -278,7 +278,7 @@ function TestimonyModal({ onClose, onSuccess }: { onClose: () => void; onSuccess
 }
 
 // ── Main Page ────────────────────────────────────────────────────
-export default function CommunityPage() {
+function CommunityPageContent() {
   const supabase     = getSupabaseClient()
   const searchParams = useSearchParams()
   const autoplay     = searchParams.get('autoplay') === '1'
@@ -622,5 +622,17 @@ export default function CommunityPage() {
         )}
       </AnimatePresence>
     </main>
+  )
+}
+
+export default function CommunityPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-[#f7f9fb] flex items-center justify-center">
+        <p className="text-[#45464e]">Loading...</p>
+      </div>
+    }>
+      <CommunityPageContent />
+    </Suspense>
   )
 }
