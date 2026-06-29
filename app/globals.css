@@ -6,6 +6,23 @@
 
 body {
   font-family: var(--font-jakarta);
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+body::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+}
+
+html {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+html::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
 }
 
 .material-symbols-outlined {
