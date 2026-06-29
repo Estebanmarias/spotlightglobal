@@ -104,7 +104,7 @@ export default function VisionPage() {
               <div className="aspect-square rounded-2xl overflow-hidden shadow-2xl rotate-3 hover:rotate-0 transition-transform duration-500">
                 <img
                   className="w-full h-full object-cover"
-                  src="https://lh3.googleusercontent.com/aida-public/AB6AXuAoBpZhZrrrHRlxlMi30zQCBrHX9t_HPyZQYg7Zst_WzdBJzzQRjNJvgeiOIFUAak1clSoi8MExyi64a90uKkVuZh1DlLJ5fPoT3u8X3mGPcHT8Ti_aMFPzhmtEIIm5zsUdp5Cadnu4q2h3wvZWPjb5TTnteKTRl6-y4JlxNVPIeaIW5kahA-zidmLwR0RlvVVKI8DwSxjlILZM9kFc7Y1oYCyY1cWjC0yb9oAcnAI8RCvwb7QychkfcSUFzlA5hEtUr-7ezfc4RAk"
+                  src="/images/gallery/community-3.jpg"
                   alt="Community gathering"
                 />
               </div>

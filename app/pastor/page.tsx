@@ -21,44 +21,69 @@ export default function PastorPage() {
     <main className="bg-[#f7f9fb] text-[#191c1e] overflow-x-hidden">
 
       {/* ── HERO ─────────────────────────────────────────────────── */}
-      <section className="relative min-h-[85vh] flex items-center bg-[#081534] overflow-hidden">
-      <div className="absolute inset-0 z-0">
-        <img
-          src="/images/apostle-1.jpg"
-          alt="Apostle Edet Kingsley"
-          className="w-full h-full object-cover object-top opacity-60"
-        />
-        {/* Gradient sits on top of image, both inside z-0 wrapper */}
-        <div className="absolute inset-0 bg-gradient-to-r from-[#081534] via-[#081534]/60 to-transparent" />
-      </div>
+<section className="relative min-h-screen bg-[#081534] overflow-hidden pt-20 lg:pt-24">
 
-        <div className="relative z-20 w-full max-w-[1280px] mx-auto px-6 md:px-16 py-24">
-          <motion.div variants={fadeUp} initial="hidden" animate="show" className="max-w-2xl">
-            <span className="text-[#fdc425] text-[11px] font-bold tracking-[0.2em] uppercase mb-4 block">
-              Lead Pastor · theSpotlightChurch
+  {/* Background Image */}
+  <div className="absolute inset-0 z-0">
+    <img
+      src="/images/apostle-1.jpg"
+      alt="Apostle Edet Kingsley"
+      className="w-full h-full object-cover object-[center_40%]"
+    />
+    {/* Dark overlay */}
+    <div className="absolute inset-0 bg-[#081534]/70" />
+  </div>
+
+  {/* Content */}
+  <div className="relative z-10 h-full flex items-center">
+    <div className="w-full max-w-[1280px] mx-auto px-6 md:px-16 py-12">
+      <motion.div 
+        variants={fadeUp} 
+        initial="hidden" 
+        animate="show" 
+        className="max-w-2xl"
+      >
+        <span className="text-[#fdc425] text-[11px] font-bold tracking-[0.2em] uppercase mb-4 block">
+          Lead Pastor · theSpotlightChurch
+        </span>
+
+        <h1 className="text-white text-[48px] sm:text-[64px] lg:text-[80px] font-bold leading-[1.0] mb-6">
+          Apostle Edet<br />Kingsley
+        </h1>
+
+        <p className="text-white/80 text-[16px] sm:text-[18px] leading-[28px] mb-10 max-w-xl">
+          A voice of hope, a beacon of light, and a shepherd dedicated to revealing the
+          transformative power of God's love to our generation.
+        </p>
+
+        <div className="flex flex-wrap gap-4">
+          <a 
+            href="https://www.youtube.com/@pstedetkingsley" 
+            target="_blank" 
+            rel="noreferrer"
+            className="flex items-center gap-2 bg-[#fdc425] text-[#6d5200] px-8 py-4 rounded-full text-[13px] font-bold hover:brightness-110 transition-all active:scale-95"
+          >
+            <span className="material-symbols-outlined text-[18px]" style={{ fontVariationSettings: "'FILL' 1" }}>
+              play_circle
             </span>
-            <h1 className="text-white text-[48px] sm:text-[64px] lg:text-[80px] font-bold leading-[1.0] mb-6">
-              Apostle Edet<br />Kingsley
-            </h1>
-            <p className="text-white/80 text-[16px] sm:text-[18px] leading-[28px] mb-10 max-w-xl">
-              A voice of hope, a beacon of light, and a shepherd dedicated to revealing the
-              transformative power of God's love to our generation.
-            </p>
-            <div className="flex flex-wrap gap-4">
-              <a href="https://www.youtube.com/@pstedetkingsley" target="_blank" rel="noreferrer"
-                className="flex items-center gap-2 bg-[#fdc425] text-[#6d5200] px-8 py-4 rounded-full text-[13px] font-bold hover:brightness-110 transition-all active:scale-95">
-                <span className="material-symbols-outlined text-[18px]" style={{ fontVariationSettings: "'FILL' 1" }}>play_circle</span>
-                Watch Sermons
-              </a>
-              <a href="https://t.me/thespotlightchurchLive" target="_blank" rel="noreferrer"
-                className="flex items-center gap-2 border-2 border-white text-white px-8 py-4 rounded-full text-[13px] font-bold hover:bg-white/10 transition-all active:scale-95">
-                <span className="material-symbols-outlined text-[18px]">radio_button_checked</span>
-                Join Live Prayer
-              </a>
-            </div>
-          </motion.div>
+            Watch Sermons
+          </a>
+
+          <a 
+            href="https://t.me/thespotlightchurchLive" 
+            target="_blank" 
+            rel="noreferrer"
+            className="flex items-center gap-2 border-2 border-white text-white px-8 py-4 rounded-full text-[13px] font-bold hover:bg-white/10 transition-all active:scale-95"
+          >
+            <span className="material-symbols-outlined text-[18px]">radio_button_checked</span>
+            Join Live Prayer
+          </a>
         </div>
-      </section>
+      </motion.div>
+    </div>
+  </div>
+
+</section>
 
       {/* ── QUOTE BAND ───────────────────────────────────────────── */}
       <section className="bg-[#fdc425] py-8 px-6">
@@ -119,28 +144,27 @@ export default function PastorPage() {
                   </h2>
                 </div>
 
-                <div className="space-y-6 text-[#45464e] text-[15px] sm:text-[16px] leading-[1.85]">
-                  <p>
-                    <span className="text-[#081534] font-bold">Apostle Edet Kingsley</span> is a visionary leader,
-                    teacher, and apostle called to awaken the world to the reality of the Holy Spirit. As the lead pastor
-                    of theSpotlightChurch, he has fostered a community where diversity is celebrated and spiritual
-                    stability is the foundation of every life.
-                  </p>
-                  <p>
-                    His ministry is marked by a unique blend of corporate excellence and spiritual depth. Beyond the
-                    pulpit, Apostle Kingsley is a renowned gospel artist whose music has touched millions globally.
-                    His landmark anthem,{' '}
-                    <span className="text-[#081534] font-bold italic">"Holy Spirit Oyoyo,"</span>{' '}
-                    has become a staple in worship sessions around the world, known for ushering in an atmosphere
-                    of intense divine presence.
-                  </p>
-                  <p>
-                    With years of ministry, his teachings focus on the practical application of the Word, empowering
-                    believers to shine their light in the spheres of business, arts, and governance. He believes that
-                    the church is not just a building, but a light-station where every member is equipped to impact
-                    their world.
-                  </p>
-                </div>
+                <div className="space-y-8 text-[#45464e] text-[15px] sm:text-[16px] leading-[1.85]">
+                    <p className="text-justify">
+                      <span className="text-[#081534] font-bold">Apostle Edet Kingsley</span> is the Setman of The Spotlight Church, 
+                      a vibrant ministry committed to raising believers who accurately represent Christ through sound doctrine, spiritual 
+                      excellence, and purposeful living.
+                    </p>
+
+                    <p className="text-justify">
+                      With a strong apostolic and teaching grace, he is passionate about unveiling God's Word with clarity, depth, and practical relevance. 
+                      His ministry emphasizes spiritual growth, preparation for destiny, excellence in service, kingdom leadership, and the transforming power 
+                      of God's presence. His messages challenge believers to pursue intimacy with God, embrace discipline, and become effective ambassadors 
+                      of Christ in every sphere of influence.
+                    </p>
+
+                    <p className="text-justify">
+                      Through preaching, leadership development, discipleship, and mentorship, Pastor Edet is committed 
+                      to equipping men and women to discover their God-given purpose, maximize their potential, and impact their generation for the Kingdom.
+                      He continues to inspire lives with a message of faith, preparation, joy, and unwavering devotion to Christ, 
+                      raising a generation that shines as light in a dark world and advances God's Kingdom with wisdom, power, and integrity.
+                    </p>
+                  </div>
 
                 {/* CTA block */}
                 <div className="p-8 bg-[#081534] rounded-2xl relative overflow-hidden">
