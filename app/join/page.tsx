@@ -13,12 +13,12 @@ export default function JoinPage() {
   const router = useRouter()
   const [form, setForm] = useState({
     first_name: '', last_name: '', email: '',
-    phone: '', dob: '', guest_status: 'First_Timer',
+    phone: '', dob: '', guest_status: 'First_Timer', address: '',
   })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     setForm(prev => ({ ...prev, [e.target.name]: e.target.value }))
   }
 
@@ -56,11 +56,9 @@ export default function JoinPage() {
 
       <div className="w-full max-w-2xl z-10">
         <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
+          initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4 }}
-          className="text-center mb-8 sm:mb-10"
-        >
+          className="text-center mb-8 sm:mb-10">
           <h1 className="text-[32px] sm:text-[44px] md:text-[56px] font-bold text-[#081534] mb-3 sm:mb-4">Join the Family</h1>
           <p className="text-[15px] sm:text-[18px] leading-[24px] sm:leading-[28px] text-[#45464e] max-w-lg mx-auto">
             We are thrilled that you've chosen to grow with us. Fill out the form below to start your journey.
@@ -69,12 +67,11 @@ export default function JoinPage() {
 
         {/* Form card */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
+          initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, delay: 0.1 }}
           className="bg-white rounded-xl border border-[#c6c6cf] p-5 sm:p-8 md:p-12"
-          style={{ boxShadow: '0 4px 60px -12px rgba(8,21,52,0.08)' }}
-        >
+          style={{ boxShadow: '0 4px 60px -12px rgba(8,21,52,0.08)' }}>
+
           <form onSubmit={handleSubmit} className="space-y-6 sm:space-y-8">
 
             {/* Personal Info */}
@@ -87,17 +84,17 @@ export default function JoinPage() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5 sm:gap-6">
                 <div>
-                  <label className={labelClass}>First Name</label>
+                  <label className={labelClass}>First Name *</label>
                   <input name="first_name" type="text" placeholder="Jane" required
                     className={inputClass} value={form.first_name} onChange={handleChange} />
                 </div>
                 <div>
-                  <label className={labelClass}>Last Name</label>
+                  <label className={labelClass}>Last Name *</label>
                   <input name="last_name" type="text" placeholder="Doe" required
                     className={inputClass} value={form.last_name} onChange={handleChange} />
                 </div>
                 <div>
-                  <label className={labelClass}>Email Address</label>
+                  <label className={labelClass}>Email Address *</label>
                   <input name="email" type="email" placeholder="hello@example.com" required
                     className={inputClass} value={form.email} onChange={handleChange} />
                 </div>
@@ -107,20 +104,32 @@ export default function JoinPage() {
                     className={inputClass} value={form.phone} onChange={handleChange} />
                 </div>
                 <div>
-                  <label className={labelClass}>Date of Birth</label>
+                  <label className={labelClass}>Date of Birth *</label>
                   <input name="dob" type="date" required
                     className={inputClass} value={form.dob} onChange={handleChange} />
                 </div>
                 <div>
-                  <label className={labelClass}>Guest Type</label>
+                  <label className={labelClass}>I am a *</label>
                   <select name="guest_status" className={inputClass}
                     value={form.guest_status} onChange={handleChange}>
                     <option value="First_Timer">First Time Guest</option>
-                    <option value="Returning">Returning Visitor</option>
                     <option value="Regular">Regular Attendee</option>
                     <option value="Member">Interested in Membership</option>
                   </select>
                 </div>
+              </div>
+
+              {/* Address — full width */}
+              <div>
+                <label className={labelClass}>Home Address</label>
+                <textarea
+                  name="address"
+                  placeholder="Street, City, State"
+                  rows={2}
+                  className="w-full bg-[#f2f4f6] border-b border-[#76777f] focus:border-[#081534] focus:ring-0 outline-none transition-all px-4 py-3 rounded-t-lg text-[16px] text-[#191c1e] resize-none"
+                  value={form.address}
+                  onChange={handleChange}
+                />
               </div>
             </div>
 
@@ -147,17 +156,24 @@ export default function JoinPage() {
             </div>
 
             {/* Error */}
-            {error && <p className="text-[#ba1a1a] text-[14px] font-medium">{error}</p>}
+            {error && (
+              <div className="flex items-start gap-2 p-4 bg-[#ffdad6] border border-[#ba1a1a]/30 rounded-xl">
+                <span className="material-symbols-outlined text-[#ba1a1a] text-[18px] shrink-0 mt-0.5">error</span>
+                <p className="text-[#ba1a1a] text-[13px] font-semibold">{error}</p>
+              </div>
+            )}
 
             {/* Submit */}
             <div className="pt-2">
               <motion.button
                 whileTap={{ scale: 0.97 }}
                 type="submit" disabled={loading}
-                className="w-full bg-[#fdc425] text-[#6d5200] text-[16px] sm:text-[20px] md:text-[24px] font-bold py-4 sm:py-5 rounded-xl shadow-lg hover:brightness-110 transition-all disabled:opacity-70 flex items-center justify-center gap-3"
-              >
-                {loading ? 'Processing...' : 'Join the Community'}
-                {!loading && <span className="material-symbols-outlined">arrow_forward</span>}
+                className="w-full bg-[#fdc425] text-[#6d5200] text-[16px] sm:text-[20px] md:text-[24px] font-bold py-4 sm:py-5 rounded-xl shadow-lg hover:brightness-110 transition-all disabled:opacity-70 flex items-center justify-center gap-3">
+                {loading ? (
+                  <><span className="w-5 h-5 border-2 border-[#6d5200]/30 border-t-[#6d5200] rounded-full animate-spin" /> Processing...</>
+                ) : (
+                  <>Join the Community <span className="material-symbols-outlined">arrow_forward</span></>
+                )}
               </motion.button>
               <p className="text-center text-[12px] text-[#45464e] mt-5 sm:mt-6">
                 By joining, you agree to receive inspirational updates from theSpotlightChurch.

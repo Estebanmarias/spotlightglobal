@@ -73,7 +73,7 @@ export default function Footer() {
         <div className="border-t border-white/10 py-6">
           <Link href="/pastor" className="group inline-flex items-center gap-4 hover:opacity-90 transition-opacity">
             <div className="w-11 h-11 rounded-full overflow-hidden ring-2 ring-[#fdc425]/50 shrink-0">
-              <img src={PASTOR_IMG} alt="Apostle Edet Kingsley" className="w-full h-full object-cover object-top" />
+              <img src="/images/apostle-1.jpg" alt="Apostle Edet Kingsley" className="w-full h-full object-cover object-top" />
             </div>
             <div>
               <p className="text-[10px] font-bold text-[#fdc425] uppercase tracking-widest leading-none mb-1">Lead Pastor</p>

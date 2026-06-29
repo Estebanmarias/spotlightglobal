@@ -58,7 +58,7 @@ function VisionSection() {
             </div>
           </div>
           <div className="space-y-4 sm:space-y-6">
-            <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuA3KNp-CVcwhV12KWJdBem1EHXNCFl5nW7AJOWUSr0Hx4viExit3TwNjFBjvwQYerkAH__E4X4VT3wME2NJiQtNQmj9CVDQxakM-OCwVCz-mc0O2EC5eW1k2gquLnn4GKEkMEJIMqstMxOKsb_pIYRTNxZBNzlGMtb8w7fFK8_j1JHPoP-4vgF8MaU6p10tTsbQ0EqeACSSflLmnZAPGAm7jPFrb8J11EI6QHhyDERQi1pJeHu7D9M_2I45-Dh1pNib7CF3EkMMe2k"
+            <img src="/images/gallery/gallery-3.webp"
               alt="Community" className="rounded-lg sm:rounded-xl w-full aspect-[4/5] object-cover shadow-sm" />
             <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuAO2xjXf2xjGElj9c-sSaN8mK2mKDbuXihrEItmDwWrb1VEx5lmSJlBbBalOS6Pvri-qJdtrCcegXcGl4MlJeXqKJpdOqhIMXRRSU2NdTn_45UJ_-QlE_hoRMym7N6yu0HINxmNlHrf6gX7uF8h2TwLgiYc7zSwUSQn92bfXCLfU0dITvvCUQkm5OQEGk2o_iAe3yx3XcGVxwt1OSA35jVP-MaGa_nZAeM2F3AnMfno8SAMJKIG3-LHlUsgZyfFHmA1RqMxK0qKESk"
               alt="Service" className="rounded-lg sm:rounded-xl w-full aspect-square object-cover shadow-sm" />

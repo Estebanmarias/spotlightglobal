@@ -1,58 +1,61 @@
 'use client'
 
 import { motion } from 'framer-motion'
+import type { Variants } from 'framer-motion'
 import Link from 'next/link'
 
-const fadeUp = {
+const fadeUp: Variants = {
   hidden: { opacity: 0, y: 24 },
-  show: (i = 0) => ({ opacity: 1, y: 0, transition: { duration: 0.6, delay: i * 0.1, ease: 'easeOut' } }),
+  show: (i = 0) => ({ opacity: 1, y: 0, transition: { duration: 0.6, delay: i * 0.1, ease: [0.4, 0, 0.2, 1] } }),
 }
 
-const highlights = [
-  { icon: 'church',       label: 'Founded',        value: 'theSpotlightChurch' },
-  { icon: 'radio_button_checked', label: 'Daily Prayer', value: 'Live on Telegram' },
-  { icon: 'play_circle',  label: 'Sermons',         value: 'YouTube · @pstedetkingsley' },
-  { icon: 'podcasts',     label: 'Teachings',       value: 'Spotify & Telegram' },
+const statCards = [
+  { icon: 'church',             label: 'Founded',      value: 'theSpotlightChurch' },
+  { icon: 'volunteer_activism', label: 'Daily Prayer',  value: '5:00 AM' },
+  { icon: 'auto_stories',       label: 'Sermons',       value: '1,200+' },
+  { icon: 'school',             label: 'Teachings',     value: 'Global' },
 ]
 
 export default function PastorPage() {
   return (
-    <main className="bg-[#f7f9fb] text-[#191c1e]">
+    <main className="bg-[#f7f9fb] text-[#191c1e] overflow-x-hidden">
 
       {/* ── HERO ─────────────────────────────────────────────────── */}
-      <section className="relative min-h-[70vh] flex items-end overflow-hidden bg-[#081534]">
-        {/* Background portrait */}
-        <div className="absolute inset-0 z-0">
-          <img
-            src="/images/apostle-edet-kingsley.jpg"
-            alt="Apostle Edet Kingsley"
-            className="w-full h-full object-cover object-top opacity-40"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-[#081534] via-[#081534]/60 to-[#081534]/20" />
-        </div>
+      <section className="relative min-h-[85vh] flex items-center bg-[#081534] overflow-hidden">
+      <div className="absolute inset-0 z-0">
+        <img
+          src="/images/apostle-1.jpg"
+          alt="Apostle Edet Kingsley"
+          className="w-full h-full object-cover object-top opacity-60"
+        />
+        {/* Gradient sits on top of image, both inside z-0 wrapper */}
+        <div className="absolute inset-0 bg-gradient-to-r from-[#081534] via-[#081534]/60 to-transparent" />
+      </div>
 
-        {/* Hero text */}
-        <div className="relative z-10 w-full max-w-[1100px] mx-auto px-6 pb-16 pt-32">
-          <motion.p variants={fadeUp} initial="hidden" animate="show"
-            className="text-[#fdc425] text-[11px] font-bold uppercase tracking-[0.25em] mb-3">
-            Lead Pastor · theSpotlightChurch
-          </motion.p>
-          <motion.h1 variants={fadeUp} custom={1} initial="hidden" animate="show"
-            className="text-white text-[48px] sm:text-[64px] lg:text-[80px] font-bold leading-[1.0] mb-6">
-            Apostle Edet<br />Kingsley
-          </motion.h1>
-          <motion.div variants={fadeUp} custom={2} initial="hidden" animate="show"
-            className="flex flex-wrap gap-3">
-            <a href="https://www.youtube.com/@pstedetkingsley" target="_blank" rel="noreferrer"
-              className="flex items-center gap-2 bg-[#fdc425] text-[#6d5200] px-6 py-3 rounded-full text-[13px] font-bold hover:brightness-110 transition-all active:scale-95">
-              <span className="material-symbols-outlined text-[16px]">play_circle</span>
-              Watch Sermons
-            </a>
-            <a href="https://t.me/thespotlightchurchLive" target="_blank" rel="noreferrer"
-              className="flex items-center gap-2 bg-white/10 border border-white/20 text-white px-6 py-3 rounded-full text-[13px] font-bold hover:bg-white/20 transition-all active:scale-95">
-              <span className="material-symbols-outlined text-[16px]">radio_button_checked</span>
-              Join Live Prayer
-            </a>
+        <div className="relative z-20 w-full max-w-[1280px] mx-auto px-6 md:px-16 py-24">
+          <motion.div variants={fadeUp} initial="hidden" animate="show" className="max-w-2xl">
+            <span className="text-[#fdc425] text-[11px] font-bold tracking-[0.2em] uppercase mb-4 block">
+              Lead Pastor · theSpotlightChurch
+            </span>
+            <h1 className="text-white text-[48px] sm:text-[64px] lg:text-[80px] font-bold leading-[1.0] mb-6">
+              Apostle Edet<br />Kingsley
+            </h1>
+            <p className="text-white/80 text-[16px] sm:text-[18px] leading-[28px] mb-10 max-w-xl">
+              A voice of hope, a beacon of light, and a shepherd dedicated to revealing the
+              transformative power of God's love to our generation.
+            </p>
+            <div className="flex flex-wrap gap-4">
+              <a href="https://www.youtube.com/@pstedetkingsley" target="_blank" rel="noreferrer"
+                className="flex items-center gap-2 bg-[#fdc425] text-[#6d5200] px-8 py-4 rounded-full text-[13px] font-bold hover:brightness-110 transition-all active:scale-95">
+                <span className="material-symbols-outlined text-[18px]" style={{ fontVariationSettings: "'FILL' 1" }}>play_circle</span>
+                Watch Sermons
+              </a>
+              <a href="https://t.me/thespotlightchurchLive" target="_blank" rel="noreferrer"
+                className="flex items-center gap-2 border-2 border-white text-white px-8 py-4 rounded-full text-[13px] font-bold hover:bg-white/10 transition-all active:scale-95">
+                <span className="material-symbols-outlined text-[18px]">radio_button_checked</span>
+                Join Live Prayer
+              </a>
+            </div>
           </motion.div>
         </div>
       </section>
@@ -60,122 +63,159 @@ export default function PastorPage() {
       {/* ── QUOTE BAND ───────────────────────────────────────────── */}
       <section className="bg-[#fdc425] py-8 px-6">
         <div className="max-w-[900px] mx-auto text-center">
-          <p className="text-[#6d5200] text-[16px] sm:text-[20px] font-bold leading-relaxed italic">
+          <h2 className="text-[#6d5200] text-[16px] sm:text-[20px] font-bold leading-relaxed italic">
             "We are a people marvellously helped, greatly blessed, deeply loved, and highly favoured."
-          </p>
-          <p className="text-[#785a00] text-[12px] font-semibold mt-2 uppercase tracking-widest">— Apostle Edet Kingsley</p>
+          </h2>
         </div>
       </section>
 
-      {/* ── BIO ──────────────────────────────────────────────────── */}
-      <section className="py-20 px-6 bg-white">
-        <div className="max-w-[1000px] mx-auto">
-          <div className="flex flex-col lg:flex-row gap-12 lg:gap-20 items-start">
+      {/* ── BIO & PROFILE ────────────────────────────────────────── */}
+      <section className="py-24 px-6 bg-[#f2f4f6]">
+        <div className="max-w-[1280px] mx-auto">
+          <div className="flex flex-col lg:flex-row gap-16">
 
-            {/* Portrait card */}
-            <motion.div initial={{ opacity: 0, x: -24 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }}
-              className="shrink-0 lg:sticky lg:top-24">
-              <div className="relative">
-                <div className="absolute -inset-2 rounded-[24px] bg-gradient-to-br from-[#fdc425] via-[#fdc425]/40 to-transparent" />
-                <div className="relative w-[260px] sm:w-[300px] rounded-[22px] overflow-hidden bg-[#1e2a4a]"
-                  style={{ aspectRatio: '3/4' }}>
+            {/* Sticky sidebar */}
+            <aside className="lg:w-1/3 lg:sticky lg:top-28 h-fit">
+              {/* Portrait */}
+              <div className="relative bg-white p-2 rounded-xl shadow-lg mb-8 group overflow-hidden">
+                <div className="aspect-[4/5] rounded-lg overflow-hidden">
                   <img
-                    src="/images/apostle-edet-kingsley.webp"
-                    className="w-full h-full object-cover object-top"
+                    src="/images/apostle-1.jpg"
+                    alt="Apostle Edet Kingsley"
+                    className="w-full h-full object-cover object-top transition-transform duration-700 group-hover:scale-105"
                   />
                 </div>
-                {/* Gold dot */}
-                <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 w-6 h-6 rounded-full bg-[#fdc425] border-4 border-white" />
+                {/* Gold border accent */}
+                <div className="absolute inset-0 rounded-xl ring-2 ring-[#fdc425]/40 pointer-events-none" />
               </div>
 
-              {/* Highlights */}
-              <div className="mt-8 space-y-3 w-[260px] sm:w-[300px]">
-                {highlights.map(h => (
-                  <div key={h.label} className="flex items-center gap-3 p-3 bg-[#f7f9fb] rounded-xl border border-[#eceef0]">
-                    <div className="w-8 h-8 rounded-lg bg-[#081534] flex items-center justify-center shrink-0">
-                      <span className="material-symbols-outlined text-[#fdc425] text-[16px]">{h.icon}</span>
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-[10px] font-bold text-[#76777f] uppercase tracking-wide">{h.label}</p>
-                      <p className="text-[12px] font-bold text-[#081534] truncate">{h.value}</p>
-                    </div>
+              {/* Stat cards grid */}
+              <div className="grid grid-cols-2 gap-4">
+                {statCards.map(s => (
+                  <div key={s.label}
+                    className="bg-white p-5 rounded-xl border border-[#c6c6cf] flex flex-col items-center text-center hover:shadow-md transition-all">
+                    <span className="material-symbols-outlined text-[#fdc425] text-[28px] mb-2"
+                      style={{ fontVariationSettings: "'FILL' 1" }}>{s.icon}</span>
+                    <span className="text-[11px] text-[#45464e] font-semibold uppercase tracking-wide mb-0.5">{s.label}</span>
+                    <span className="text-[13px] font-bold text-[#081534] text-center leading-snug">{s.value}</span>
                   </div>
                 ))}
               </div>
-            </motion.div>
+            </aside>
 
-            {/* Bio text */}
-            <motion.div initial={{ opacity: 0, y: 24 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
-              className="flex-1 pt-2">
-              <div className="flex items-center gap-4 mb-8">
-                <div className="w-12 h-[3px] bg-[#fdc425] rounded-full" />
-                <span className="material-symbols-outlined text-[#fdc425] text-[20px]"
-                  style={{ fontVariationSettings: "'FILL' 1" }}>church</span>
-                <div className="w-12 h-[3px] bg-[#fdc425] rounded-full" />
-              </div>
+            {/* Bio content */}
+            <div className="lg:w-2/3">
+              <motion.div initial={{ opacity: 0, y: 24 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
+                className="space-y-8">
 
-              <div className="space-y-5 text-[15px] sm:text-[16px] text-[#45464e] leading-[1.85]">
-                <p>
-                  <span className="text-[#081534] font-bold">Apostle Edet Kingsley</span> is the Setman of The Spotlight Church,
-                   a vibrant ministry committed to raising believers who accurately represent Christ through sound doctrine, 
-                  spiritual excellence, and purposeful living.
-                </p>
-                <p>
-                  With a strong apostolic and teaching grace, he is passionate about unveiling <br /> God's Word with clarity, 
-                  depth, and practical relevance. His ministry emphasizes spiritual growth, preparation for destiny, 
-                  excellence in service, kingdom leadership, and the transforming power of God's presence. 
-                  His messages challenge believers to pursue intimacy with God,
-                   embrace discipline, and <br /> become effective ambassadors of Christ in every sphere of influence.
-                </p>
-                <p>
-                    Through preaching, leadership development, discipleship, and mentorship, 
-                    Pastor Edet is committed to equipping men and women to discover their God-given purpose, 
-                    maximize their potential, and impact their generation for the Kingdom.
-                </p>
-                <p>
-                  He is also a recording gospel artist — his music is a soundtrack of faith, hope, and the glory of God.
-                  His debut single <span className="text-[#081534] font-semibold italic">Holy Spirit Oyoyo</span> has
-                  touched lives across Nigeria and beyond, and is available on all major streaming platforms.
-                </p>
-                <p>
-                  Under his leadership, theSpotlightChurch has grown into a community of believers who are not just
-                  churchgoers but Kingdom ambassadors — marvellously helped, greatly blessed, deeply loved,
-                  and highly favoured.
-                </p>
-              </div>
-
-              {/* CTA block */}
-              <div className="mt-10 p-6 bg-[#081534] rounded-2xl">
-                <p className="text-white font-bold text-[16px] mb-1">Ready to be part of the family?</p>
-                <p className="text-white/60 text-[13px] mb-5">Join us for service this Sunday — in person or online.</p>
-                <div className="flex flex-wrap gap-3">
-                  <Link href="/join"
-                    className="flex items-center gap-2 bg-[#fdc425] text-[#6d5200] px-6 py-3 rounded-full text-[13px] font-bold hover:brightness-110 transition-all active:scale-95">
-                    <span className="material-symbols-outlined text-[16px]">person_add</span>
-                    Join the Church
-                  </Link>
-                  <Link href="/community"
-                    className="flex items-center gap-2 bg-white/10 border border-white/20 text-white px-6 py-3 rounded-full text-[13px] font-bold hover:bg-white/20 transition-all active:scale-95">
-                    <span className="material-symbols-outlined text-[16px]">groups</span>
-                    Our Community
-                  </Link>
+                <div>
+                  <span className="inline-block px-4 py-1 bg-[#fdc425]/20 text-[#785a00] border border-[#fdc425]/40 rounded-full text-[12px] font-bold mb-4 uppercase tracking-widest">
+                    Biography
+                  </span>
+                  <h2 className="text-[#081534] text-[28px] sm:text-[36px] lg:text-[44px] font-bold leading-tight">
+                    Leading a Generation to the{' '}
+                    <span className="text-[#785a00] italic">Spotlight</span>{' '}
+                    of God's Presence.
+                  </h2>
                 </div>
-              </div>
-            </motion.div>
+
+                <div className="space-y-6 text-[#45464e] text-[15px] sm:text-[16px] leading-[1.85]">
+                  <p>
+                    <span className="text-[#081534] font-bold">Apostle Edet Kingsley</span> is a visionary leader,
+                    teacher, and apostle called to awaken the world to the reality of the Holy Spirit. As the lead pastor
+                    of theSpotlightChurch, he has fostered a community where diversity is celebrated and spiritual
+                    stability is the foundation of every life.
+                  </p>
+                  <p>
+                    His ministry is marked by a unique blend of corporate excellence and spiritual depth. Beyond the
+                    pulpit, Apostle Kingsley is a renowned gospel artist whose music has touched millions globally.
+                    His landmark anthem,{' '}
+                    <span className="text-[#081534] font-bold italic">"Holy Spirit Oyoyo,"</span>{' '}
+                    has become a staple in worship sessions around the world, known for ushering in an atmosphere
+                    of intense divine presence.
+                  </p>
+                  <p>
+                    With years of ministry, his teachings focus on the practical application of the Word, empowering
+                    believers to shine their light in the spheres of business, arts, and governance. He believes that
+                    the church is not just a building, but a light-station where every member is equipped to impact
+                    their world.
+                  </p>
+                </div>
+
+                {/* CTA block */}
+                <div className="p-8 bg-[#081534] rounded-2xl relative overflow-hidden">
+                  <div className="absolute -right-20 -top-20 w-64 h-64 bg-[#fdc425]/10 rounded-full blur-[80px] pointer-events-none" />
+                  <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+                    <div>
+                      <h3 className="text-white text-[18px] font-bold mb-1">Join our global community</h3>
+                      <p className="text-white/60 text-[13px]">Connect with Apostle Edet Kingsley and the family today.</p>
+                    </div>
+                    <div className="flex flex-wrap gap-3 shrink-0">
+                      <Link href="/join"
+                        className="bg-[#fdc425] text-[#6d5200] px-6 py-3 rounded-full text-[13px] font-bold hover:brightness-110 transition-all active:scale-95">
+                        Join the Church
+                      </Link>
+                      <Link href="/community"
+                        className="text-white border border-white/30 px-6 py-3 rounded-full text-[13px] font-bold hover:bg-white/10 transition-all active:scale-95">
+                        Our Community
+                      </Link>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Gospel artistry + leadership photo cards */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
+                  {/* Gospel card */}
+                  <motion.div initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
+                    transition={{ delay: 0.1 }}
+                    className="group cursor-pointer rounded-xl overflow-hidden">
+                    <div className="relative h-64 overflow-hidden">
+                      <img src="/images/apostle-2.jpg" alt="Gospel Artistry"
+                        className="w-full h-full object-cover object-top transition-transform duration-700 group-hover:scale-110" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
+                      <div className="absolute inset-0 bg-[#fdc425]/0 group-hover:bg-[#fdc425]/10 transition-colors duration-500" />
+                      <div className="absolute bottom-4 left-4">
+                        <span className="text-[#fdc425] text-[10px] font-bold uppercase tracking-widest block mb-1">Gospel Artistry</span>
+                        <h4 className="text-white text-[18px] font-bold">Holy Spirit Oyoyo</h4>
+                      </div>
+                      <a href="https://kingdomboiz.com/download-music-edet-kingsley-holy-spirit-oyoyo/"
+                        target="_blank" rel="noreferrer"
+                        className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity bg-[#fdc425] text-[#6d5200] px-3 py-1.5 rounded-full text-[11px] font-bold flex items-center gap-1">
+                        <span className="material-symbols-outlined text-[14px]">music_note</span>
+                        Listen
+                      </a>
+                    </div>
+                  </motion.div>
+
+                  {/* Leadership card */}
+                  <motion.div initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
+                    transition={{ delay: 0.2 }}
+                    className="group cursor-pointer rounded-xl overflow-hidden">
+                    <div className="relative h-64 overflow-hidden">
+                      <img src="/images/apostle-3.jpg" alt="Sunday Teachings"
+                        className="w-full h-full object-cover object-center transition-transform duration-700 group-hover:scale-110" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
+                      <div className="absolute inset-0 bg-[#081534]/0 group-hover:bg-[#081534]/20 transition-colors duration-500" />
+                      <div className="absolute bottom-4 left-4">
+                        <span className="text-[#fdc425] text-[10px] font-bold uppercase tracking-widest block mb-1">Leadership</span>
+                        <h4 className="text-white text-[18px] font-bold">Sunday Teachings</h4>
+                      </div>
+                      <a href="https://www.youtube.com/@pstedetkingsley" target="_blank" rel="noreferrer"
+                        className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity bg-white/20 backdrop-blur-sm text-white px-3 py-1.5 rounded-full text-[11px] font-bold flex items-center gap-1 border border-white/30">
+                        <span className="material-symbols-outlined text-[14px]">play_circle</span>
+                        Watch
+                      </a>
+                    </div>
+                  </motion.div>
+                </div>
+
+              </motion.div>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* ── CLOSING BANNER ───────────────────────────────────────── */}
-      <section className="bg-[#081534] py-16 px-6 text-center">
-        <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
-          className="max-w-2xl mx-auto">
-          <p className="text-[#fdc425] text-[11px] font-bold uppercase tracking-widest mb-4">theSpotlightChurch</p>
-          <h2 className="text-white text-[24px] sm:text-[32px] font-bold leading-snug">
-            We are one body, shining one light.
-          </h2>
-        </motion.div>
-      </section>
+      
 
     </main>
   )
