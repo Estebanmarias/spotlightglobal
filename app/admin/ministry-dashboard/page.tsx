@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import { getSupabaseClient } from '@/lib/supabase'
@@ -68,7 +68,7 @@ const getNextWeekday = (weekdayName: string) => {
 const isPermissionsEmpty = (perms: string[] | null | undefined) =>
   !perms || perms.length === 0 || (perms.length === 1 && perms[0] === 'dashboard')
 
-export default function MinistryDashboardPage() {
+function MinistryDashboardContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const supabase = getSupabaseClient()
@@ -568,5 +568,17 @@ export default function MinistryDashboardPage() {
         )}
       </AnimatePresence>
     </div>
+  )
+}
+
+export default function MinistryDashboardPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-[#f7f9fb] flex items-center justify-center">
+        <p className="text-[#45464e]">Loading...</p>
+      </div>
+    }>
+      <MinistryDashboardContent />
+    </Suspense>
   )
 }
