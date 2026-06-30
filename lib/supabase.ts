@@ -1,7 +1,7 @@
 import { createBrowserClient } from '@supabase/ssr'
 import type { SupabaseClient } from '@supabase/supabase-js'
 
-let client: SupabaseClient<any, any, any> | null = null
+let client: SupabaseClient<any, any> | null = null
 
 // IMPORTANT: createBrowserClient (from @supabase/ssr) stores the session
 // as cookies instead of localStorage. This is required for middleware.ts
@@ -12,7 +12,7 @@ let client: SupabaseClient<any, any, any> | null = null
 // every protected route redirect kept failing.
 export function getSupabaseClient() {
   if (!client) {
-    client = createBrowserClient<any, any, any>(
+    client = createBrowserClient<any, any>(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
     )
