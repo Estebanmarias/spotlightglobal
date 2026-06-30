@@ -137,7 +137,7 @@ export default function AdminDashboard() {
           <div className="absolute top-0 right-0 w-96 h-96 rounded-full bg-[#fdc425] blur-[80px] translate-x-1/3 -translate-y-1/3" />
           <div className="absolute bottom-0 left-0 w-64 h-64 rounded-full bg-white blur-[60px] -translate-x-1/3 translate-y-1/3" />
         </div>
-        <div className="relative z-10 pl-12 lg:pl-0">
+        <div className="relative z-10">
           <p className="text-[#fdc425] text-[12px] font-semibold uppercase tracking-widest mb-1">{today}</p>
           <h1 className="text-white text-[24px] sm:text-[30px] font-bold mb-1">
             {greeting}, <span className="text-[#fdc425]">{displayName}</span> 👋
@@ -148,7 +148,7 @@ export default function AdminDashboard() {
           </p>
         </div>
 
-        <div className="relative z-10 mt-6 grid grid-cols-3 gap-2 sm:gap-3 pl-12 lg:pl-0">
+        <div className="relative z-10 mt-6 grid grid-cols-3 gap-2 sm:gap-3">
           {[
             { label: "Total Members", value: total, icon: "group" },
             { label: "This Week", value: thisWeek, icon: "person_add" },
