@@ -41,29 +41,30 @@ function AdminLoginContent() {
       .eq("user_id", authData.session.user.id)
       .single() as { data: { is_ministry_leader: boolean; role: string; permissions: string[]; status: string } | null };
 
-    setLoading(false);
-
-    // Block non-approved admins
     if (!roleData || roleData.status !== 'approved') {
       await supabase.auth.signOut()
       setError("Your account is pending approval. Contact Setman.")
+      setLoading(false)
       return
     }
 
-    const isSuper    = roleData?.role === "super_admin";
+    const isSuper      = roleData?.role === "super_admin";
     const isPureLeader = !isSuper && roleData?.is_ministry_leader && isPermissionsEmpty(roleData?.permissions);
 
-    // If middleware set a ?next= param, honour it — but only for safe admin paths
     const next = searchParams.get('next')
     const safeNext = next && next.startsWith('/admin/') ? next : null
 
-    if (isPureLeader) {
-      router.push("/admin/ministry-dashboard");
-    } else if (safeNext) {
-      router.push(safeNext);
-    } else {
-      router.push("/admin/dashboard");
-    }
+    const destination = isPureLeader
+      ? "/admin/ministry-dashboard"
+      : safeNext || "/admin/dashboard"
+
+    // CRITICAL FIX: router.push() is a client-side transition that can fire
+    // before the browser has actually persisted the auth cookie to disk —
+    // this race condition is much more common on mobile Safari/Chrome where
+    // cookie writes are throttled more aggressively than desktop. Using a
+    // full page navigation (window.location) forces a real HTTP request,
+    // guaranteeing the cookie is sent and read correctly by middleware.
+    window.location.href = destination;
   };
 
   return (
@@ -77,7 +78,6 @@ function AdminLoginContent() {
         transition={{ duration: 0.4 }}
         className="w-full max-w-[440px] flex flex-col items-center relative z-10"
       >
-        {/* Brand */}
         <div className="mb-10 text-center flex flex-col items-center">
           <img
             src="https://lh3.googleusercontent.com/aida-public/AB6AXuCSu9ztjFXXL57HPmU2Tzxi3_L64jT6N2N-it5rvbfUfWfdXYJHE01o-8vaDbMMklLymKGFy1h8bgWMuq6cFCbsAWGpAlzRdnIlqlCNZGURQg-bl42EaVtpB0oh1Ad-gK8evCtIRS5ux11Sgpvn686W0Zv9ySUxOUssIE11jsJlK62yZPqSHl64xThPfeKXmVOT7T--wIzDqUmNxAViuDnvS5k1CKHkBHX3FGjpWOScub8kqDfinr_Tsn0ifKgyAVbp8f2XdxntkwI"
@@ -92,7 +92,6 @@ function AdminLoginContent() {
           </p>
         </div>
 
-        {/* Card */}
         <div className="w-full bg-white border border-[#c6c6cf] rounded-xl p-7 sm:p-10 shadow-sm">
           <form onSubmit={handleLogin} className="space-y-6">
             <div>
