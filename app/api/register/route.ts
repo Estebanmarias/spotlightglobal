@@ -44,18 +44,18 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Invalid request body.' }, { status: 400 })
   }
 
-  const { first_name, last_name, email, phone, dob, guest_status } = body as Record<string, string>
+  const { first_name, last_name, email, phone, address, dob, guest_status } = body as Record<string, string>
 
   // ── 3. Input validation ───────────────────────────────────────
-  if (!first_name || !last_name || !email || !phone || !dob || !guest_status) {
-    return NextResponse.json({ error: 'All fields are required.' }, { status: 400 })
+  if (!first_name || !last_name || !email || !phone || !dob) {
+    return NextResponse.json({ error: 'All required fields must be filled in.' }, { status: 400 })
   }
 
-  if (typeof first_name !== 'string' || first_name.trim().length < 1 || first_name.trim().length > 100) {
+  if (typeof first_name !== 'string' || first_name.trim().length < 1 || first_name.trim().length > 50) {
     return NextResponse.json({ error: 'Invalid first name.' }, { status: 400 })
   }
 
-  if (typeof last_name !== 'string' || last_name.trim().length < 1 || last_name.trim().length > 100) {
+  if (typeof last_name !== 'string' || last_name.trim().length < 1 || last_name.trim().length > 50) {
     return NextResponse.json({ error: 'Invalid last name.' }, { status: 400 })
   }
 
@@ -71,32 +71,40 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Invalid phone number.' }, { status: 400 })
   }
 
-  // Validate DOB — must be a real date and person must be between 5 and 120 years old
+  if (address && address.length > 200) {
+    return NextResponse.json({ error: 'Address is too long.' }, { status: 400 })
+  }
+
+  // Validate DOB
   const dobDate = new Date(dob)
   if (isNaN(dobDate.getTime())) {
     return NextResponse.json({ error: 'Invalid date of birth.' }, { status: 400 })
   }
   const age = Math.floor((Date.now() - dobDate.getTime()) / (365.25 * 24 * 60 * 60 * 1000))
-  if (age < 5 || age > 120) {
+  if (age < 0 || age > 120) {
     return NextResponse.json({ error: 'Invalid date of birth.' }, { status: 400 })
   }
 
-  const validStatuses = ['First_Timer', 'Returning', 'Regular', 'Member']
-  if (!validStatuses.includes(guest_status)) {
-    return NextResponse.json({ error: 'Invalid guest status.' }, { status: 400 })
-  }
+  // ⚠️ CURRENT 3-TIER SCHEMA ONLY — Returning/Regular no longer exist.
+  // Gracefully default to First_Timer instead of hard-rejecting, since
+  // an unexpected value here shouldn't block a real registration.
+  const validStatuses = ['First_Timer', 'Attending', 'Member']
+  const resolvedStatus = validStatuses.includes(guest_status) ? guest_status : 'First_Timer'
 
   // ── 4. Insert into Supabase ───────────────────────────────────
-  const { error: dbError } = await getSupabaseAdminClient()
+  const { data: member, error: dbError } = await getSupabaseAdminClient()
     .from('members')
     .insert([{
       first_name: first_name.trim(),
       last_name: last_name.trim(),
       email: email.toLowerCase().trim(),
       phone: phone.trim(),
+      address: address?.trim() || null,
       dob,
-      guest_status,
-    }])
+      guest_status: resolvedStatus,
+    }] as any)
+    .select()
+    .single()
 
   if (dbError) {
     if (dbError.code === '23505') {
@@ -124,15 +132,14 @@ export async function POST(req: NextRequest) {
           attributes: {
             PHONE: phone.trim(),
             DOB: dob,
-            GUEST_STATUS: guest_status,
+            GUEST_STATUS: resolvedStatus,
           },
         }),
       })
     } catch (err) {
-      // Brevo failure should not block registration success
       console.error('[BREVO ERROR]', err)
     }
   }
 
-  return NextResponse.json({ success: true, first_name: first_name.trim() }, { status: 200 })
+  return NextResponse.json({ success: true, first_name: first_name.trim(), memberId: member?.id }, { status: 200 })
 }

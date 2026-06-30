@@ -1,20 +1,17 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { getSupabaseClient } from "@/lib/supabase";
 import { motion } from "framer-motion";
+import { Suspense } from "react";
 
-// Mirrors the "pure ministry leader" rule in lib/use-admin-permissions.ts —
-// only someone with NO real general-admin permissions (empty or just the
-// default ['dashboard'] placeholder) gets routed to the scoped Ministry
-// Dashboard on login. An admin who also happens to lead a ministry keeps
-// landing on the normal dashboard like any other admin.
 const isPermissionsEmpty = (perms: string[] | null | undefined) =>
   !perms || perms.length === 0 || (perms.length === 1 && perms[0] === 'dashboard')
 
-export default function AdminLoginPage() {
+function AdminLoginContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPw, setShowPw] = useState(false);
@@ -40,17 +37,30 @@ export default function AdminLoginPage() {
 
     const { data: roleData } = await supabase
       .from("admin_roles")
-      .select("is_ministry_leader, role, permissions")
+      .select("is_ministry_leader, role, permissions, status")
       .eq("user_id", authData.session.user.id)
-      .single() as { data: { is_ministry_leader: boolean; role: string; permissions: string[] } | null };
+      .single() as { data: { is_ministry_leader: boolean; role: string; permissions: string[]; status: string } | null };
 
     setLoading(false);
 
-    const isSuper = roleData?.role === "super_admin";
+    // Block non-approved admins
+    if (!roleData || roleData.status !== 'approved') {
+      await supabase.auth.signOut()
+      setError("Your account is pending approval. Contact Setman.")
+      return
+    }
+
+    const isSuper    = roleData?.role === "super_admin";
     const isPureLeader = !isSuper && roleData?.is_ministry_leader && isPermissionsEmpty(roleData?.permissions);
+
+    // If middleware set a ?next= param, honour it — but only for safe admin paths
+    const next = searchParams.get('next')
+    const safeNext = next && next.startsWith('/admin/') ? next : null
 
     if (isPureLeader) {
       router.push("/admin/ministry-dashboard");
+    } else if (safeNext) {
+      router.push(safeNext);
     } else {
       router.push("/admin/dashboard");
     }
@@ -58,7 +68,6 @@ export default function AdminLoginPage() {
 
   return (
     <main className="flex items-center justify-center px-4 py-12 min-h-screen bg-[#f7f9fb] relative overflow-hidden">
-      {/* Ambient blobs */}
       <div className="absolute top-0 left-0 w-[500px] h-[500px] bg-[#081534]/5 rounded-full blur-[100px] -translate-x-1/2 -translate-y-1/2 pointer-events-none" />
       <div className="absolute bottom-0 right-0 w-[400px] h-[400px] bg-[#fdc425]/8 rounded-full blur-[80px] translate-x-1/2 translate-y-1/2 pointer-events-none" />
 
@@ -86,7 +95,6 @@ export default function AdminLoginPage() {
         {/* Card */}
         <div className="w-full bg-white border border-[#c6c6cf] rounded-xl p-7 sm:p-10 shadow-sm">
           <form onSubmit={handleLogin} className="space-y-6">
-            {/* Email */}
             <div>
               <label className="block text-[14px] font-semibold text-[#081534] mb-2">
                 Administrator Email
@@ -96,9 +104,7 @@ export default function AdminLoginPage() {
                   mail
                 </span>
                 <input
-                  type="email"
-                  required
-                  value={email}
+                  type="email" required value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="admin@thespotlight.church"
                   className="w-full pl-10 pr-3 py-3 bg-[#f7f9fb] border-b border-[#c6c6cf] focus:border-[#081534] focus:ring-0 outline-none transition-all text-[16px] text-[#191c1e]"
@@ -106,13 +112,13 @@ export default function AdminLoginPage() {
               </div>
             </div>
 
-            {/* Password */}
             <div>
               <div className="flex justify-between items-center mb-2">
                 <label className="text-[14px] font-semibold text-[#081534]">
                   Security Password
                 </label>
-                <button type="button" onClick={() => router.push('/admin/forgot-password')} className="text-[12px] text-[#785a00] hover:underline">
+                <button type="button" onClick={() => router.push('/admin/forgot-password')}
+                  className="text-[12px] text-[#785a00] hover:underline">
                   Forgot password?
                 </button>
               </div>
@@ -121,18 +127,13 @@ export default function AdminLoginPage() {
                   lock
                 </span>
                 <input
-                  type={showPw ? "text" : "password"}
-                  required
-                  value={password}
+                  type={showPw ? "text" : "password"} required value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
                   className="w-full pl-10 pr-10 py-3 bg-[#f7f9fb] border-b border-[#c6c6cf] focus:border-[#081534] focus:ring-0 outline-none transition-all text-[16px] text-[#191c1e]"
                 />
-                <button
-                  type="button"
-                  onClick={() => setShowPw((p) => !p)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[#76777f] hover:text-[#081534] transition-colors"
-                >
+                <button type="button" onClick={() => setShowPw((p) => !p)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[#76777f] hover:text-[#081534] transition-colors">
                   <span className="material-symbols-outlined text-[20px]">
                     {showPw ? "visibility_off" : "visibility"}
                   </span>
@@ -141,18 +142,21 @@ export default function AdminLoginPage() {
             </div>
 
             {error && (
-              <p className="text-[#ba1a1a] text-[14px] font-medium">{error}</p>
+              <div className="flex items-start gap-2 p-3 bg-[#ffdad6] rounded-lg">
+                <span className="material-symbols-outlined text-[#ba1a1a] text-[16px] shrink-0 mt-0.5">error</span>
+                <p className="text-[#ba1a1a] text-[13px] font-semibold">{error}</p>
+              </div>
             )}
 
             <motion.button
               whileTap={{ scale: 0.97 }}
-              type="submit"
-              disabled={loading}
+              type="submit" disabled={loading}
               className="w-full py-4 bg-[#081534] text-white text-[14px] font-bold rounded-lg shadow-sm hover:brightness-110 transition-all disabled:opacity-70 flex justify-center items-center gap-2"
             >
-              {loading ? "Authenticating..." : "Sign In to Portal"}
-              {!loading && (
-                <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
+              {loading ? (
+                <><span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> Authenticating...</>
+              ) : (
+                <>Sign In to Portal <span className="material-symbols-outlined text-[18px]">arrow_forward</span></>
               )}
             </motion.button>
           </form>
@@ -165,4 +169,16 @@ export default function AdminLoginPage() {
       </motion.div>
     </main>
   );
+}
+
+export default function AdminLoginPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-[#f7f9fb] flex items-center justify-center">
+        <p className="text-[#45464e]">Loading...</p>
+      </div>
+    }>
+      <AdminLoginContent />
+    </Suspense>
+  )
 }

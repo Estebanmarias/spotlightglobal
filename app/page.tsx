@@ -18,7 +18,7 @@ export default function HomePage() {
   )
 }
 
-// ── Inline Vision teaser ──────────────────────────────────────────────────────
+// ── Inline Vision teaser ─────────────────────────────────────────────────────
 function VisionSection() {
   return (
     <section className="py-16 sm:py-24 bg-[#f7f9fb]">

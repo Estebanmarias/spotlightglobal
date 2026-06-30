@@ -8,7 +8,7 @@ import { getSupabaseClient } from '@/lib/supabase'
 
 // ── CONFIG ──────────────────────────────────────────────────────
 const YT_API_KEY    = 'AIzaSyAtd9uF8EknLxIfBzA2VenjaREwfPoI0Qo'
-const YT_CHANNEL_ID = 'UCqKvr26isZoFXO02xEtX5UQ' // e.g. UCxxxxxxxxxxxx
+const YT_CHANNEL_ID = 'UCqKvr26isZoFXO02xEtX5UQ' 
 
 type ChurchEvent = {
   id: string; title: string; description: string | null
