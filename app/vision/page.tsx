@@ -3,6 +3,7 @@
 import { useEffect, useRef } from 'react'
 import { motion, Variants } from 'framer-motion'
 import Link from 'next/link'
+import { s } from '@upstash/redis'
 
 const fadeUp: Variants = {
   hidden: { opacity: 0, y: 24 },
@@ -10,16 +11,42 @@ const fadeUp: Variants = {
 }
 
 const pillars = [
-  { icon: 'auto_stories', title: 'Deepening Faith', desc: 'Spiritual growth through intentional worship, rigorous teaching, and a commitment to understanding our place in God\'s story.' },
-  { icon: 'diversity_3', title: 'Building Community', desc: 'Creating authentic spaces of belonging where every story is heard and every person is valued as a vital part of our family.' },
-  { icon: 'volunteer_activism', title: 'Igniting Impact', desc: 'Active outreach and service initiatives that address local needs and bring tangible hope to the neighborhoods we call home.' },
-  { icon: 'rocket_launch', title: 'Future Focus', desc: 'Investing in the next generation through youth leadership, education, and innovative ministries that look toward tomorrow.' },
+  {
+    icon: 'menu_book',
+    title: 'Wisdom',
+    desc: 'We preach the wisdom of God so that your faith will not stand on man, but on the power of God.',
+    list: false,
+  },
+  {
+    icon: 'bolt',
+    title: 'Power',
+    desc: 'We reach many with the power of God to heal, deliver, liberate, and enlighten them, lifting lives into all that God has paid for in Christ Jesus.',
+    list: false,
+  },
+  {
+    icon: 'favorite',
+    title: 'Love',
+    desc: 'God loves us, and it is our responsibility to communicate His love to a faint and dying world through the truth of the Gospel making many realize that God is not mad or angry at them.',
+    list: false,
+  },
+  {
+    icon: 'diamond',
+    title: 'Wealth',
+    desc: null,
+    list: true,
+    lines: [
+      'Money in the hands of righteous men is righteous.',
+      'Money in the hands of good people will do great things.',
+      'Money in the hands of God\'s men will bring more men to God.',
+      'God wants you wealthy.',
+    ],
+  },
 ]
 
 const checks = [
-  { title: 'Inclusive Environment', desc: 'A place where everyone belongs, regardless of their past or current stage of life.' },
-  { title: 'Spiritual Growth', desc: 'Tools and resources to help you deepen your understanding of scripture and prayer.' },
-  { title: 'Community Service', desc: 'Active outreach programs designed to meet the tangible needs of our local neighbors.' },
+  { title: 'Love and be Loved', desc: 'Here we expect you to recieve of Godos Love through Brothers and Sisters and Give it.' },
+  { title: 'Respond and be Responsible', desc: 'We expect you to respond to Gods Work and be a Responsible Believer.' },
+  { title: 'Serve and be Great', desc: 'You were born with a gift from God to Humanity and we believe that serving Gift is your Guaranteed root to Greatness and this Church give you that Plartform.' },
 ]
 
 export default function VisionPage() {
@@ -145,7 +172,7 @@ export default function VisionPage() {
         <div className="max-w-3xl mx-auto px-6 reveal opacity-0 translate-y-8 transition-all duration-700">
           <h2 className="text-[32px] font-bold leading-[40px] text-[#fdc425] mb-6">Experience the Vision Firsthand</h2>
           <p className="text-[18px] leading-[28px] text-white/80 mb-10">
-            Whether you're exploring faith for the first time or looking for a new spiritual home, we'd love to meet you this Sunday. Step into the spotlight of grace.
+            Whether you&apos;re exploring faith for the first time or looking for a new spiritual home, we&apos;d love to meet you this Sunday. Step into the spotlight of grace.
           </p>
           <div className="flex flex-col sm:flex-row justify-center gap-4">
             <Link href="/join"

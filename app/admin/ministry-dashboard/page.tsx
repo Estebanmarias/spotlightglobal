@@ -320,7 +320,7 @@ function MinistryDashboardContent() {
       {/* Header */}
       <div className="sticky top-0 z-30 bg-white border-b border-[#c6c6cf] px-4 sm:px-8 py-4">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-          <div className="pl-12 lg:pl-0">
+          <div className="">
             <h2 className="text-[20px] sm:text-[24px] font-bold text-[#081534]">
               Ministry Dashboard
               {!isPureLeader && (

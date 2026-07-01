@@ -146,7 +146,7 @@ export default function AnalyticsPage() {
       {/* Header */}
       <div className="sticky top-0 bg-white border-b border-[#c6c6cf] px-4 sm:px-8 lg:px-10 py-4 z-40">
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
-          <div className="pl-12 lg:pl-0">
+          <div className="">
             <h2 className="text-[22px] sm:text-[26px] font-bold text-[#081534]">Analytics</h2>
             <p className="text-[13px] text-[#45464e]">Live data from members and attendance records.</p>
           </div>

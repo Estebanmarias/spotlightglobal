@@ -220,7 +220,7 @@ export default function SettingsPage() {
       {/* Header */}
       <div className="bg-white border-b border-[#c6c6cf] px-4 sm:px-8 lg:px-10 py-6">
         <div className="flex items-center justify-between gap-3">
-          <div className="pl-12 lg:pl-0">
+          <div className="">
             <h1 className="text-[24px] font-bold text-[#081534]">Settings</h1>
             <p className="text-[13px] text-[#45464e] mt-1">Manage your account, admin access, and team permissions.</p>
           </div>
