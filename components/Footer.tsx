@@ -11,8 +11,8 @@ const exploreLinks = [
 ]
 
 const legalLinks = [
-  { label: 'Contact Us',       href: '#' },
-  { label: 'Privacy Policy',   href: '#' },
+  { label: 'Contact Us',       href: '/contact' },
+  { label: 'Privacy Policy',   href: 'privacy-policy' },
   { label: 'Terms of Service', href: '#' },
 ]
 

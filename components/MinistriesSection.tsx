@@ -5,22 +5,22 @@ import { motion } from 'framer-motion'
 const ministries = [
   {
     name: 'Media Team', desc: 'Empowering the next generation to lead with faith.',
-    img: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAnqPUzQDzwfLD6eg1bu0ybLckdsDkN_qiQvU1w6sndZ-197SwBp88YuzxejjVOFfyXE1pyXwG8tlQ5sPJmFKLgtb2Dw58bxMecn1wPSsdDLC00s7itVHqjrNfuvdKr6Sq9g5H8XrxaUsvlxS1E8qRdJiHfsDe2-PDgsCIDpf7epF8QqtvT4B_R2YqpxNVVoZOHTl95RiK0tkNaGgwtzPCHKe1nas79k8MX1naNVGFP_TeO8GajubXxhqNjn6ZHfg2kTBVCTrGInT8',
+    img: '/images/media.jpg',
     col: 'md:col-span-2 md:row-span-1',
   },
   {
     name: 'Spotlight Worship', desc: 'Music and liturgy that touches the soul.',
-    img: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAYuMUTfe2jUxE9-fvjz8BUszSKduChiEHNBYz6DH0kKH-6rMuhGG1nJ3CzPlq1aDg8jwK71TWjzw-787BgqZzhyydy7DzZfoJ-2lTTyeT0z0iTRucCM6Zhir-fCetrXrWGE0op1pt38qqARR_TSWQoKhsGvsMXiO55Wx4ShWJcnUPtlxRrkjgms3rQoqEdUr4zxjQZvoXHl-q9vkQcDnCym0lgNz7zOM3OQxci4_-ehkLk6dhv9itZYVLdnXPvyAx0z8R3d_WqoHM',
+    img: '/images/fade.jpg',
     col: 'md:col-span-1 md:row-span-2',
   },
   {
     name: 'Welfare & Program', desc: 'Fun and safe faith foundations.',
-    img: 'https://lh3.googleusercontent.com/aida-public/AB6AXuB7ku22GaPTigytuJv8Mrv3kKsrrjdWAlzK8fe4RQV30Be-wLfAScV_fDTQ-QDEMXGtN-PtS5N7hT3EHVAfjPJDhLHPxCs_2Lo4mHsZaHuUK73Bdb5gJODWvm6EUSoLrmbzhufzkBb1lEQyG7_Op7he1HxqVjTusGsl70n92N3NOIqnsOCF_FDFaSiKVNUPZeWX5VmYLLdohomefelshRorKbMPDX2kC0M1kHqn67ZtjpDCNeTHG-50MYMR7feTDZrVq5PxyTu-6-s',
+    img: '/images/welfare.jpg',
     col: 'md:col-span-1 md:row-span-1',
   },
   {
     name: 'Evangelism & Outreach', desc: 'Making a tangible difference in our local community.',
-    img: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAoDHWXqpvM09TjqphSJG_LMqwVWC3s1pzH63w3GdwXdbOitbopfaAI3TJXcVXuQi11nsNhXt4PUGhTBaqYmIDzlUwDjy4yz23bEjxs3EB696IDr79A8vXYa1SmGMQKeLyXmagNJcdiGcb3D08chMBjOPVPfYXIWXJX9LNII6Zq5SXmkfzQh9bAYxO3-d4mp6Kq2LsgZJ2iEulwB5fcPY2Rm7X6zsK2XwYRtXgAAR1MMJQ2azqWtA5zih_xuRnOcgHW3nEV3HQ3UVk',
+    img: '/images/OUTREACH-4.jpg',
     col: 'md:col-span-2 md:row-span-1',
   },
 ]

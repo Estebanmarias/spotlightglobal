@@ -3,7 +3,6 @@
 import { useEffect, useRef } from 'react'
 import { motion, Variants } from 'framer-motion'
 import Link from 'next/link'
-import { s } from '@upstash/redis'
 
 const fadeUp: Variants = {
   hidden: { opacity: 0, y: 24 },
@@ -160,7 +159,18 @@ export default function VisionPage() {
                   <span className="material-symbols-outlined text-[#ffdf9a] text-[28px]" style={{ fontVariationSettings: "'FILL' 1" }}>{p.icon}</span>
                 </div>
                 <h3 className="text-[24px] font-semibold text-[#081534] mb-3">{p.title}</h3>
+                {p.list ? (
+                <ul className="space-y-2">
+                  {(p as any).lines.map((line: string, i: number) => (
+                    <li key={i} className="flex items-start gap-2 text-[15px] text-[#45464e] leading-[24px]">
+                      <span className="mt-2 w-1.5 h-1.5 rounded-full bg-[#fdc425] shrink-0" />
+                      {line}
+                    </li>
+                  ))}
+                </ul>
+                  ) : (
                 <p className="text-[16px] text-[#45464e] leading-[24px]">{p.desc}</p>
+                  )}
               </div>
             ))}
           </div>

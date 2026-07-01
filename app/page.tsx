@@ -48,7 +48,7 @@ function VisionSection() {
 
         <div className="grid grid-cols-2 gap-4 sm:gap-6">
           <div className="space-y-4 sm:space-y-6 mt-8 sm:mt-12">
-            <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuBTuADFGULSK_90YFVDxdiCK2sPyTjqAUnqU08JyaHjwjfSnbJygSolxW9nLDsRd-KHq_d6j_NshbO6LhnTpnfCnOxXsf0o7TuNbYLwB0MgNkwytq1nXsvkHNwjJ5ND7EhffTEy7p-b-Gdah7IpOTKdUr6ITUTQw2mxwtmyU9mQI_wYmlMYMGXg3SMHP1Swf7XfOd2xulznrcN40PfIoQ3OcDkSOcg9KeJPOJTSsFAw44cvVjr0jt_844mwL0Z4CXMgwU0lHGsi3W8"
+            <img src="/images/best.jpg"
               alt="Church exterior" className="rounded-lg sm:rounded-xl w-full aspect-[4/5] object-cover shadow-sm" />
             <div className="bg-[#fdc425] p-4 sm:p-6 rounded-lg sm:rounded-xl">
               <h3 className="text-[16px] sm:text-[20px] lg:text-[24px] font-semibold text-[#6d5200] mb-1 sm:mb-2">Our Mission</h3>
@@ -58,9 +58,9 @@ function VisionSection() {
             </div>
           </div>
           <div className="space-y-4 sm:space-y-6">
-            <img src="/images/gallery/gallery-3.webp"
+            <img src="/images/gallery/gallery-1.webp"
               alt="Community" className="rounded-lg sm:rounded-xl w-full aspect-[4/5] object-cover shadow-sm" />
-            <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuAO2xjXf2xjGElj9c-sSaN8mK2mKDbuXihrEItmDwWrb1VEx5lmSJlBbBalOS6Pvri-qJdtrCcegXcGl4MlJeXqKJpdOqhIMXRRSU2NdTn_45UJ_-QlE_hoRMym7N6yu0HINxmNlHrf6gX7uF8h2TwLgiYc7zSwUSQn92bfXCLfU0dITvvCUQkm5OQEGk2o_iAe3yx3XcGVxwt1OSA35jVP-MaGa_nZAeM2F3AnMfno8SAMJKIG3-LHlUsgZyfFHmA1RqMxK0qKESk"
+            <img src="/images/hands-1.jpg"
               alt="Service" className="rounded-lg sm:rounded-xl w-full aspect-square object-cover shadow-sm" />
           </div>
         </div>
