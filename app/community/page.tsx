@@ -138,7 +138,7 @@ function EventsCarousel({ events }: { events: ChurchEvent[] }) {
   if (events.length === 0) return (
     <div className="text-center py-20 bg-white rounded-3xl border border-[#c6c6cf]">
       <span className="material-symbols-outlined text-[56px] text-[#c6c6cf] block mb-3">event</span>
-      <p className="text-[#45464e] font-semibold text-[16px]">No upcoming gatherings scheduled yet</p>
+      <p className="text-[#45464e] font-semibold text-[16px]">No upcoming Services scheduled yet</p>
       <p className="text-[13px] text-[#76777f] mt-1">Check back soon, or join us this Sunday</p>
     </div>
   )
@@ -453,8 +453,8 @@ function CommunityPageContent() {
         <div className="max-w-[1280px] mx-auto">
           <motion.div initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
             className="mb-12">
-            <h2 className="text-[28px] sm:text-[32px] font-bold text-[#081534] mb-2">Upcoming Gatherings</h2>
-            <p className="text-[#45464e] text-[15px]">Save the date for these community moments.</p>
+            <h2 className="text-[28px] sm:text-[32px] font-bold text-[#081534] mb-2">Upcoming Services</h2>
+            <p className="text-[#45464e] text-[15px]">Save the date for these Upcoming Services.</p>
           </motion.div>
 
           {eventsLoading ? (

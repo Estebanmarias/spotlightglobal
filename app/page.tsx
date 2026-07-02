@@ -1,6 +1,7 @@
 import HeroSection from '@/components/HeroSection'
 import MinistriesSection from '@/components/MinistriesSection'
 import ConnectSection from '@/components/ConnectSection'
+import SplashWrapper from '@/components/SplashWrapper'
 
 export const metadata = {
   title: 'theSpotlightChurch | Welcome Home',
@@ -9,12 +10,14 @@ export const metadata = {
 
 export default function HomePage() {
   return (
-    <main>
-      <HeroSection />
-      <VisionSection />
-      <MinistriesSection />
-      <ConnectSection />
-    </main>
+    <SplashWrapper>
+      <main>
+        <HeroSection />
+        <VisionSection />
+        <MinistriesSection />
+        <ConnectSection />
+      </main>
+    </SplashWrapper>
   )
 }
 
