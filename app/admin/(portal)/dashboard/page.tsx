@@ -35,6 +35,8 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState(true);
   const [partnerCount, setPartnerCount] = useState(0);
   const [newPartnerCount, setNewPartnerCount] = useState(0);
+  const [testimonies, setTestimonies] = useState<{ id: string; name: string; testimony: string; created_at: string }[]>([]);
+  const [deletingTestimony, setDeletingTestimony] = useState<string | null>(null);
 
   useEffect(() => {
     if (access.loading) return;
@@ -74,15 +76,24 @@ export default function AdminDashboard() {
       });
       setStatusCounts(counts);
 
-      // Partner submissions — Setman only
-      if (access.isSuperAdmin) {
-        const { count: pTotal } = await supabase
-          .from('partner_submissions').select('id', { count: 'exact', head: true })
+      // Partners — Setman OR admin with 'partners' permission
+      if (access.canAccess('partners')) {
+        const { count: pTotal } = await (supabase.from('partner_submissions') as any)
+          .select('id', { count: 'exact', head: true })
         setPartnerCount(pTotal || 0)
 
         const { count: pNew } = await (supabase.from('partner_submissions') as any)
           .select('id', { count: 'exact', head: true }).eq('status', 'new')
         setNewPartnerCount(pNew || 0)
+      }
+
+      // Testimonies — Setman only
+      if (access.isSuperAdmin) {
+        const { data: tData } = await (supabase.from('testimonies') as any)
+          .select('id, name, testimony, created_at')
+          .order('created_at', { ascending: false })
+          .limit(50)
+        setTestimonies(tData || [])
       }
 
       setLoading(false);
@@ -103,23 +114,22 @@ export default function AdminDashboard() {
 
   const statusConfig = [
     { key: "First_Timer", label: "First Timers", color: "bg-green-500", light: "bg-green-50 text-green-700" },
-    { key: "Attending", label: "Attending", color: "bg-blue-500", light: "bg-blue-50 text-blue-700" },
-    { key: "Member", label: "Members", color: "bg-[#fdc425]", light: "bg-[#fdc425]/20 text-[#785a00]" },
+    { key: "Attending",   label: "Attending",    color: "bg-blue-500",  light: "bg-blue-50 text-blue-700" },
+    { key: "Member",      label: "Members",      color: "bg-[#fdc425]", light: "bg-[#fdc425]/20 text-[#785a00]" },
   ];
 
   const allQuickActions: { icon: string; label: string; desc: string; href: string; bg: string; text: string; page: PageKey }[] = [
-    { icon: "person_add", label: "Add Member", desc: "Register someone new", href: "/admin/add-member", bg: "bg-[#081534]", text: "text-white", page: "members" },
-    { icon: "group", label: "View Members", desc: "Browse congregation", href: "/admin/members", bg: "bg-[#fdc425]", text: "text-[#6d5200]", page: "members" },
-    { icon: "fact_check", label: "Attendance", desc: "Log Sunday headcount", href: "/admin/attendance", bg: "bg-white", text: "text-[#081534]", page: "attendance" },
-    { icon: "church", label: "Ministries", desc: "Manage departments", href: "/admin/ministries", bg: "bg-white", text: "text-[#081534]", page: "ministries" },
+    { icon: "person_add", label: "Add Member",  desc: "Register someone new",  href: "/admin/add-member",  bg: "bg-[#081534]", text: "text-white",        page: "members" },
+    { icon: "group",      label: "View Members",desc: "Browse congregation",   href: "/admin/members",     bg: "bg-[#fdc425]", text: "text-[#6d5200]",   page: "members" },
+    { icon: "fact_check", label: "Attendance",  desc: "Log Sunday headcount",  href: "/admin/attendance",  bg: "bg-white",     text: "text-[#081534]",   page: "attendance" },
+    { icon: "church",     label: "Ministries",  desc: "Manage departments",    href: "/admin/ministries",  bg: "bg-white",     text: "text-[#081534]",   page: "ministries" },
   ];
 
   const quickActions = allQuickActions.filter(a => access.canAccess(a.page));
-
   const totalForBar = total || 1;
 
   const statusBadgeStyle = (status: string) => {
-    if (status === "Member") return "bg-[#fdc425]/20 text-[#785a00]";
+    if (status === "Member")   return "bg-[#fdc425]/20 text-[#785a00]";
     if (status === "Attending") return "bg-blue-50 text-blue-700";
     return "bg-green-50 text-green-700";
   };
@@ -133,11 +143,11 @@ export default function AdminDashboard() {
 
       {/* ── Hero header ── */}
       <div className="bg-[#081534] px-4 sm:px-8 lg:px-10 pt-8 pb-10 relative overflow-hidden">
-        <div className="absolute inset-0 opacity-5">
+        <div className="absolute inset-0 opacity-5 pointer-events-none">
           <div className="absolute top-0 right-0 w-96 h-96 rounded-full bg-[#fdc425] blur-[80px] translate-x-1/3 -translate-y-1/3" />
           <div className="absolute bottom-0 left-0 w-64 h-64 rounded-full bg-white blur-[60px] -translate-x-1/3 translate-y-1/3" />
         </div>
-        <div className="relative z-10">
+        <div className="relative z-10 pl-12 lg:pl-0">
           <p className="text-[#fdc425] text-[12px] font-semibold uppercase tracking-widest mb-1">{today}</p>
           <h1 className="text-white text-[24px] sm:text-[30px] font-bold mb-1">
             {greeting}, <span className="text-[#fdc425]">{displayName}</span> 👋
@@ -148,11 +158,11 @@ export default function AdminDashboard() {
           </p>
         </div>
 
-        <div className="relative z-10 mt-6 grid grid-cols-3 gap-2 sm:gap-3">
+        <div className="relative z-10 mt-6 grid grid-cols-3 gap-2 sm:gap-3 pl-12 lg:pl-0">
           {[
-            { label: "Total Members", value: total, icon: "group" },
-            { label: "This Week", value: thisWeek, icon: "person_add" },
-            { label: "This Month", value: thisMonth, icon: "trending_up" },
+            { label: "Total Members", value: total,     icon: "group" },
+            { label: "This Week",     value: thisWeek,  icon: "person_add" },
+            { label: "This Month",    value: thisMonth, icon: "trending_up" },
           ].map((s, i) => (
             <motion.div key={s.label}
               initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
@@ -206,12 +216,9 @@ export default function AdminDashboard() {
               <h3 className="text-[15px] font-bold text-[#081534]">Congregation Breakdown</h3>
               {access.canAccess('members') && (
                 <button onClick={() => router.push("/admin/members")}
-                  className="text-[11px] font-semibold text-[#785a00] hover:underline">
-                  View all
-                </button>
+                  className="text-[11px] font-semibold text-[#785a00] hover:underline">View all</button>
               )}
             </div>
-
             <div className="space-y-4">
               {statusConfig.map(s => {
                 const count = statusCounts[s.key as keyof StatusCounts];
@@ -228,14 +235,12 @@ export default function AdminDashboard() {
                       <motion.div
                         initial={{ width: 0 }} animate={{ width: `${pct}%` }}
                         transition={{ delay: 0.4, duration: 0.6 }}
-                        className={`${s.color} h-2 rounded-full`}
-                      />
+                        className={`${s.color} h-2 rounded-full`} />
                     </div>
                   </div>
                 );
               })}
             </div>
-
             <div className="mt-6 pt-4 border-t border-[#c6c6cf]">
               <p className="text-[11px] text-[#45464e] font-semibold uppercase tracking-wide mb-1">Total Registered</p>
               <p className="text-[28px] font-bold text-[#081534]">{loading ? "—" : total.toLocaleString()}</p>
@@ -255,18 +260,14 @@ export default function AdminDashboard() {
                 </button>
               )}
             </div>
-
             {loading ? (
               <div className="space-y-3">
-                {[1,2,3,4,5].map(i => (
-                  <div key={i} className="h-12 bg-[#f2f4f6] rounded-lg animate-pulse" />
-                ))}
+                {[1,2,3,4,5].map(i => <div key={i} className="h-12 bg-[#f2f4f6] rounded-lg animate-pulse" />)}
               </div>
             ) : recentMembers.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-10 text-center">
                 <span className="material-symbols-outlined text-[48px] text-[#c6c6cf] mb-2">group_add</span>
                 <p className="text-[#45464e] font-semibold text-[14px]">No members yet</p>
-                <p className="text-[12px] text-[#76777f] mt-1">Register your first member to get started</p>
                 {access.canAccess('members') && (
                   <button onClick={() => router.push("/admin/add-member")}
                     className="mt-4 px-4 py-2 bg-[#081534] text-white text-[12px] font-bold rounded-lg hover:opacity-90">
@@ -280,25 +281,21 @@ export default function AdminDashboard() {
                   <motion.div key={m.id}
                     initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: 0.3 + i * 0.06 }}
-                    className="flex items-center justify-between p-3 rounded-lg hover:bg-[#f7f9fb] transition-colors group">
+                    className="flex items-center justify-between p-3 rounded-lg hover:bg-[#f7f9fb] transition-colors">
                     <div className="flex items-center gap-3">
                       <div className="w-9 h-9 rounded-full bg-[#081534] text-white flex items-center justify-center text-[11px] font-bold shrink-0">
                         {m.first_name[0]}{m.last_name[0]}
                       </div>
                       <div>
-                        <p className="text-[13px] font-semibold text-[#191c1e]">
-                          {m.first_name} {m.last_name}
-                        </p>
+                        <p className="text-[13px] font-semibold text-[#191c1e]">{m.first_name} {m.last_name}</p>
                         <p className="text-[11px] text-[#45464e]">
                           {new Date(m.created_at).toLocaleDateString("en-NG", { month: "short", day: "numeric", year: "numeric" })}
                         </p>
                       </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${statusBadgeStyle(m.guest_status)}`}>
-                        {m.guest_status.replace("_", " ")}
-                      </span>
-                    </div>
+                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${statusBadgeStyle(m.guest_status)}`}>
+                      {m.guest_status.replace("_", " ")}
+                    </span>
                   </motion.div>
                 ))}
               </div>
@@ -306,7 +303,7 @@ export default function AdminDashboard() {
           </motion.div>
         </div>
 
-        {/* ── Bottom row — page links ── */}
+        {/* ── Bottom row ── */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           {access.canAccess('ministries') && (
             <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
@@ -343,7 +340,8 @@ export default function AdminDashboard() {
             </motion.div>
           )}
 
-          {access.isSuperAdmin ? (
+          {/* Giving — Setman OR admin with giving permission */}
+          {access.canAccess('giving') && (
             <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.4 }}
               onClick={() => router.push("/admin/giving")}
@@ -351,13 +349,16 @@ export default function AdminDashboard() {
               <div className="w-10 h-10 bg-[#081534] text-[#fdc425] rounded-xl flex items-center justify-center mb-4">
                 <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>volunteer_activism</span>
               </div>
-              <h3 className="text-[15px] font-bold text-[#081534] mb-1">Giving & Partners</h3>
-              <p className="text-[12px] text-[#6d5200] mb-4">Donations, tithes & partnership records.</p>
+              <h3 className="text-[15px] font-bold text-[#081534] mb-1">Giving & Records</h3>
+              <p className="text-[12px] text-[#6d5200] mb-4">Donations, tithes & giving records.</p>
               <div className="flex items-center gap-1 text-[#081534] text-[12px] font-semibold group-hover:gap-2 transition-all">
                 Open <span className="material-symbols-outlined text-[14px]">arrow_forward</span>
               </div>
             </motion.div>
-          ) : (
+          )}
+
+          {/* Settings — only if no giving access (fills the slot) */}
+          {!access.canAccess('giving') && (
             <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.4 }}
               onClick={() => router.push("/admin/settings")}
@@ -374,8 +375,8 @@ export default function AdminDashboard() {
           )}
         </div>
 
-        {/* ── Partners snapshot — Setman only ── */}
-        {access.isSuperAdmin && (
+        {/* ── Partners snapshot — Setman OR admin with partners permission ── */}
+        {access.canAccess('partners') && (
           <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.45 }}
             onClick={() => router.push('/admin/partner')}
@@ -400,6 +401,61 @@ export default function AdminDashboard() {
           </motion.div>
         )}
 
+        {/* ── Testimonies — Setman only ── */}
+        {access.isSuperAdmin && (
+          <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5 }}
+            className="bg-white border border-[#c6c6cf] rounded-xl overflow-hidden">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-[#c6c6cf]">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 bg-[#fdc425]/20 text-[#785a00] rounded-lg flex items-center justify-center">
+                  <span className="material-symbols-outlined text-[18px]" style={{ fontVariationSettings: "'FILL' 1" }}>chat_bubble</span>
+                </div>
+                <div>
+                  <h3 className="text-[14px] font-bold text-[#081534]">Community Testimonies</h3>
+                  <p className="text-[11px] text-[#45464e]">{testimonies.length} total — delete any harmful content</p>
+                </div>
+              </div>
+            </div>
+            {testimonies.length === 0 ? (
+              <div className="text-center py-10">
+                <span className="material-symbols-outlined text-[40px] text-[#c6c6cf] block mb-2">chat_bubble_outline</span>
+                <p className="text-[13px] text-[#76777f]">No testimonies submitted yet</p>
+              </div>
+            ) : (
+              <div className="divide-y divide-[#f2f4f6] max-h-[400px] overflow-y-auto">
+                {testimonies.map(t => (
+                  <div key={t.id} className="flex items-start justify-between gap-3 px-5 py-4 hover:bg-[#f7f9fb] transition-colors">
+                    <div className="flex items-start gap-3 min-w-0">
+                      <div className="w-8 h-8 rounded-full bg-[#081534] text-white flex items-center justify-center text-[11px] font-bold shrink-0 mt-0.5">
+                        {t.name.charAt(0).toUpperCase()}
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-[13px] font-bold text-[#081534]">{t.name}</p>
+                        <p className="text-[12px] text-[#45464e] leading-relaxed mt-0.5 line-clamp-2">"{t.testimony}"</p>
+                        <p className="text-[10px] text-[#76777f] mt-1">
+                          {new Date(t.created_at).toLocaleDateString('en-NG', { day: 'numeric', month: 'short', year: 'numeric' })}
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      disabled={deletingTestimony === t.id}
+                      onClick={async () => {
+                        setDeletingTestimony(t.id)
+                        await (supabase.from('testimonies') as any).delete().eq('id', t.id)
+                        setTestimonies(prev => prev.filter(x => x.id !== t.id))
+                        setDeletingTestimony(null)
+                      }}
+                      className="shrink-0 p-1.5 text-[#45464e] hover:text-[#ba1a1a] hover:bg-[#ffdad6] rounded-lg transition-colors disabled:opacity-40">
+                      <span className="material-symbols-outlined text-[16px]">delete</span>
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </motion.div>
+        )}
+
         {/* ── Footer note ── */}
         <div className="bg-[#ffdf9a] border border-[#fdc425] rounded-xl p-4 sm:p-5 flex items-start sm:items-center gap-4">
           <span className="material-symbols-outlined text-[#785a00] text-[24px] shrink-0"
@@ -407,8 +463,7 @@ export default function AdminDashboard() {
           <div>
             <p className="text-[13px] font-bold text-[#081534]">Company of the Blessed</p>
             <p className="text-[12px] text-[#5a4300]">
-              Every soul registered here is tracked, welcomed, and followed up with love.
-              Keep growing the family. 🙏
+              Every soul registered here is tracked, welcomed, and followed up with love. Keep growing the family. 🙏
             </p>
           </div>
           {access.canAccess('members') && (
@@ -418,7 +473,6 @@ export default function AdminDashboard() {
             </button>
           )}
         </div>
-
       </div>
     </div>
   );

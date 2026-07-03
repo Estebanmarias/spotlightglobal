@@ -28,7 +28,7 @@ function VisionSection() {
       <div className="px-4 sm:px-8 lg:px-16 w-full max-w-[1280px] mx-auto grid grid-cols-1 md:grid-cols-2 gap-10 sm:gap-12 lg:gap-16 items-center">
         <div>
           <h2 className="text-[24px] sm:text-[28px] lg:text-[32px] font-bold leading-[1.3] sm:leading-[40px] text-[#081534] mb-4 sm:mb-6">
-            A Sanctuary for Modern Souls
+            THIS IS CHURCH - the best place to be
           </h2>
           <p className="text-[15px] sm:text-[16px] lg:text-[18px] leading-[24px] sm:leading-[26px] lg:leading-[28px] text-[#45464e] mb-6 sm:mb-8">
            We make Christ Known, Manifesting the Character of the Holy Spirit, Helping many find Purpose and through

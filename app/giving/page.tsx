@@ -31,9 +31,8 @@ const pillars = [
 
 // ── Account data ─────────────────────────────────────────────────────
 const localAccounts = [
-  { id: 1, purpose: 'Tithes & Offerings', bank: 'GTBank',     accountName: 'Spotlight Global', accountNo: '0123456789' },
-  { id: 2, purpose: 'Welfare & Charity',  bank: 'Zenith Bank', accountName: 'Spotlight Global', accountNo: '0987654321' },
-  { id: 3, purpose: 'Building Project',   bank: 'Moniepoint',  accountName: 'Spotlight Global', accountNo: '8877665544' },
+  { id: 1, purpose: 'Prophetic Seeds', bank: 'Moniepoint', accountName: 'Kingsley Edet', accountNo: '8115316745' },
+  { id: 2, purpose: 'Offerings, Tithes, Welfare & Projects', bank: 'Palmpay', accountName: 'Unwana Ema', accountNo: '8108287193' },
 ]
 
 const intlAccounts = [
@@ -67,7 +66,7 @@ function CopyRow({ label, value, copied, onCopy }: { label: string; value: strin
 }
 
 export default function GivingPage() {
-  const [accountTab, setAccountTab] = useState<'local' | 'intl'>('local')
+  const [accountTab, setAccountTab] = useState<'local'>('local')
   const [copiedKey, setCopiedKey] = useState<string | null>(null)
 
   useEffect(() => {
@@ -190,88 +189,40 @@ export default function GivingPage() {
           <div className="flex justify-center mb-10">
             <div className="bg-white border border-[#c6c6cf] p-1 rounded-full flex gap-1 shadow-sm">
               <button onClick={() => setAccountTab('local')}
-                className={`px-6 py-2.5 rounded-full font-bold text-[13px] transition-all duration-200
-                  ${accountTab === 'local' ? 'bg-[#081534] text-white shadow-sm' : 'text-[#45464e] hover:text-[#081534]'}`}>
+                className="px-6 py-2.5 rounded-full font-bold text-[13px] transition-all duration-200 bg-[#081534] text-white shadow-sm">
                 Local (NGN)
               </button>
-              <button onClick={() => setAccountTab('intl')}
-                className={`px-6 py-2.5 rounded-full font-bold text-[13px] transition-all duration-200
-                  ${accountTab === 'intl' ? 'bg-[#081534] text-white shadow-sm' : 'text-[#45464e] hover:text-[#081534]'}`}>
+              <button disabled title="International accounts coming soon"
+                className="px-6 py-2.5 rounded-full font-bold text-[13px] text-[#a3a4ab] bg-transparent cursor-not-allowed flex items-center gap-1.5">
                 International
+                <span className="text-[9px] font-bold bg-[#e6e7ea] text-[#76777f] px-1.5 py-0.5 rounded-full">SOON</span>
               </button>
             </div>
           </div>
 
           {/* Local accounts */}
-          <AnimatePresence mode="wait">
-            {accountTab === 'local' && (
-              <motion.div key="local"
-                initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }}
-                transition={{ duration: 0.25 }}
-                className="grid grid-cols-1 sm:grid-cols-3 gap-5">
-                {localAccounts.map((acc, i) => (
-                  <motion.div key={acc.id}
-                    initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: i * 0.08 }}
-                    className="bg-white border border-[#c6c6cf] rounded-xl p-6 flex flex-col justify-between hover:border-[#081534]/30 hover:shadow-md transition-all">
-                    <div>
-                      <p className="text-[10px] font-bold text-[#785a00] uppercase tracking-widest mb-3">
-                        {acc.purpose}
-                      </p>
-                      <h3 className="text-[19px] font-bold text-[#081534] mb-0.5">{acc.bank}</h3>
-                      <p className="text-[13px] text-[#45464e] mb-5">{acc.accountName}</p>
-                    </div>
-                    <CopyRow label="Account Number" value={acc.accountNo}
-                      copied={copiedKey === `local-${acc.id}`}
-                      onCopy={() => handleCopy(acc.accountNo, `local-${acc.id}`)} />
-                  </motion.div>
-                ))}
+          <motion.div
+            initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.25 }}
+            className="grid grid-cols-1 sm:grid-cols-2 gap-5 max-w-2xl mx-auto">
+            {localAccounts.map((acc, i) => (
+              <motion.div key={acc.id}
+                initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.08 }}
+                className="bg-white border border-[#c6c6cf] rounded-xl p-6 flex flex-col justify-between hover:border-[#081534]/30 hover:shadow-md transition-all">
+                <div>
+                  <p className="text-[10px] font-bold text-[#785a00] uppercase tracking-widest mb-3">
+                    {acc.purpose}
+                  </p>
+                  <h3 className="text-[19px] font-bold text-[#081534] mb-0.5">{acc.bank}</h3>
+                  <p className="text-[13px] text-[#45464e] mb-5">{acc.accountName}</p>
+                </div>
+                <CopyRow label="Account Number" value={acc.accountNo}
+                  copied={copiedKey === `local-${acc.id}`}
+                  onCopy={() => handleCopy(acc.accountNo, `local-${acc.id}`)} />
               </motion.div>
-            )}
-
-            {/* International accounts */}
-            {accountTab === 'intl' && (
-              <motion.div key="intl"
-                initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }}
-                transition={{ duration: 0.25 }}
-                className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                {intlAccounts.map((acc, i) => (
-                  <motion.div key={acc.id}
-                    initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: i * 0.08 }}
-                    className="bg-white border border-[#c6c6cf] rounded-xl p-6 flex flex-col gap-5 hover:border-[#081534]/30 hover:shadow-md transition-all">
-                    <div>
-                      <p className="text-[10px] font-bold text-[#785a00] uppercase tracking-widest mb-3">
-                        {acc.purpose}
-                      </p>
-                      <h3 className="text-[19px] font-bold text-[#081534] mb-0.5">{acc.bank}</h3>
-                      <p className="text-[13px] text-[#45464e]">{acc.accountName}</p>
-                    </div>
-
-                    <div className="space-y-2.5">
-                      <CopyRow label="Account No" value={acc.accountNo}
-                        copied={copiedKey === `intl-acct-${acc.id}`}
-                        onCopy={() => handleCopy(acc.accountNo, `intl-acct-${acc.id}`)} />
-
-                      {'routing' in acc ? (
-                        <CopyRow label="Routing Number" value={acc.routing!}
-                          copied={copiedKey === `intl-route-${acc.id}`}
-                          onCopy={() => handleCopy(acc.routing!, `intl-route-${acc.id}`)} />
-                      ) : (
-                        <CopyRow label="Sort Code" value={acc.sortCode!}
-                          copied={copiedKey === `intl-sort-${acc.id}`}
-                          onCopy={() => handleCopy(acc.sortCode!, `intl-sort-${acc.id}`)} />
-                      )}
-
-                      <CopyRow label="SWIFT / BIC Code" value={acc.swift}
-                        copied={copiedKey === `intl-swift-${acc.id}`}
-                        onCopy={() => handleCopy(acc.swift, `intl-swift-${acc.id}`)} />
-                    </div>
-                  </motion.div>
-                ))}
-              </motion.div>
-            )}
-          </AnimatePresence>
+            ))}
+          </motion.div>
 
           {/* Trust note */}
           <div className="flex items-center justify-center gap-2 mt-10">

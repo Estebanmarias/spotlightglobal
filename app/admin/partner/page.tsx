@@ -37,7 +37,7 @@ const statusStyle = (status: string) => {
 export default function PartnersAdminPage() {
   const router   = useRouter()
   const supabase = getSupabaseClient()
-  const access   = useAdminAccess()
+  const access   = useAdminAccess('partners')
 
   const [submissions, setSubmissions] = useState<PartnerSubmission[]>([])
   const [loading, setLoading]         = useState(true)
@@ -54,7 +54,7 @@ export default function PartnersAdminPage() {
 
   useEffect(() => {
     if (access.loading) return
-    if (access.isSuperAdmin) fetchSubmissions()
+    if (access.canAccess('partners')) fetchSubmissions()
   }, [access.loading])
 
   const fetchSubmissions = async () => {
@@ -118,13 +118,13 @@ export default function PartnersAdminPage() {
     )
   }
 
-  if (!access.isSuperAdmin) {
+  if (!access.canAccess('partners')) {
     return (
       <div className="min-h-screen bg-[#f7f9fb] flex items-center justify-center p-6">
         <div className="text-center max-w-sm">
           <span className="material-symbols-outlined text-[56px] text-[#c6c6cf] block mb-3">lock</span>
           <h2 className="text-[18px] font-bold text-[#081534] mb-2">Restricted Access</h2>
-          <p className="text-[13px] text-[#45464e] mb-6">Partner submissions are only visible to Super Admin accounts.</p>
+          <p className="text-[13px] text-[#45464e] mb-6">Partner submissions are only visible to admins granted access to this page.</p>
           <button onClick={() => router.push('/admin/dashboard')}
             className="px-6 py-2.5 bg-[#081534] text-white rounded-lg text-[13px] font-bold hover:opacity-90">
             Back to Dashboard
@@ -140,7 +140,7 @@ export default function PartnersAdminPage() {
       {/* ── Header ────────────────────────────────────────────────── */}
       <div className="sticky top-0 z-30 bg-white border-b border-[#c6c6cf] px-4 sm:px-8 py-4">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-          <div className="flex items-center gap-3 pl-12 lg:pl-0">
+          <div className="flex items-center gap-3">
             <button onClick={() => router.push('/admin/dashboard')}
               className="hidden lg:flex items-center gap-1.5 px-3 py-2 border border-[#c6c6cf] text-[#45464e] rounded-lg text-[13px] font-semibold hover:bg-[#f2f4f6] hover:text-[#081534] transition-colors shrink-0">
               <span className="material-symbols-outlined text-[18px]">arrow_back</span>

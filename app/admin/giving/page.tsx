@@ -18,7 +18,7 @@ type GivingRecord = {
   notes: string | null
 }
 
-const GIVING_TYPES = ['General', 'Tithe', 'Missions', 'Building Fund', 'Partnership', 'Other']
+const GIVING_TYPES = ['Offering', 'Tithe', 'Welfare', 'Projects', 'Other']
 const PAYMENT_METHODS = ['Bank Transfer', 'Cash', 'Card', 'Online', 'Other']
 
 const inputCls = 'w-full bg-[#f2f4f6] border-b-2 border-transparent focus:border-[#081534] outline-none px-4 py-3 rounded-t-lg text-[14px] transition-colors'
@@ -30,10 +30,10 @@ const emptyForm = {
 
 const typeColor = (type: string) => {
   switch (type) {
-    case 'Tithe': return 'bg-[#fdc425]/20 text-[#785a00]'
-    case 'Missions': return 'bg-[#d8e2ff] text-[#002960]'
-    case 'Building Fund': return 'bg-purple-100 text-purple-800'
-    case 'Partnership': return 'bg-green-100 text-green-800'
+    case 'Offering': return 'bg-[#fdc425]/20 text-[#785a00]'
+    case 'Tithe': return 'bg-[#d8e2ff] text-[#002960]'
+    case 'Welfare': return 'bg-purple-100 text-purple-800'
+    case 'Projects': return 'bg-green-100 text-green-800'
     default: return 'bg-[#f2f4f6] text-[#45464e]'
   }
 }
@@ -42,7 +42,7 @@ export default function GivingPage() {
   const router = useRouter()
   const supabase = getSupabaseClient()
 
-  const access = useAdminAccess()
+  const access = useAdminAccess('giving')
   const [records, setRecords] = useState<GivingRecord[]>([])
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -56,7 +56,7 @@ export default function GivingPage() {
 
   useEffect(() => {
     if (access.loading) return
-    if (access.isSuperAdmin) fetchRecords()
+    if (access.canAccess('giving')) fetchRecords()
   }, [access.loading])
 
   const fetchRecords = async () => {
@@ -112,7 +112,7 @@ export default function GivingPage() {
     return <div className="min-h-screen bg-[#f7f9fb] flex items-center justify-center"><p className="text-[#45464e]">Loading...</p></div>
   }
 
-  if (!access.isSuperAdmin) {
+  if (!access.canAccess('giving')) {
     return (
       <div className="min-h-screen bg-[#f7f9fb] flex items-center justify-center p-6">
         <div className="text-center max-w-sm">
@@ -140,8 +140,8 @@ export default function GivingPage() {
               <span className="material-symbols-outlined text-[18px]">arrow_back</span>
             </button>
             <div>
-              <h2 className="text-[20px] sm:text-[24px] font-bold text-[#081534]">Giving & Partners</h2>
-              <p className="text-[12px] text-[#45464e]">Track donations, tithes, and partnership contributions.</p>
+              <h2 className="text-[20px] sm:text-[24px] font-bold text-[#081534]">Giving</h2>
+              <p className="text-[12px] text-[#45464e]">Track Offerings, tithes, and project contributions.</p>
             </div>
           </div>
           <div className="flex items-center gap-2">

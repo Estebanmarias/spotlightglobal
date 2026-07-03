@@ -8,15 +8,16 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { getSupabaseClient } from '@/lib/supabase'
 
-export type PageKey = 'dashboard' | 'members' | 'attendance' | 'ministries' | 'analytics' | 'giving' | 'settings'
+export type PageKey = 'dashboard' | 'members' | 'attendance' | 'ministries' | 'analytics' | 'giving' | 'partners' | 'settings'
 
 export const ALL_PAGES: { key: PageKey; label: string; icon: string }[] = [
-  { key: 'dashboard',  label: 'Dashboard',  icon: 'space_dashboard' },
-  { key: 'members',    label: 'Members',    icon: 'group' },
-  { key: 'attendance', label: 'Attendance', icon: 'fact_check' },
-  { key: 'ministries', label: 'Ministries', icon: 'church' },
-  { key: 'analytics',  label: 'Analytics',  icon: 'analytics' },
-  { key: 'giving',     label: 'Giving & Partners', icon: 'volunteer_activism' },
+  { key: 'dashboard',  label: 'Dashboard',         icon: 'space_dashboard' },
+  { key: 'members',    label: 'Members',            icon: 'group' },
+  { key: 'attendance', label: 'Attendance',         icon: 'fact_check' },
+  { key: 'ministries', label: 'Ministries',         icon: 'church' },
+  { key: 'analytics',  label: 'Analytics',          icon: 'analytics' },
+  { key: 'giving',     label: 'Giving Records',     icon: 'volunteer_activism' },
+  { key: 'partners',   label: 'Partner Submissions',icon: 'handshake' },
 ]
 
 type AdminAccess = {
