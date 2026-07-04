@@ -42,7 +42,7 @@ export default function ContactPage() {
       setFormState('success')
     } catch {
       setFormState('error')
-      setErrorMsg('Failed to send message. Please email us directly at spotlightchurch@gmail.com')
+      setErrorMsg('Failed to send message. Please email us directly at officialspotlightglobal@gmail.com')
     }
   }
 
@@ -88,7 +88,7 @@ export default function ContactPage() {
 
             <div className="space-y-5">
               {[
-                { icon: 'mail',        text: 'spotlightchurch@gmail.com',       href: 'mailto:spotlightchurch@gmail.com' },
+                { icon: 'mail',        text: 'officialspotlightglobal@gmail.com',       href: 'mailto:officialspotlightglobal@gmail.com' },
                 { icon: 'send',        text: 't.me/thespotlightchurchLive',     href: 'https://t.me/thespotlightchurchLive' },
                 { icon: 'play_circle', text: 'YouTube · @thespotlightchurch',   href: 'https://www.youtube.com/@thespotlightchurch' },
               ].map(item => (

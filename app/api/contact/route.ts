@@ -23,7 +23,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Email service not configured.' }, { status: 500 })
   }
 
-  const senderEmail = process.env.BREVO_SENDER_EMAIL || 'spotlightchurch@gmail.com'
+  const senderEmail = process.env.BREVO_SENDER_EMAIL || 'officialspotlightglobal@gmail.com'
   const senderName = process.env.BREVO_SENDER_NAME || 'theSpotlightChurch Website'
 
   try {
@@ -35,7 +35,7 @@ export async function POST(req: NextRequest) {
       },
       body: JSON.stringify({
         sender: { name: senderName, email: senderEmail },
-        to: [{ email: 'spotlightchurch@gmail.com', name: 'theSpotlightChurch' }],
+        to: [{ email: 'officialspotlightglobal@gmail.com', name: 'theSpotlightChurch' }],
         replyTo: { email, name: `${first_name} ${last_name || ''}`.trim() },
         subject: `Contact Form: ${interest || 'General Inquiry'} — ${first_name} ${last_name || ''}`.trim(),
         htmlContent: `

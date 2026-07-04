@@ -172,7 +172,7 @@ export default function TermsPage() {
                 style={{ fontVariationSettings: "'FILL' 1" }}>description</span>
               <h4 className="text-[13px] font-bold text-[#081534] mb-1">Have questions?</h4>
               <p className="text-[11px] text-[#45464e] mb-4 leading-relaxed">Contact us about any legal concerns.</p>
-              <a href="mailto:spotlightchurch@gmail.com"
+              <a href="mailto:officialspotlightglobal@gmail.com"
                 className="w-full py-2 bg-[#081534] text-white rounded-lg text-[12px] font-bold hover:opacity-90 transition-opacity flex items-center justify-center gap-1.5">
                 <span className="material-symbols-outlined text-[14px]">mail</span>
                 Email Us
@@ -220,7 +220,7 @@ export default function TermsPage() {
                 If you have any questions or concerns about these Terms of Service, our team is happy to provide clarity.
               </p>
               <div className="flex flex-wrap gap-3 justify-center">
-                <a href="mailto:spotlightchurch@gmail.com"
+                <a href="mailto:officialspotlightglobal@gmail.com"
                   className="flex items-center gap-2 bg-[#081534] text-white px-6 py-3 rounded-full text-[13px] font-bold hover:opacity-90 transition-all active:scale-95">
                   <span className="material-symbols-outlined text-[16px]">mail</span>
                   Contact Us

@@ -105,7 +105,7 @@ Keep shining the light. 🌟
     },
     body: JSON.stringify({
       sender: { name: 'Spotlight Admin', email: 'noreply@thespotlightchurch.com' },
-      to: [{ email: 'spotlightchurch@gmail.com', name: 'Apostle Edet Kingsley' }],
+      to: [{ email: 'officialspotlightglobal@gmail.com', name: 'Apostle Edet Kingsley' }],
       subject: `Weekly Spotlight Summary — ${dateLabel}`,
       textContent: emailBody,
     }),
