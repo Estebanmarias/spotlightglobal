@@ -4,7 +4,7 @@ import { motion } from 'framer-motion'
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 
-const YT_API_KEY    = 'AIzaSyAtd9uF8EknLxIfBzA2VenjaREwfPoI0Qo'
+const YT_API_KEY = process.env.NEXT_PUBLIC_YOUTUBE_API_KEY!
 const YT_CHANNEL_ID = 'UCqKvr26isZoFXO02xEtX5UQ'
 
 type HeroVideoState =

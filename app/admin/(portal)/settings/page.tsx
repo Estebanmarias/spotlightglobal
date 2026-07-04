@@ -465,7 +465,7 @@ export default function SettingsPage() {
                   <label className="text-[12px] font-bold text-[#45464e] uppercase tracking-wide mb-2 block">Page Access</label>
                   <p className="text-[12px] text-[#76777f] mb-3">Choose which pages this admin can see and use.</p>
                   <div className="flex flex-wrap gap-2">
-                    {ALL_PAGES.filter(p => p.key !== 'giving').map(p => {
+                    {ALL_PAGES.filter(p => p.key !== 'dashboard').map(p => {
                       const active = invitePermissions.includes(p.key)
                       return (
                         <button key={p.key} type="button"
@@ -553,7 +553,7 @@ export default function SettingsPage() {
                 <div className="px-6 py-6">
                   <p className="text-[12px] text-[#76777f] mb-4">Choose which pages this admin can see and use.</p>
                   <div className="flex flex-wrap gap-2">
-                    {ALL_PAGES.filter(p => p.key !== 'giving').map(p => {
+                    {ALL_PAGES.filter(p => p.key !== 'dashboard').map(p => {
                       const active = editPermissions.includes(p.key)
                       return (
                         <button key={p.key} type="button"

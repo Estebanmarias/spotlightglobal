@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 import LayoutWrapper from "@/components/LayoutWrapper";
+import ChurchStructuredData from "@/components/ChurchStructuredData";
 
 const jakarta = Plus_Jakarta_Sans({
   subsets: ["latin"],
@@ -9,9 +10,31 @@ const jakarta = Plus_Jakarta_Sans({
   variable: "--font-jakarta",
 });
 
+const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://spotlightglobal.vercel.app";
+
 export const metadata: Metadata = {
-  title: "theSpotlightChurch | Welcome Home",
-  description: "A sanctuary for modern souls.",
+  metadataBase: new URL(baseUrl),
+  title: {
+    default: "theSpotlightChurch | Welcome Home",
+    template: "%s | theSpotlightChurch",
+  },
+  description: "THIS IS CHURCH - the best place to be.",
+  keywords: ["church in Abuja", "theSpotlightChurch", "FCT church", "Sunday service Abuja", "Christian community Abuja"],
+  openGraph: {
+    title: "theSpotlightChurch | Welcome Home",
+    description: "THIS IS CHURCH - the best place to be.",
+    url: baseUrl,
+    siteName: "theSpotlightChurch",
+    images: [{ url: `${baseUrl}/og-image.jpg`, width: 1200, height: 630 }],
+    locale: "en_NG",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "theSpotlightChurch | Welcome Home",
+    description: "THIS IS CHURCH - the best place to be.",
+    images: [`${baseUrl}/og-image.jpg`],
+  },
 };
 
 export default function RootLayout({
@@ -30,6 +53,7 @@ export default function RootLayout({
       <body
         className={`${jakarta.variable} font-sans bg-[#f7f9fb] text-[#191c1e] flex flex-col min-h-screen`}
       >
+        <ChurchStructuredData />
         <LayoutWrapper>{children}</LayoutWrapper>
       </body>
     </html>

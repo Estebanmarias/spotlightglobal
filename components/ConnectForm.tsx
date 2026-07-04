@@ -137,7 +137,7 @@ export default function ConnectForm() {
           </div>
         </motion.div>
 
-        {/* Guest Status */}
+        {/* Guest Status — matches current 3-tier schema (First_Timer / Attending / Member) */}
         <motion.div variants={fadeUp}>
           <label className={labelClass}>Guest Type</label>
           <select
@@ -147,8 +147,7 @@ export default function ConnectForm() {
             onChange={handleChange}
           >
             <option value="First_Timer">First Time Guest</option>
-            <option value="Returning">Returning Visitor</option>
-            <option value="Regular">Regular Attendee</option>
+            <option value="Attending">Regularly Attending</option>
             <option value="Member">Interested in Membership</option>
           </select>
         </motion.div>

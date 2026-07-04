@@ -387,8 +387,7 @@ export default function PartnerPage() {
             />
             <h2 className="text-[32px] sm:text-[40px] font-bold text-white mb-6">God Bless You.</h2>
             <p className="text-[16px] sm:text-[18px] leading-[28px] text-white/70">
-              There's a link to a WhatsApp group where every registered partner will be part of —
-              to ensure there's a cordial relationship between the partnership and the ministry.
+              Upon registration, partners will gain access to our dedicated network, ensuring seamless communication and a close relationship with the ministry.
             </p>
           </motion.div>
         </div>

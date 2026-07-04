@@ -7,7 +7,7 @@ import { useSearchParams } from 'next/navigation'
 import { getSupabaseClient } from '@/lib/supabase'
 
 // ── CONFIG ──────────────────────────────────────────────────────
-const YT_API_KEY    = 'AIzaSyAtd9uF8EknLxIfBzA2VenjaREwfPoI0Qo'
+const YT_API_KEY = process.env.NEXT_PUBLIC_YOUTUBE_API_KEY!
 const YT_CHANNEL_ID = 'UCqKvr26isZoFXO02xEtX5UQ' 
 
 type ChurchEvent = {
@@ -19,10 +19,10 @@ type CommunityPhoto = { id: string; image_url: string; caption: string | null }
 type Testimony = { id: string; name: string; testimony: string; created_at: string }
 
 const linkStack = [
-  { icon: 'radio_button_checked', live: true,  title: 'Daily Prayer — Live Service',    meta: null,                              href: 'https://t.me/thespotlightchurchLive' },
+  { icon: 'radio_button_checked', live: true,  title: 'Daily Prayer — Live Service',    meta: 'Join Prayers Everyday 5pm',       href: 'https://t.me/thespotlightchurchLive' },
   { icon: 'play_circle',          live: false, title: 'Sunday Sermons & Teachings',     meta: 'YouTube · @pstedetkingsley',      href: 'https://www.youtube.com/@pstedetkingsley' },
   { icon: 'podcasts',             live: false, title: 'Audio Teachings',                meta: 'Sermons on the go',               href: 'https://t.me/companyoftheblessed' },
-  { icon: 'music_note',           live: false, title: 'Latest Worship Single',          meta: 'Listen on Spotify & Apple Music', href: 'https://kingdomboiz.com/download-music-edet-kingsley-holy-spirit-oyoyo/' },
+  { icon: 'music_note',           live: false, title: 'Latest Worship Single',          meta: 'Download the Latest Single', href: 'https://kingdomboiz.com/download-music-edet-kingsley-holy-spirit-oyoyo/' },
 ]
 
 const fadeUp: Variants = {

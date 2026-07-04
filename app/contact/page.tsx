@@ -31,38 +31,12 @@ export default function ContactPage() {
     setErrorMsg('')
     setFormState('submitting')
 
-    // Send via Brevo
+    // Sent via our own server route — keeps the Brevo API key off the client
     try {
-      const res = await fetch('https://api.brevo.com/v3/smtp/email', {
+      const res = await fetch('/api/contact', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'api-key': process.env.NEXT_PUBLIC_BREVO_API_KEY || '',
-        },
-        body: JSON.stringify({
-          sender: { name: `${form.first_name} ${form.last_name}`.trim(), email: 'spotlightchurch@gmail.com' },
-          to: [{ email: 'spotlightchurch@gmail.com', name: 'theSpotlightChurch' }],
-          replyTo: { email: form.email, name: `${form.first_name} ${form.last_name}`.trim() },
-          subject: `Contact Form: ${selectedInterest} — ${form.first_name} ${form.last_name}`,
-          htmlContent: `
-            <div style="font-family: sans-serif; max-width: 560px; margin: 0 auto;">
-              <div style="background:#081534;padding:24px 32px;border-radius:12px 12px 0 0;">
-                <h2 style="color:#fdc425;margin:0;font-size:18px;">New Contact Message</h2>
-                <p style="color:rgba(255,255,255,0.6);margin:4px 0 0;font-size:12px;text-transform:uppercase;letter-spacing:2px;">${selectedInterest}</p>
-              </div>
-              <div style="background:#fff;padding:24px 32px;border:1px solid #eceef0;border-top:none;border-radius:0 0 12px 12px;">
-                <table style="width:100%;border-collapse:collapse;">
-                  <tr><td style="padding:8px 0;color:#76777f;font-size:13px;width:120px;">Name</td><td style="color:#081534;font-weight:600;">${form.first_name} ${form.last_name}</td></tr>
-                  <tr><td style="padding:8px 0;color:#76777f;font-size:13px;">Email</td><td style="color:#081534;"><a href="mailto:${form.email}" style="color:#081534;">${form.email}</a></td></tr>
-                  ${form.phone ? `<tr><td style="padding:8px 0;color:#76777f;font-size:13px;">Phone</td><td style="color:#081534;">${form.phone}</td></tr>` : ''}
-                </table>
-                <div style="margin-top:16px;padding:16px;background:#f7f9fb;border-radius:8px;border-left:3px solid #fdc425;">
-                  <p style="margin:0;color:#45464e;font-size:14px;line-height:1.7;">${form.message}</p>
-                </div>
-              </div>
-            </div>
-          `,
-        }),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...form, interest: selectedInterest }),
       })
       if (!res.ok) throw new Error('Send failed')
       setFormState('success')
@@ -116,7 +90,7 @@ export default function ContactPage() {
               {[
                 { icon: 'mail',        text: 'spotlightchurch@gmail.com',       href: 'mailto:spotlightchurch@gmail.com' },
                 { icon: 'send',        text: 't.me/thespotlightchurchLive',     href: 'https://t.me/thespotlightchurchLive' },
-                { icon: 'play_circle', text: 'YouTube · @pstedetkingsley',      href: 'https://www.youtube.com/@pstedetkingsley' },
+                { icon: 'play_circle', text: 'YouTube · @thespotlightchurch',   href: 'https://www.youtube.com/@thespotlightchurch' },
               ].map(item => (
                 <a key={item.icon} href={item.href} target="_blank" rel="noreferrer"
                   className="flex items-center gap-4 group">
@@ -134,7 +108,7 @@ export default function ContactPage() {
               <div className="flex gap-3">
                 {[
                   { href: 'https://instagram.com/thespotlightchurch', icon: 'photo_camera' },
-                  { href: 'https://www.youtube.com/@pstedetkingsley', icon: 'play_circle' },
+                  { href: 'https://www.youtube.com/@thespotlightchurch', icon: 'play_circle' },
                   { href: 'https://t.me/thespotlightchurchLive', icon: 'send' },
                 ].map(s => (
                   <a key={s.icon} href={s.href} target="_blank" rel="noreferrer"

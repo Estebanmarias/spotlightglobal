@@ -5,7 +5,7 @@ import SplashWrapper from '@/components/SplashWrapper'
 
 export const metadata = {
   title: 'theSpotlightChurch | Welcome Home',
-  description: 'A sanctuary for modern souls. Join our global community.',
+  description: 'THIS IS CHURCH - the best place to be.',
 }
 
 export default function HomePage() {

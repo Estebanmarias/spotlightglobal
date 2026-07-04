@@ -11,8 +11,18 @@ const ratelimit = new Ratelimit({
   prefix: 'spotlight:register',
 })
 
+// Normalizes a Nigerian phone number to Brevo's expected SMS format
+// (country code prefix, digits only, no +, spaces, dashes, or parens).
+// Accepts local (0801...) or already-international (234801... / +234801...) input.
+function toBrevoSmsFormat(rawPhone: string): string {
+  const digitsOnly = rawPhone.replace(/[^\d]/g, '')
+  if (digitsOnly.startsWith('234')) return digitsOnly
+  if (digitsOnly.startsWith('0')) return `234${digitsOnly.slice(1)}`
+  return `234${digitsOnly}`
+}
+
 export async function POST(req: NextRequest) {
-  // ── 1. Rate limit check ───────────────────────────────────────
+  // ── 1. Rate limit check ─────────────────────────────────────────
   const ip = req.headers.get('x-forwarded-for')?.split(',')[0].trim()
     ?? req.headers.get('x-real-ip')
     ?? '127.0.0.1'
@@ -36,7 +46,7 @@ export async function POST(req: NextRequest) {
     )
   }
 
-  // ── 2. Parse body ─────────────────────────────────────────────
+  // ── 2. Parse body ────────────────────────────────────────────────
   let body: Record<string, unknown>
   try {
     body = await req.json()
@@ -46,7 +56,7 @@ export async function POST(req: NextRequest) {
 
   const { first_name, last_name, email, phone, address, dob, guest_status } = body as Record<string, string>
 
-  // ── 3. Input validation ───────────────────────────────────────
+  // ── 3. Input validation ──────────────────────────────────────────
   if (!first_name || !last_name || !email || !phone || !dob) {
     return NextResponse.json({ error: 'All required fields must be filled in.' }, { status: 400 })
   }
@@ -91,7 +101,7 @@ export async function POST(req: NextRequest) {
   const validStatuses = ['First_Timer', 'Attending', 'Member']
   const resolvedStatus = validStatuses.includes(guest_status) ? guest_status : 'First_Timer'
 
-  // ── 4. Insert into Supabase ───────────────────────────────────
+  // ── 4. Insert into Supabase ───────────────────────────────────────
   const { data: member, error: dbError } = await getSupabaseAdminClient()
     .from('members')
     .insert([{
@@ -114,10 +124,10 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Registration failed. Please try again.' }, { status: 500 })
   }
 
-  // ── 5. Push to Brevo ──────────────────────────────────────────
+  // ── 5. Push to Brevo ──────────────────────────────────────────────
   if (process.env.BREVO_API_KEY) {
     try {
-      await fetch('https://api.brevo.com/v3/contacts', {
+      const brevoRes = await fetch('https://api.brevo.com/v3/contacts', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -130,12 +140,17 @@ export async function POST(req: NextRequest) {
           listIds: [Number(process.env.BREVO_LIST_ID)],
           updateEnabled: true,
           attributes: {
-            PHONE: phone.trim(),
+            SMS: toBrevoSmsFormat(phone.trim()), // was PHONE — not a real attribute in this account
             DOB: dob,
             GUEST_STATUS: resolvedStatus,
           },
         }),
       })
+
+      if (!brevoRes.ok) {
+        const errText = await brevoRes.text()
+        console.error('[BREVO ERROR]', brevoRes.status, errText)
+      }
     } catch (err) {
       console.error('[BREVO ERROR]', err)
     }
