@@ -124,7 +124,7 @@ export default function HeroSection() {
                 Latest Sermon
               </Link>
             ) : (
-              <a href="https://www.youtube.com/@pstedetkingsley" target="_blank" rel="noreferrer"
+              <a href="https://www.youtube.com/@thespotlightchurch" target="_blank" rel="noreferrer"
                 className="bg-white/10 backdrop-blur-md border border-white/20 text-white px-6 sm:px-8 py-3.5 sm:py-4 rounded-lg text-[13px] sm:text-[14px] font-bold hover:bg-white/20 transition-all active:scale-95 flex items-center gap-2">
                 <span className="material-symbols-outlined text-[18px]">play_circle</span>
                 Watch on YouTube

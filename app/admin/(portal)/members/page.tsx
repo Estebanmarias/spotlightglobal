@@ -237,11 +237,28 @@ function EditMemberModal({
       .from('members') as any)
       .update(form)
       .eq('id', member.id)
-    setSaving(false)
+
     if (updateError) {
+      setSaving(false)
       setError(updateError.code === '23505' ? 'This email is already in use.' : 'Error saving changes.')
       return
     }
+
+    // Push updated guest status to Brevo so automations (e.g. Day 30 invite)
+    // see the correct value. Uses the ORIGINAL email as the Brevo contact
+    // identifier, since that's what the contact is keyed by there.
+    try {
+      await fetch('/api/admin/sync-brevo-status', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: member.email, guest_status: form.guest_status }),
+      })
+    } catch (err) {
+      console.error('[BREVO SYNC] Failed to sync guest status:', err)
+      // Don't block the save on this — Supabase is already updated
+    }
+
+    setSaving(false)
     onSaved()
   }
 

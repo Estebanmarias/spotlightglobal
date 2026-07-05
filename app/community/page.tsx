@@ -85,7 +85,7 @@ function LatestSermon({ autoplay }: { autoplay: boolean }) {
             <p className="text-white/60 text-[15px] leading-relaxed">
               Join Apostle Edet Kingsley as he delivers a fresh word from God. Every Sunday service is a transformative experience for the entire Spotlight family.
             </p>
-            <a href="https://www.youtube.com/@pstedetkingsley" target="_blank" rel="noreferrer"
+            <a href="https://www.youtube.com/@thespotlightchurch" target="_blank" rel="noreferrer"
               className="inline-flex items-center gap-2 text-[#fdc425] font-bold hover:gap-4 transition-all text-[14px]">
               View All Sermons <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
             </a>
