@@ -15,7 +15,7 @@ const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://spotlightglobal.ver
 export const metadata: Metadata = {
   metadataBase: new URL(baseUrl),
   verification: {
-    google: 'zdQt_AVg-C3k0O7i',
+    google: 'zdQt_AVg-C3k0O7iBpkEL5b-cZ11tSRzQx8xf8cEAgE',
   },
   title: {
     default: "theSpotlightChurch | Welcome Home",
