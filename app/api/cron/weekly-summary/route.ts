@@ -97,6 +97,9 @@ Keep shining the light. 🌟
     return NextResponse.json({ error: 'Brevo not configured' }, { status: 500 })
   }
 
+  const senderEmail = process.env.BREVO_SENDER_EMAIL || 'officialspotlightglobal@gmail.com'
+  const senderName = process.env.BREVO_SENDER_NAME || 'TheSpotlightChurch'
+
   const brevoRes = await fetch('https://api.brevo.com/v3/smtp/email', {
     method: 'POST',
     headers: {
@@ -104,7 +107,7 @@ Keep shining the light. 🌟
       'api-key': process.env.BREVO_API_KEY,
     },
     body: JSON.stringify({
-      sender: { name: 'Spotlight Admin', email: 'noreply@thespotlightchurch.com' },
+      sender: { name: senderName, email: senderEmail },
       to: [{ email: 'officialspotlightglobal@gmail.com', name: 'Apostle Edet Kingsley' }],
       subject: `Weekly Spotlight Summary — ${dateLabel}`,
       textContent: emailBody,

@@ -1,5 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
 
+function getStatusListId(status: string): number | null {
+  switch (status) {
+    case 'First_Timer': return Number(process.env.BREVO_LIST_ID_FIRST_TIMER) || null
+    case 'Attending':   return Number(process.env.BREVO_LIST_ID_ATTENDING) || null
+    case 'Member':      return Number(process.env.BREVO_LIST_ID_MEMBER) || null
+    default:            return null
+  }
+}
+
 export async function POST(req: NextRequest) {
   let body: Record<string, unknown>
   try {
@@ -8,7 +17,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Invalid request body.' }, { status: 400 })
   }
 
-  const { email, guest_status } = body as Record<string, string>
+  const { email, guest_status, old_guest_status } = body as Record<string, string>
 
   if (!email || !guest_status) {
     return NextResponse.json({ error: 'email and guest_status are required.' }, { status: 400 })
@@ -19,8 +28,17 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Brevo not configured' }, { status: 500 })
   }
 
+  const newListId = getStatusListId(guest_status)
+  const oldListId = old_guest_status ? getStatusListId(old_guest_status) : null
+
+  const payload: Record<string, unknown> = {
+    attributes: { GUEST_STATUS: guest_status },
+  }
+  // Move to the new status list, and remove from the old one if it's different
+  if (newListId) payload.listIds = [newListId]
+  if (oldListId && oldListId !== newListId) payload.unlinkListIds = [oldListId]
+
   try {
-    // Brevo identifies existing contacts by their current email for this endpoint.
     const brevoRes = await fetch(
       `https://api.brevo.com/v3/contacts/${encodeURIComponent(email.toLowerCase().trim())}`,
       {
@@ -29,13 +47,10 @@ export async function POST(req: NextRequest) {
           'Content-Type': 'application/json',
           'api-key': process.env.BREVO_API_KEY,
         },
-        body: JSON.stringify({
-          attributes: { GUEST_STATUS: guest_status },
-        }),
+        body: JSON.stringify(payload),
       }
     )
 
-    // Brevo returns 204 No Content on a successful update
     if (!brevoRes.ok && brevoRes.status !== 204) {
       const errText = await brevoRes.text()
       console.error('[SYNC-BREVO-STATUS] Brevo update failed:', brevoRes.status, errText)

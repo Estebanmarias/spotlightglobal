@@ -8,7 +8,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { getSupabaseClient } from '@/lib/supabase'
 
-export type PageKey = 'dashboard' | 'members' | 'attendance' | 'ministries' | 'analytics' | 'giving' | 'partners' | 'settings'
+export type PageKey = 'dashboard' | 'members' | 'attendance' | 'ministries' | 'analytics' | 'giving' | 'partners' | 'messaging'| 'settings' 
 
 export const ALL_PAGES: { key: PageKey; label: string; icon: string }[] = [
   { key: 'dashboard',  label: 'Dashboard',         icon: 'space_dashboard' },
@@ -18,6 +18,7 @@ export const ALL_PAGES: { key: PageKey; label: string; icon: string }[] = [
   { key: 'analytics',  label: 'Analytics',          icon: 'analytics' },
   { key: 'giving',     label: 'Giving Records',     icon: 'volunteer_activism' },
   { key: 'partners',   label: 'Partner Submissions',icon: 'handshake' },
+  { key: 'messaging',  label: 'Messaging',          icon: 'campaign' },
 ]
 
 type AdminAccess = {

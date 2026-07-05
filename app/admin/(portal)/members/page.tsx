@@ -251,7 +251,7 @@ function EditMemberModal({
       await fetch('/api/admin/sync-brevo-status', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: member.email, guest_status: form.guest_status }),
+        body: JSON.stringify({ email: member.email, guest_status: form.guest_status, old_guest_status: member.guest_status }),
       })
     } catch (err) {
       console.error('[BREVO SYNC] Failed to sync guest status:', err)

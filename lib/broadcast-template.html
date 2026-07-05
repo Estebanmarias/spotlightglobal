@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>{{SUBJECT}}</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background-color: #f7f9fb;
+    font-family: 'Plus Jakarta Sans', Arial, sans-serif;
+    color: #191c1e;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrapper { max-width: 600px; margin: 40px auto; background: #ffffff; border-radius: 16px; overflow: hidden; border: 1px solid #c6c6cf; }
+
+  .header { background: #f7f9fb; padding: 28px 40px; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid #c6c6cf; }
+  .header img { width: 44px; height: 44px; border-radius: 50%; }
+  .header-name { font-size: 18px; font-weight: 800; color: #081534; }
+
+  .banner { background: #081534; padding: 20px 40px; }
+  .banner-label { font-size: 11px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: #fdc425; }
+
+  .body { padding: 40px; }
+  .body p { font-size: 15px; line-height: 1.75; color: #45464e; margin-bottom: 16px; white-space: pre-wrap; }
+
+  .footer { background: #081534; padding: 40px; text-align: center; }
+  .footer-logo { font-size: 16px; font-weight: 800; color: #ffffff; margin-bottom: 8px; }
+  .footer-addr { font-size: 12px; color: rgba(255,255,255,0.5); margin-bottom: 24px; line-height: 1.6; }
+  .footer-links { display: flex; justify-content: center; gap: 20px; margin-bottom: 20px; flex-wrap: wrap; }
+  .footer-links a { font-size: 12px; color: rgba(255,255,255,0.5); text-decoration: none; }
+  .footer-copy { font-size: 11px; color: rgba(255,255,255,0.3); }
+  .footer-unsub { margin-top: 12px; font-size: 11px; color: rgba(255,255,255,0.3); }
+  .footer-unsub a { color: #fdc425; text-decoration: underline; }
+
+  @media (max-width: 600px) {
+    .wrapper { margin: 0; border-radius: 0; border: none; }
+    .body, .banner, .footer { padding: 24px 20px; }
+    .header { padding: 20px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrapper">
+
+  <div class="header">
+    <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuBXeDcU5csODEcKXqqIPjuGTfXHuYsOy5Ejd9WYTgmrbkzeYRDODg-_n8ubDlCgtzlGhBD5xT7iYncWEzIKHqix5RIHOYte731k8w9y4C5Wq8hs5IowQbW7V-cDrQPHP9lOISuvV8hm63Dc_6nPaJKvnIqH7RoAhJ19PQEebQvA5T2Q1dw1YcD0XGdYN3uHrHBgL1lmzWZrWzyCcQVwkheCcuZNUl_xu6MPtTqfRW7O5RXqRXOr4XUWWJVjcZvTYmpgcqRpm6L2pbs" alt="theSpotlightChurch"/>
+    <span class="header-name">theSpotlightChurch</span>
+  </div>
+
+  <div class="banner">
+    <div class="banner-label">Church Notice</div>
+  </div>
+
+  <div class="body">
+    {{BROADCAST_BODY}}
+  </div>
+
+  <div class="footer">
+    <div class="footer-logo">theSpotlightChurch</div>
+    <div class="footer-addr">
+      Ado Guest House Event Centre, Ado Secretariat Junction,<br/>
+      Abuja-Keffi Road, Karu, FCT, Nigeria
+    </div>
+    <div class="footer-links">
+      <a href="https://spotlightglobal.vercel.app/contact">Contact Us</a>
+      <a href="https://spotlightglobal.vercel.app/privacy-policy">Privacy Policy</a>
+      <a href="https://spotlightglobal.vercel.app/terms-and-service">Terms of Service</a>
+    </div>
+    <div class="footer-copy">© 2026 theSpotlightChurch. All rights reserved.</div>
+    <div class="footer-unsub">
+      <a href="{{ unsubscribe }}">Unsubscribe from these emails</a>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

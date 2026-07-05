@@ -21,6 +21,17 @@ function toBrevoSmsFormat(rawPhone: string): string {
   return `234${digitsOnly}`
 }
 
+// Maps a guest_status value to its dedicated Brevo list ID, used for
+// broadcast audience targeting (see /api/admin/broadcast).
+function getStatusListId(status: string): number | null {
+  switch (status) {
+    case 'First_Timer': return Number(process.env.BREVO_LIST_ID_FIRST_TIMER) || null
+    case 'Attending':   return Number(process.env.BREVO_LIST_ID_ATTENDING) || null
+    case 'Member':      return Number(process.env.BREVO_LIST_ID_MEMBER) || null
+    default:            return null
+  }
+}
+
 export async function POST(req: NextRequest) {
   // ── 1. Rate limit check ─────────────────────────────────────────
   const ip = req.headers.get('x-forwarded-for')?.split(',')[0].trim()
@@ -127,6 +138,12 @@ export async function POST(req: NextRequest) {
   // ── 5. Push to Brevo ──────────────────────────────────────────────
   if (process.env.BREVO_API_KEY) {
     try {
+      // Add to the main list plus the status-specific list (if configured),
+      // so broadcast audience targeting stays accurate from day one.
+      const listIds = [Number(process.env.BREVO_LIST_ID)]
+      const statusListId = getStatusListId(resolvedStatus)
+      if (statusListId) listIds.push(statusListId)
+
       const brevoRes = await fetch('https://api.brevo.com/v3/contacts', {
         method: 'POST',
         headers: {
@@ -137,7 +154,7 @@ export async function POST(req: NextRequest) {
           email: email.toLowerCase().trim(),
           firstName: first_name.trim(),
           lastName: last_name.trim(),
-          listIds: [Number(process.env.BREVO_LIST_ID)],
+          listIds,
           updateEnabled: true,
           attributes: {
             SMS: toBrevoSmsFormat(phone.trim()), // was PHONE — not a real attribute in this account
