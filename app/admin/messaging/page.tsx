@@ -66,7 +66,7 @@ export default function MessagingPage() {
   }
 
   useEffect(() => {
-    if (!access.loading && access.canAccess()) fetchHistory()
+    if (!access.loading && access.canAccess('messaging')) fetchHistory()
   }, [access.loading])
 
   const resetForm = () => {
@@ -130,7 +130,7 @@ export default function MessagingPage() {
     )
   }
 
-  if (!access.canAccess()) {
+  if (!access.canAccess('messaging')) {
     return (
       <div className="min-h-screen bg-[#f7f9fb] flex items-center justify-center p-6">
         <div className="text-center max-w-sm">
