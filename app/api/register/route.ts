@@ -152,12 +152,12 @@ export async function POST(req: NextRequest) {
         },
         body: JSON.stringify({
           email: email.toLowerCase().trim(),
-          firstName: first_name.trim(),
-          lastName: last_name.trim(),
           listIds,
           updateEnabled: true,
           attributes: {
-            SMS: toBrevoSmsFormat(phone.trim()), // was PHONE — not a real attribute in this account
+            FIRSTNAME: first_name.trim(), // was top-level firstName — not a real API field, silently ignored
+            LASTNAME: last_name.trim(),   // was top-level lastName — same issue
+            SMS: toBrevoSmsFormat(phone.trim()),
             DOB: dob,
             GUEST_STATUS: resolvedStatus,
           },

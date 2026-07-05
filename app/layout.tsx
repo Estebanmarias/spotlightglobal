@@ -3,6 +3,7 @@ import { Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 import LayoutWrapper from "@/components/LayoutWrapper";
 import ChurchStructuredData from "@/components/ChurchStructuredData";
+import { GoogleAnalytics } from '@next/third-parties/google'
 
 const jakarta = Plus_Jakarta_Sans({
   subsets: ["latin"],
@@ -22,7 +23,7 @@ export const metadata: Metadata = {
     template: "%s | theSpotlightChurch",
   },
   description: "THIS IS CHURCH - the best place to be.",
-  keywords: ["church in Abuja", "theSpotlightChurch", "FCT church", "Sunday service Abuja", "Christian community Abuja"],
+  keywords: ["church in Abuja", "theSpotlightChurch", "FCT church", "Sunday service Abuja", "Christian community Abuja", "church events Abuja", "churches in mararaba", "spiritual growth Abuja", "worship services Abuja", "Christian fellowship Abuja", "church in Karu"],
   openGraph: {
     title: "theSpotlightChurch | Welcome Home",
     description: "THIS IS CHURCH - the best place to be.",
@@ -58,6 +59,7 @@ export default function RootLayout({
       >
         <ChurchStructuredData />
         <LayoutWrapper>{children}</LayoutWrapper>
+        <GoogleAnalytics gaId="G-0RJHPQC0DY" />
       </body>
     </html>
   );
