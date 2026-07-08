@@ -17,10 +17,10 @@ const navItems: NavItem[] = [
   { icon: 'group',              label: 'Members',      href: '/admin/members',     page: 'members' },
   { icon: 'fact_check',         label: 'Attendance',   href: '/admin/attendance',  page: 'attendance' },
   { icon: 'church',             label: 'Ministries',   href: '/admin/ministries',  page: 'ministries' },
-  // { icon: 'groups',             label: 'My Ministry', href: '/admin/ministry-dashboard', page: 'ministries' },
   { icon: 'analytics',          label: 'Analytics',    href: '/admin/analytics',   page: 'analytics' },
   { icon: 'volunteer_activism', label: 'Giving',       href: '/admin/giving',      page: 'giving' },
-  { icon: 'handshake',          label: 'Partners',     href: '/admin/partners',    page: 'partners' },
+  { icon: 'handshake',          label: 'Partners',     href: '/admin/partner',     page: 'partners' },
+  { icon: 'campaign',           label: 'Messaging',    href: '/admin/messaging',   page: 'messaging' },
   { icon: 'settings',           label: 'Settings',     href: '/admin/settings' },
   { icon: 'person_add',         label: 'Add Member',   href: '/admin/add-member',  page: 'members' },
 ]
@@ -28,9 +28,6 @@ const navItems: NavItem[] = [
 const pageTitle = (pathname: string): string => {
   const match = navItems.find(item => pathname === item.href)
   if (match) return match.label
-  if (pathname === '/admin/attendance')                  return 'Attendance'
-  if (pathname === '/admin/giving')                      return 'Giving'
-  if (pathname === '/admin/partners')                    return 'Partnerships'
   if (pathname.startsWith('/admin/ministry-dashboard')) return 'Ministry Dashboard'
   return 'Admin Portal'
 }
@@ -52,9 +49,9 @@ export default function AdminMobileTopBar() {
       if (!session) return
       const { data } = await supabase
         .from('admin_roles')
-        .select('role, permissions')
+        .select('role, permissions, is_ministry_leader')
         .eq('user_id', session.user.id)
-        .single() as { data: { role: string; permissions: PageKey[] } | null }
+        .single() as { data: { role: string; permissions: PageKey[]; is_ministry_leader: boolean } | null }
       if (data) {
         setIsSuperAdmin(data.role === 'super_admin')
         setIsMinistryLeader(data.is_ministry_leader ?? false)
@@ -66,12 +63,11 @@ export default function AdminMobileTopBar() {
   }, [])
 
   const canAccess = (page?: PageKey) => {
-  if (!page) return true
-  if (isSuperAdmin) return true
-  if (page === 'ministries' && isMinistryLeader) return true
-  if (page === 'ministries' && isMinistryLeader) return true
-return permissions.includes(page)
-}
+    if (!page) return true
+    if (isSuperAdmin) return true
+    if (page === 'ministries' && isMinistryLeader) return true
+    return permissions.includes(page)
+  }
 
   const handleLogout = async () => {
     await supabase.auth.signOut()
