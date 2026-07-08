@@ -5,6 +5,7 @@ import { motion } from 'framer-motion'
 import { getSupabaseClient } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
 import { useAdminAccess } from '@/lib/use-admin-permissions'
+import AdminLoader from '@/components/AdminLoader'
 
 type StatusCounts = {
   First_Timer: number
@@ -199,7 +200,9 @@ export default function AnalyticsPage() {
             <h4 className="text-[18px] font-bold text-[#081534] mb-1">Weekly Registrations</h4>
             <p className="text-[12px] text-[#45464e] mb-6">New members registered per week over the last 8 weeks.</p>
             {loading ? (
-              <div className="h-40 bg-[#f2f4f6] rounded-lg animate-pulse" />
+              <div className="h-40 flex items-center justify-center">
+                <AdminLoader label="Loading registrations..." />
+              </div>
             ) : (
               <>
                 <div className="relative h-40 sm:h-48 flex items-end gap-1.5 sm:gap-2 px-1">
@@ -224,9 +227,7 @@ export default function AnalyticsPage() {
             <h4 className="text-[18px] font-bold mb-1">Guest Status</h4>
             <p className="text-[12px] opacity-70 mb-6">Congregation breakdown by type.</p>
             {loading ? (
-              <div className="space-y-4">
-                {[1,2,3].map(i => <div key={i} className="h-8 bg-white/10 rounded animate-pulse" />)}
-              </div>
+              <AdminLoader label="Loading status..." />
             ) : (
               <div className="space-y-5">
                 {statusConfig.map(s => {
@@ -268,7 +269,9 @@ export default function AnalyticsPage() {
           </div>
 
           {loading ? (
-            <div className="h-48 bg-[#f2f4f6] rounded-lg animate-pulse" />
+            <div className="h-48 flex items-center justify-center">
+              <AdminLoader label="Loading attendance..." />
+            </div>
           ) : attendanceWeeks.length === 0 ? (
             <div className="text-center py-12">
               <span className="material-symbols-outlined text-[48px] text-[#c6c6cf] block mb-2">fact_check</span>

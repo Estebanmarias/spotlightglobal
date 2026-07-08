@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import { getSupabaseClient } from '@/lib/supabase'
 import { useAdminAccess } from '@/lib/use-admin-permissions'
+import AdminLoader from '@/components/AdminLoader'
 
 // ── Types ─────────────────────────────────────────────────────────────
 type Ministry = {
@@ -20,6 +21,7 @@ type Ministry = {
   tag?: string
   tag_color?: string
   image?: string
+  ministry_leaders?: { user_id: string }[]
 }
 
 const ICON_OPTIONS = [
@@ -87,7 +89,7 @@ export default function MinistriesPage() {
     setLoading(true)
     const { data, error } = await supabase
       .from('ministries')
-      .select('*')
+      .select('*, ministry_leaders(user_id)')
       .order('created_at', { ascending: false })
     if (!error && data) setMinistries(data)
     setLoading(false)
@@ -327,8 +329,8 @@ export default function MinistriesPage() {
 
         {/* Ministry Grid */}
         {loading ? (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-            {[1,2,3].map(i => <div key={i} className="h-64 bg-white rounded-xl animate-pulse border border-[#c6c6cf]" />)}
+          <div className="bg-white rounded-xl border border-[#c6c6cf] mb-8">
+            <AdminLoader label="Loading ministries..." />
           </div>
         ) : ministries.length === 0 ? (
           <div className="bg-white border border-[#c6c6cf] rounded-xl py-20 text-center mb-8">
@@ -382,12 +384,25 @@ export default function MinistriesPage() {
                           <div><p className="text-[10px] text-[#45464e] font-semibold">Meeting</p><p className="text-[13px] text-[#081534] font-bold truncate">{m.meeting_day}</p></div>
                         </div>
                         <div className="flex items-center justify-end gap-1 pt-2 border-t border-[#f2f4f6]">
-                          {access.isSuperAdmin && (
-                            <button type="button" onClick={() => router.push(`/admin/ministry-dashboard?ministry=${m.id}`)}
-                              className="p-2 text-[#45464e] hover:text-[#081534] hover:bg-[#f2f4f6] rounded-lg transition-all shrink-0" title="View Dashboard">
-                              <span className="material-symbols-outlined text-[18px]">dashboard</span>
-                            </button>
-                          )}
+                          {(access.isSuperAdmin || access.isMinistryLeader) && (() => {
+                            const isThisLeader = access.isSuperAdmin ||
+                              m.ministry_leaders?.some((l: any) => l.user_id === access.userId)
+                            return isThisLeader ? (
+                              <button
+                                onClick={() => router.push(`/admin/ministry-dashboard?ministryId=${m.id}`)}
+                                className="flex items-center gap-1.5 px-3 py-1.5 bg-[#081534] text-white rounded-lg text-[11px] font-bold hover:opacity-90 transition-opacity">
+                                <span className="material-symbols-outlined text-[14px]">dashboard</span>
+                                Dashboard
+                              </button>
+                            ) : (
+                              <button disabled
+                                title="You are not the leader of this ministry"
+                                className="flex items-center gap-1.5 px-3 py-1.5 bg-[#f2f4f6] text-[#c6c6cf] rounded-lg text-[11px] font-semibold cursor-not-allowed border border-[#eceef0]">
+                                <span className="material-symbols-outlined text-[14px]">lock</span>
+                                No Access
+                              </button>
+                            )
+                          })()}
                           <button type="button" onClick={() => openAssignLeader(m)} className="p-2 text-[#45464e] hover:text-[#081534] hover:bg-[#f2f4f6] rounded-lg transition-all shrink-0" title="Assign Leader">
                             <span className="material-symbols-outlined text-[18px]">badge</span>
                           </button>
@@ -431,12 +446,23 @@ export default function MinistriesPage() {
                         <button type="button" onClick={() => setDetail(m)} className="flex-1 bg-[#f2f4f6] text-[#081534] text-[12px] py-2.5 rounded-lg hover:bg-[#eceef0] transition-colors font-semibold">
                           View Details
                         </button>
-                        {access.isSuperAdmin && (
-                          <button type="button" onClick={() => router.push(`/admin/ministry-dashboard?ministry=${m.id}`)}
-                            className="px-3 bg-[#f2f4f6] text-[#45464e] rounded-lg hover:bg-[#eceef0] transition-colors" title="View Dashboard">
-                            <span className="material-symbols-outlined text-[18px]">dashboard</span>
-                          </button>
-                        )}
+                        {(access.isSuperAdmin || access.isMinistryLeader) && (() => {
+                          const isThisLeader = access.isSuperAdmin ||
+                              m.ministry_leaders?.some((l: any) => l.user_id === access.userId)
+                          return isThisLeader ? (
+                            <button type="button"
+                              onClick={() => router.push(`/admin/ministry-dashboard?ministryId=${m.id}`)}
+                              className="px-3 bg-[#081534] text-white rounded-lg hover:opacity-90 transition-colors" title="View Dashboard">
+                              <span className="material-symbols-outlined text-[18px]">dashboard</span>
+                            </button>
+                          ) : (
+                            <button type="button" disabled
+                              title="You are not the leader of this ministry"
+                              className="px-3 bg-[#f2f4f6] text-[#c6c6cf] rounded-lg cursor-not-allowed">
+                              <span className="material-symbols-outlined text-[18px]">lock</span>
+                            </button>
+                          )
+                        })()}
                         <button type="button" onClick={() => openAssignLeader(m)} className="px-3 bg-[#f2f4f6] text-[#45464e] rounded-lg hover:bg-[#eceef0] transition-colors" title="Assign Leader">
                           <span className="material-symbols-outlined text-[18px]">badge</span>
                         </button>

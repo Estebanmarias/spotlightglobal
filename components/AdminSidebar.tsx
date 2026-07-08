@@ -17,6 +17,7 @@ const navItems: NavItem[] = [
   { icon: 'group',             label: 'Members',      href: '/admin/members',     page: 'members' },
   { icon: 'fact_check',        label: 'Attendance',   href: '/admin/attendance',  page: 'attendance' },
   { icon: 'church',            label: 'Ministries',   href: '/admin/ministries',  page: 'ministries' },
+  // { icon: 'groups',            label: 'My Ministry', href: '/admin/ministry-dashboard', page: 'ministries' },
   { icon: 'analytics',         label: 'Analytics',    href: '/admin/analytics',   page: 'analytics' },
   { icon: 'volunteer_activism', label: 'Giving',      href: '/admin/giving',      page: 'giving' },
   { icon: 'handshake',         label: 'Partners',     href: '/admin/partner',    page: 'partners' },
@@ -31,6 +32,7 @@ export default function AdminSidebar() {
 
   const [isSuperAdmin, setIsSuperAdmin] = useState(false)
   const [permissions, setPermissions]   = useState<PageKey[]>([])
+  const [isMinistryLeader, setIsMinistryLeader] = useState(false)
   const [loaded, setLoaded]             = useState(false)
 
   useEffect(() => {
@@ -46,6 +48,7 @@ export default function AdminSidebar() {
 
       if (data) {
         setIsSuperAdmin(data.role === 'super_admin')
+        setIsMinistryLeader(data.is_ministry_leader ?? false)
         setPermissions(data.permissions || [])
       }
       setLoaded(true)
@@ -54,10 +57,12 @@ export default function AdminSidebar() {
   }, [])
 
   const canAccess = (page?: PageKey) => {
-    if (!page) return true // no gate (e.g. Settings)
-    if (isSuperAdmin) return true
-    return permissions.includes(page)
-  }
+  if (!page) return true
+  if (isSuperAdmin) return true
+  if (page === 'ministries' && isMinistryLeader) return true
+  if (page === 'ministries' && isMinistryLeader) return true
+return permissions.includes(page)
+}
 
   const handleLogout = async () => {
     await supabase.auth.signOut()

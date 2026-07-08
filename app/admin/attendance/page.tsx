@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import { getSupabaseClient } from '@/lib/supabase'
 import { useAdminAccess } from '@/lib/use-admin-permissions'
+import AdminLoader from '@/components/AdminLoader'
 
 type AttendanceRecord = {
   id: string
@@ -234,9 +235,7 @@ export default function AttendancePage() {
           <h3 className="text-[16px] font-bold text-[#081534] mb-6">Attendance History</h3>
 
           {loading ? (
-            <div className="space-y-3">
-              {[1,2,3].map(i => <div key={i} className="h-16 bg-[#f2f4f6] rounded-lg animate-pulse" />)}
-            </div>
+            <AdminLoader label="Loading attendance history..." />
           ) : records.length === 0 ? (
             <div className="text-center py-12">
               <span className="material-symbols-outlined text-[48px] text-[#c6c6cf] block mb-2">fact_check</span>

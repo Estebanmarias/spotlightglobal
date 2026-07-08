@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import { getSupabaseClient } from '@/lib/supabase'
 import { useAdminAccess } from '@/lib/use-admin-permissions'
+import AdminLoader from '@/components/AdminLoader'
 
 type GivingRecord = {
   id: string

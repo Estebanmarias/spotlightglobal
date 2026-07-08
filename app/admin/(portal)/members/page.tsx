@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { getSupabaseClient } from '@/lib/supabase'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useAdminAccess } from '@/lib/use-admin-permissions'
+import AdminLoader from '@/components/AdminLoader'
 
 type Member = {
   id: string
@@ -530,13 +531,11 @@ export default function MembersPage() {
                 </thead>
                 <tbody className="divide-y divide-[#f2f4f6]">
                   {loading ? (
-                    [...Array(6)].map((_, i) => (
-                      <tr key={i}>
-                        <td colSpan={7} className="px-4 py-3">
-                          <div className="h-8 bg-[#f2f4f6] rounded animate-pulse" />
-                        </td>
-                      </tr>
-                    ))
+                    <tr>
+                      <td colSpan={7}>
+                        <AdminLoader label="Loading members..." />
+                      </td>
+                    </tr>
                   ) : members.length === 0 ? (
                     <tr>
                       <td colSpan={7} className="px-6 py-20 text-center">
@@ -620,15 +619,7 @@ export default function MembersPage() {
         {view === 'grid' && (
           <>
             {loading ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                {[...Array(8)].map((_, i) => (
-                  <div key={i} className="bg-white rounded-xl border border-[#c6c6cf] p-5 animate-pulse">
-                    <div className="w-12 h-12 rounded-full bg-[#f2f4f6] mb-4" />
-                    <div className="h-4 bg-[#f2f4f6] rounded w-3/4 mb-2" />
-                    <div className="h-3 bg-[#f2f4f6] rounded w-1/2" />
-                  </div>
-                ))}
-              </div>
+              <AdminLoader label="Loading members..." />
             ) : members.length === 0 ? (
               <div className="text-center py-20">
                 <span className="material-symbols-outlined text-[56px] text-[#c6c6cf] block mb-3">manage_search</span>
