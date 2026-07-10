@@ -7,10 +7,10 @@ import { motion } from "framer-motion";
 const fadeUp = { hidden: { opacity: 0, y: 16 }, show: { opacity: 1, y: 0 } };
 
 const inputClass =
-  "w-full bg-[#eceef0] border-0 border-b border-[#c6c6cf] focus:border-[#081534] focus:ring-0 px-4 py-3 text-[#191c1e] transition-all outline-none font-[Plus_Jakarta_Sans]";
+  "w-full bg-[#eceef0] border-0 border-b border-[#c6c6cf] focus:border-[#081534] focus:ring-0 px-4 py-3 text-[14px] sm:text-[15px] text-[#191c1e] transition-all outline-none font-[Plus_Jakarta_Sans]";
 
 const labelClass =
-  "block text-[14px] font-semibold text-[#45464e] mb-2 tracking-wide";
+  "block text-[13px] sm:text-[14px] font-semibold text-[#45464e] mb-2 tracking-wide";
 
 export default function ConnectForm() {
   const router = useRouter();
@@ -60,17 +60,17 @@ export default function ConnectForm() {
 
   return (
     <motion.div
-      className="bg-[#f7f9fb] p-8 md:p-12 rounded-xl shadow-2xl"
+      className="bg-[#f7f9fb] p-5 sm:p-8 md:p-10 lg:p-12 rounded-xl shadow-2xl"
       initial="hidden"
       whileInView="show"
       viewport={{ once: true }}
       variants={{ hidden: {}, show: { transition: { staggerChildren: 0.07 } } }}
     >
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
         {/* Row 1: First + Last */}
         <motion.div
           variants={fadeUp}
-          className="grid grid-cols-1 md:grid-cols-2 gap-6"
+          className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6"
         >
           <div>
             <label className={labelClass}>First Name</label>
@@ -112,7 +112,7 @@ export default function ConnectForm() {
         {/* Row 2: Phone + DOB */}
         <motion.div
           variants={fadeUp}
-          className="grid grid-cols-1 md:grid-cols-2 gap-6"
+          className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6"
         >
           <div>
             <label className={labelClass}>Phone</label>
@@ -168,7 +168,7 @@ export default function ConnectForm() {
           type="submit"
           disabled={loading}
           whileTap={{ scale: 0.97 }}
-          className="w-full bg-[#081534] text-white py-4 rounded-lg text-[14px] font-bold tracking-wide shadow-lg hover:brightness-110 transition-all disabled:opacity-70 disabled:cursor-not-allowed"
+          className="w-full bg-[#081534] text-white py-3 sm:py-4 rounded-lg text-[13px] sm:text-[14px] font-bold tracking-wide shadow-lg hover:brightness-110 transition-all disabled:opacity-70 disabled:cursor-not-allowed"
         >
           {loading ? "Registering..." : "Register Your Presence"}
         </motion.button>

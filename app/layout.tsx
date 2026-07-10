@@ -3,8 +3,8 @@ import { Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 import LayoutWrapper from "@/components/LayoutWrapper";
 import ChurchStructuredData from "@/components/ChurchStructuredData";
-import { GoogleAnalytics } from '@next/third-parties/google'
-import Script from 'next/script'
+import { GoogleAnalytics } from "@next/third-parties/google";
+import Script from "next/script";
 
 const jakarta = Plus_Jakarta_Sans({
   subsets: ["latin"],
@@ -12,19 +12,32 @@ const jakarta = Plus_Jakarta_Sans({
   variable: "--font-jakarta",
 });
 
-const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://spotlightglobal.vercel.app";
+const baseUrl =
+  process.env.NEXT_PUBLIC_SITE_URL || "https://spotlightglobal.vercel.app";
 
 export const metadata: Metadata = {
   metadataBase: new URL(baseUrl),
   verification: {
-    google: 'zdQt_AVg-C3k0O7iBpkEL5b-cZ11tSRzQx8xf8cEAgE',
+    google: "zdQt_AVg-C3k0O7iBpkEL5b-cZ11tSRzQx8xf8cEAgE",
   },
   title: {
     default: "theSpotlightChurch | Welcome Home",
     template: "%s | theSpotlightChurch",
   },
   description: "THIS IS CHURCH - the best place to be.",
-  keywords: ["church in Abuja", "theSpotlightChurch", "FCT church", "Sunday service Abuja", "Christian community Abuja", "church events Abuja", "churches in mararaba", "spiritual growth Abuja", "worship services Abuja", "Christian fellowship Abuja", "church in Karu"],
+  keywords: [
+    "church in Abuja",
+    "theSpotlightChurch",
+    "FCT church",
+    "Sunday service Abuja",
+    "Christian community Abuja",
+    "church events Abuja",
+    "churches in mararaba",
+    "spiritual growth Abuja",
+    "worship services Abuja",
+    "Christian fellowship Abuja",
+    "church in Karu",
+  ],
   openGraph: {
     title: "theSpotlightChurch | Welcome Home",
     description: "THIS IS CHURCH - the best place to be.",
@@ -39,6 +52,14 @@ export const metadata: Metadata = {
     title: "theSpotlightChurch | Welcome Home",
     description: "THIS IS CHURCH - the best place to be.",
     images: [`${baseUrl}/og-image.jpg`],
+  },
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "theSpotlightChurch",
+  },
+  icons: {
+    apple: "/apple-touch-icon.png",
   },
 };
 
