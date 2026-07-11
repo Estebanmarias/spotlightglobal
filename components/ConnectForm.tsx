@@ -72,23 +72,23 @@ export default function ConnectForm() {
           variants={fadeUp}
           className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6"
         >
-          <div>
+          <div className="min-w-0">
             <label className={labelClass}>First Name</label>
             <input
               name="first_name"
               type="text"
-              placeholder="Edet"
+              placeholder="Spotlight"
               className={inputClass}
               value={form.first_name}
               onChange={handleChange}
             />
           </div>
-          <div>
+          <div className="min-w-0">
             <label className={labelClass}>Last Name</label>
             <input
               name="last_name"
               type="text"
-              placeholder="Kingsley"
+              placeholder="Church"
               className={inputClass}
               value={form.last_name}
               onChange={handleChange}
@@ -114,7 +114,7 @@ export default function ConnectForm() {
           variants={fadeUp}
           className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6"
         >
-          <div>
+          <div className="min-w-0">
             <label className={labelClass}>Phone</label>
             <input
               name="phone"
@@ -125,7 +125,7 @@ export default function ConnectForm() {
               onChange={handleChange}
             />
           </div>
-          <div>
+          <div className="min-w-0">
             <label className={labelClass}>Date of Birth</label>
             <input
               name="dob"

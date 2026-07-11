@@ -20,6 +20,98 @@ type StatusCounts = {
   Member: number;
 };
 
+function BirthdayWidget() {
+  const supabase = getSupabaseClient()
+  const [birthdays, setBirthdays] = useState<{ id: string; first_name: string; last_name: string; dob: string }[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const fetch_ = async () => {
+      const { data } = await supabase
+        .from('members')
+        .select('id, first_name, last_name, dob')
+        .not('dob', 'is', null) as { data: { id: string; first_name: string; last_name: string; dob: string }[] | null }
+
+      const today = new Date()
+      const upcoming = (data || []).filter(m => {
+        const dob  = new Date(m.dob)
+        const bday = new Date(today.getFullYear(), dob.getMonth(), dob.getDate())
+        const diff = Math.ceil((bday.getTime() - today.getTime()) / 86400000)
+        return diff >= 0 && diff <= 6
+      }).map(m => {
+        const dob  = new Date(m.dob)
+        const bday = new Date(today.getFullYear(), dob.getMonth(), dob.getDate())
+        const diff = Math.ceil((bday.getTime() - today.getTime()) / 86400000)
+        return { ...m, daysUntil: diff }
+      }).sort((a, b) => a.daysUntil - b.daysUntil)
+
+      setBirthdays(upcoming as any)
+      setLoading(false)
+    }
+    fetch_()
+  }, [])
+
+  const dayLabel = (days: number) => {
+    if (days === 0) return { label: 'Today! 🎉', color: 'bg-[#fdc425] text-[#6d5200]' }
+    if (days === 1) return { label: 'Tomorrow',  color: 'bg-[#d8e2ff] text-[#002960]' }
+    const d = new Date()
+    d.setDate(d.getDate() + days)
+    return {
+      label: d.toLocaleDateString('en-NG', { weekday: 'long' }),
+      color: 'bg-[#f2f4f6] text-[#45464e]'
+    }
+  }
+
+  if (!loading && birthdays.length === 0) return null
+
+  return (
+    <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
+      className="bg-white border border-[#c6c6cf] rounded-xl overflow-hidden">
+      <div className="flex items-center gap-3 px-5 py-4 border-b border-[#c6c6cf]">
+        <div className="w-9 h-9 bg-[#fdc425]/20 text-[#785a00] rounded-lg flex items-center justify-center">
+          <span className="material-symbols-outlined text-[18px]"
+            style={{ fontVariationSettings: "'FILL' 1" }}>cake</span>
+        </div>
+        <div>
+          <h3 className="text-[14px] font-bold text-[#081534]">Birthdays This Week</h3>
+          <p className="text-[11px] text-[#45464e]">
+            {loading ? 'Checking...' : `${birthdays.length} member${birthdays.length !== 1 ? 's' : ''} celebrating soon`}
+          </p>
+        </div>
+      </div>
+
+      {loading ? (
+        <div className="p-4 space-y-2">
+          {[1, 2].map(i => <div key={i} className="h-10 bg-[#f2f4f6] rounded-lg animate-pulse" />)}
+        </div>
+      ) : (
+        <div className="divide-y divide-[#f2f4f6]">
+          {birthdays.map((m: any) => {
+            const { label, color } = dayLabel(m.daysUntil)
+            return (
+              <motion.div key={m.id}
+                initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }}
+                className="flex items-center justify-between px-5 py-3 hover:bg-[#f7f9fb] transition-colors">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-full bg-[#081534] text-white flex items-center justify-center text-[11px] font-bold shrink-0">
+                    {m.first_name[0]}{m.last_name[0]}
+                  </div>
+                  <p className="text-[13px] font-semibold text-[#081534]">
+                    {m.first_name} {m.last_name}
+                  </p>
+                </div>
+                <span className={`px-2.5 py-1 rounded-full text-[11px] font-bold ${color}`}>
+                  {label}
+                </span>
+              </motion.div>
+            )
+          })}
+        </div>
+      )}
+    </motion.div>
+  )
+}
+
 export default function AdminDashboard() {
   const router = useRouter();
   const supabase = getSupabaseClient();
@@ -455,6 +547,9 @@ export default function AdminDashboard() {
             )}
           </motion.div>
         )}
+
+        {/* ── Birthday Widget ── */}
+          <BirthdayWidget />
 
         {/* ── Footer note ── */}
         <div className="bg-[#ffdf9a] border border-[#fdc425] rounded-xl p-4 sm:p-5 flex items-start sm:items-center gap-4">
