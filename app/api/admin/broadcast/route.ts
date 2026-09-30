@@ -79,6 +79,26 @@ export async function POST(req: NextRequest) {
 
   const senderEmail = process.env.BREVO_SENDER_EMAIL || 'spotlightchurch@gmail.com'
   const senderName = process.env.BREVO_SENDER_NAME || 'theSpotlightChurch'
+  let campaignId: string | number | null = null
+
+  const logFailedBroadcast = async (brevoCampaignId: string | number | null = null) => {
+    try {
+      const { error } = await supabase.from('broadcast_messages').insert([{
+        subject,
+        preview_text: preview_text || null,
+        body_text,
+        audience,
+        scheduled_for: scheduled_for || null,
+        status: 'failed',
+        brevo_campaign_id: brevoCampaignId == null ? null : String(brevoCampaignId),
+        sent_by: sent_by || null,
+      }])
+
+      if (error) console.error('[BROADCAST] Failed to log unsuccessful campaign:', error)
+    } catch (error) {
+      console.error('[BROADCAST] Failed to log unsuccessful campaign:', error)
+    }
+  }
 
   try {
     // 1. Create the campaign (draft by default, or scheduled if scheduledAt provided)
@@ -105,6 +125,7 @@ export async function POST(req: NextRequest) {
     if (!createRes.ok) {
       const errText = await createRes.text()
       console.error('[BROADCAST] Campaign create failed:', createRes.status, errText)
+      await logFailedBroadcast()
       return NextResponse.json({
         error: `Brevo error (${createRes.status}): ${errText}`,
         debugSenderUsed: { senderEmail, senderName }, // TEMP — remove once fixed
@@ -112,7 +133,7 @@ export async function POST(req: NextRequest) {
     }
 
     const created = await createRes.json()
-    const campaignId = created.id
+    campaignId = created.id
 
     // 2. If no schedule was given, send immediately
     if (!scheduled_for) {
@@ -123,6 +144,7 @@ export async function POST(req: NextRequest) {
       if (!sendRes.ok) {
         const errText = await sendRes.text()
         console.error('[BROADCAST] sendNow failed:', sendRes.status, errText)
+        await logFailedBroadcast(campaignId)
         return NextResponse.json({ error: 'Campaign created but failed to send.' }, { status: 500 })
       }
     }
@@ -137,11 +159,12 @@ export async function POST(req: NextRequest) {
       status: scheduled_for ? 'scheduled' : 'sent',
       brevo_campaign_id: String(campaignId),
       sent_by: sent_by || null,
-    }] as any)
+    }])
 
     return NextResponse.json({ success: true, campaignId, status: scheduled_for ? 'scheduled' : 'sent' })
   } catch (err) {
     console.error('[BROADCAST] Error:', err)
+    await logFailedBroadcast(campaignId)
     return NextResponse.json({ error: 'Failed to send broadcast.' }, { status: 500 })
   }
 }

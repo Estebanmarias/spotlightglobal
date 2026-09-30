@@ -10,16 +10,28 @@ const nextConfig: NextConfig = {
       },
     ],
   },
-  turbopack: {},
+    turbopack: {
+    root: process.cwd(),
+  },
 };
 
-const withPWAConfig = withPWA({
-  dest: "public",
-  disable: process.env.NODE_ENV === "development",
-  register: true,
-  workboxOptions: {
-    disableDevLogs: true,
-  },
-});
+// Only wrap with the PWA plugin for production. Its webpack-based plugin
+// hooks are fundamentally incompatible with Turbopack (which `next dev`
+// uses by default in Next.js 16) — having the wrapper present during dev,
+// even with `disable: true`, was crashing Turbopack when it tried to
+// compile the app/manifest.ts route (/manifest.webmanifest), spiraling
+// into repeated out-of-memory process crashes.
+const isProd = process.env.NODE_ENV === "production";
 
-export default withPWAConfig(nextConfig);
+const finalConfig = isProd
+  ? withPWA({
+      dest: "public",
+      disable: false,
+      register: true,
+      workboxOptions: {
+        disableDevLogs: true,
+      },
+    })(nextConfig)
+  : nextConfig;
+
+export default finalConfig;

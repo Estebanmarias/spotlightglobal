@@ -1,32 +1,33 @@
-'use client'
+"use client";
 
-import { useEffect, useState } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { useEffect, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 
-const LOGO_URL = "https://lh3.googleusercontent.com/aida-public/AB6AXuCSu9ztjFXXL57HPmU2Tzxi3_L64jT6N2N-it5rvbfUfWfdXYJHE01o-8vaDbMMklLymKGFy1h8bgWMuq6cFCbsAWGpAlzRdnIlqlCNZGURQg-bl42EaVtpB0oh1Ad-gK8evCtIRS5ux11Sgpvn686W0Zv9ySUxOUssIE11jsJlK62yZPqSHl64xThPfeKXmVOT7T--wIzDqUmNxAViuDnvS5k1CKHkBHX3FGjpWOScub8kqDfinr_Tsn0ifKgyAVbp8f2XdxntkwI"
+const LOGO_URL =
+  "https://lh3.googleusercontent.com/aida-public/AB6AXuCSu9ztjFXXL57HPmU2Tzxi3_L64jT6N2N-it5rvbfUfWfdXYJHE01o-8vaDbMMklLymKGFy1h8bgWMuq6cFCbsAWGpAlzRdnIlqlCNZGURQg-bl42EaVtpB0oh1Ad-gK8evCtIRS5ux11Sgpvn686W0Zv9ySUxOUssIE11jsJlK62yZPqSHl64xThPfeKXmVOT7T--wIzDqUmNxAViuDnvS5k1CKHkBHX3FGjpWOScub8kqDfinr_Tsn0ifKgyAVbp8f2XdxntkwI";
 
 interface SplashScreenProps {
-  onComplete: () => void
+  onComplete: () => void;
 }
 
 export default function SplashScreen({ onComplete }: SplashScreenProps) {
-  const [phase, setPhase] = useState<'intro' | 'hold' | 'exit'>('intro')
+  const [phase, setPhase] = useState<"intro" | "hold" | "exit">("intro");
 
   useEffect(() => {
-    // intro animates in ~800ms, hold for 1.2s, then exit
-    const holdTimer  = setTimeout(() => setPhase('hold'), 800)
-    const exitTimer  = setTimeout(() => setPhase('exit'), 3200)
-    const doneTimer  = setTimeout(() => onComplete(), 3200)
+    const holdTimer = setTimeout(() => setPhase("hold"), 400);
+    const exitTimer = setTimeout(() => setPhase("exit"), 1200);
+    const doneTimer = setTimeout(() => onComplete(), 1300);
+
     return () => {
-      clearTimeout(holdTimer)
-      clearTimeout(exitTimer)
-      clearTimeout(doneTimer)
-    }
-  }, [onComplete])
+      clearTimeout(holdTimer);
+      clearTimeout(exitTimer);
+      clearTimeout(doneTimer);
+    };
+  }, [onComplete]);
 
   return (
     <AnimatePresence>
-      {phase !== 'exit' ? (
+      {phase !== "exit" ? (
         <motion.div
           key="splash"
           initial={{ opacity: 1 }}
@@ -38,20 +39,20 @@ export default function SplashScreen({ onComplete }: SplashScreenProps) {
           <motion.div
             initial={{ scale: 0, opacity: 0 }}
             animate={{ scale: 1.8, opacity: 0.06 }}
-            transition={{ duration: 2, ease: 'easeOut' }}
+            transition={{ duration: 2, ease: "easeOut" }}
             className="absolute w-[600px] h-[600px] rounded-full border border-[#fdc425]"
           />
           <motion.div
             initial={{ scale: 0, opacity: 0 }}
             animate={{ scale: 1.2, opacity: 0.08 }}
-            transition={{ duration: 2, delay: 0.2, ease: 'easeOut' }}
+            transition={{ duration: 2, delay: 0.2, ease: "easeOut" }}
             className="absolute w-[400px] h-[400px] rounded-full border border-[#fdc425]"
           />
           {/* Gold radial glow behind logo */}
           <motion.div
             initial={{ opacity: 0, scale: 0.5 }}
             animate={{ opacity: 0.15, scale: 1 }}
-            transition={{ duration: 1.2, ease: 'easeOut' }}
+            transition={{ duration: 1.2, ease: "easeOut" }}
             className="absolute w-64 h-64 rounded-full bg-[#fdc425] blur-[80px]"
           />
 
@@ -65,7 +66,12 @@ export default function SplashScreen({ onComplete }: SplashScreenProps) {
             {/* Logo image */}
             <motion.div
               animate={{ y: [0, -6, 0] }}
-              transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut', delay: 1 }}
+              transition={{
+                duration: 3,
+                repeat: Infinity,
+                ease: "easeInOut",
+                delay: 1,
+              }}
             >
               <img
                 src={LOGO_URL}
@@ -111,17 +117,31 @@ export default function SplashScreen({ onComplete }: SplashScreenProps) {
             >
               <motion.span
                 animate={{ opacity: [0.3, 1, 0.3], scale: [0.8, 1.1, 0.8] }}
-                transition={{ duration: 1.2, repeat: Infinity, ease: 'easeInOut' }}
+                transition={{
+                  duration: 1.2,
+                  repeat: Infinity,
+                  ease: "easeInOut",
+                }}
                 className="w-1.5 h-1.5 rounded-full bg-[#fdc425] block"
               />
               <motion.span
                 animate={{ opacity: [0.3, 1, 0.3], scale: [0.8, 1.1, 0.8] }}
-                transition={{ duration: 1.2, repeat: Infinity, ease: 'easeInOut', delay: 0.2 }}
+                transition={{
+                  duration: 1.2,
+                  repeat: Infinity,
+                  ease: "easeInOut",
+                  delay: 0.2,
+                }}
                 className="w-1.5 h-1.5 rounded-full bg-[#fdc425] block"
               />
               <motion.span
                 animate={{ opacity: [0.3, 1, 0.3], scale: [0.8, 1.1, 0.8] }}
-                transition={{ duration: 1.2, repeat: Infinity, ease: 'easeInOut', delay: 0.4 }}
+                transition={{
+                  duration: 1.2,
+                  repeat: Infinity,
+                  ease: "easeInOut",
+                  delay: 0.4,
+                }}
                 className="w-1.5 h-1.5 rounded-full bg-[#fdc425] block"
               />
             </motion.div>
@@ -139,5 +159,5 @@ export default function SplashScreen({ onComplete }: SplashScreenProps) {
         </motion.div>
       ) : null}
     </AnimatePresence>
-  )
+  );
 }

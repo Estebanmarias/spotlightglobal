@@ -66,6 +66,18 @@ export default function MessagingPage() {
   }
 
   useEffect(() => {
+    if (typeof window === 'undefined') return
+    const params = new URLSearchParams(window.location.search)
+    const title  = params.get('title')
+    const slug   = params.get('slug')
+    if (title && slug) {
+      const url = `${window.location.origin}/devotionals/${slug}`
+      setSubject(`New Devotional: ${title}`)
+      setBodyText(`📖 New Devotional from Apostle Edet Kingsley:\n\n"${title}"\n\nRead it here: ${url}\n\nGod bless you! 🙏`)
+    }
+  }, [])
+
+  useEffect(() => {
     if (!access.loading && access.canAccess('messaging')) fetchHistory()
   }, [access.loading])
 

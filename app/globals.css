@@ -25,6 +25,14 @@ html::-webkit-scrollbar {
   width: 0 !important;
 }
 
+.tiptap p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  float: left;
+  color: #76777f;
+  pointer-events: none;
+  height: 0;
+}
+
 .material-symbols-outlined {
   font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
 }
