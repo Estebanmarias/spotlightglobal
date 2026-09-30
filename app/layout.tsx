@@ -59,7 +59,7 @@ export const metadata: Metadata = {
     title: "theSpotlightChurch",
   },
   icons: {
-    apple: "/apple-touch-icon.png",
+    apple: "/apple-touch-icon-v2.png",
   },
 };
 
