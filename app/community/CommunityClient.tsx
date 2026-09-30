@@ -149,6 +149,7 @@ function EventsCarousel({ events }: { events: ChurchEvent[] }) {
       style={{ scrollbarWidth: 'none' }}>
       {events.map((e, i) => {
         const { day, month, full } = formatDate(e.event_date)
+        const directionsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(e.location)}`
         return (
           <motion.div key={e.id}
             initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
@@ -192,9 +193,15 @@ function EventsCarousel({ events }: { events: ChurchEvent[] }) {
                 <span className="material-symbols-outlined text-[14px] text-[#fdc425]">location_on</span>
                 {e.location}
               </div>
-              <button className="w-full border-2 border-[#081534] text-[#081534] py-3 rounded-full font-bold text-[13px] hover:bg-[#081534] hover:text-white transition-all">
-                Join Us
-              </button>
+              <a
+                href={directionsUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="flex w-full items-center justify-center gap-2 rounded-full border-2 border-[#081534] py-3 text-[13px] font-bold text-[#081534] transition-all hover:bg-[#081534] hover:text-white"
+              >
+                Get Directions
+                <span className="material-symbols-outlined text-[16px]">open_in_new</span>
+              </a>
             </div>
           </motion.div>
         )

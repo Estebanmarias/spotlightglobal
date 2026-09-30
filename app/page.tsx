@@ -2,6 +2,7 @@ import HeroSection from '@/components/HeroSection'
 import MinistriesSection from '@/components/MinistriesSection'
 import ConnectSection from '@/components/ConnectSection'
 import SplashWrapper from '@/components/SplashWrapper'
+import Link from 'next/link'
 
 export const metadata = {
   title: 'theSpotlightChurch | Welcome Home',
@@ -28,11 +29,10 @@ function VisionSection() {
       <div className="px-4 sm:px-8 lg:px-16 w-full max-w-[1280px] mx-auto grid grid-cols-1 md:grid-cols-2 gap-10 sm:gap-12 lg:gap-16 items-center">
         <div>
           <h2 className="text-[24px] sm:text-[28px] lg:text-[32px] font-bold leading-[1.3] sm:leading-[40px] text-[#081534] mb-4 sm:mb-6">
-            THIS IS CHURCH - the best place to be
+            A church family growing in faith and purpose
           </h2>
           <p className="text-[15px] sm:text-[16px] lg:text-[18px] leading-[24px] sm:leading-[26px] lg:leading-[28px] text-[#45464e] mb-6 sm:mb-8">
-           We make Christ Known, Manifesting the Character of the Holy Spirit, Helping many find Purpose and through
-           God&apos;s lifting Power Fulfilling It.
+            We gather in Karu, Abuja for worship, prayer, biblical teaching, and community.
           </p>
           <div className="flex items-start gap-4">
             <div className="bg-[#1e2a4a] p-3 rounded-lg text-[#fdc425] shrink-0">
@@ -53,12 +53,16 @@ function VisionSection() {
           <div className="space-y-4 sm:space-y-6 mt-8 sm:mt-12">
             <img src="/images/best.jpg"
               alt="Church exterior" className="rounded-lg sm:rounded-xl w-full aspect-[4/5] object-cover shadow-sm" />
-            <div className="bg-[#fdc425] p-4 sm:p-6 rounded-lg sm:rounded-xl">
-              <h3 className="text-[16px] sm:text-[20px] lg:text-[24px] font-semibold text-[#6d5200] mb-1 sm:mb-2">Our Mission</h3>
+            <Link href="/vision" className="group flex flex-col justify-center bg-[#fdc425] p-4 sm:p-6 rounded-lg sm:rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#081534]">
+              <h3 className="text-[16px] sm:text-[20px] lg:text-[24px] font-semibold text-[#6d5200] mb-1 sm:mb-2">Our Vision &amp; Mission</h3>
               <p className="text-[11px] sm:text-[13px] lg:text-[14px] font-semibold text-[#6d5200] opacity-80 leading-snug">
-                Manifesting the Character of the Holy Spirit, Helping many find Purpose and through God&apos;s lifting Power Fulfilling It.
+                Discover the beliefs and commitments that shape our church.
               </p>
-            </div>
+              <span className="mt-3 inline-flex items-center gap-1 text-[12px] font-bold text-[#6d5200]">
+                Explore our vision
+                <span className="material-symbols-outlined text-[16px] transition-transform group-hover:translate-x-1">arrow_forward</span>
+              </span>
+            </Link>
           </div>
           <div className="space-y-4 sm:space-y-6">
             <img src="/images/gallery/gallery-1.webp"

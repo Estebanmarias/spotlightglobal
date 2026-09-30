@@ -43,9 +43,9 @@ const pillars = [
 ]
 
 const checks = [
-  { title: 'Love and be Loved', desc: 'Here we expect you to recieve of Godos Love through Brothers and Sisters and Give it.' },
-  { title: 'Respond and be Responsible', desc: 'We expect you to respond to Gods Work and be a Responsible Believer.' },
-  { title: 'Serve and be Great', desc: 'You were born with a gift from God to Humanity and we believe that serving Gift is your Guaranteed root to Greatness and this Church give you that Plartform.' },
+  { title: 'Love and be Loved', desc: 'Receive God’s love through one another, and share that love with others.' },
+  { title: 'Respond and be Responsible', desc: 'Respond to God’s work and live as a responsible believer.' },
+  { title: 'Serve and be Great', desc: 'Use the gifts God has given you to serve others and strengthen the church.' },
 ]
 
 export default function VisionPage() {
@@ -107,10 +107,10 @@ export default function VisionPage() {
                 <span className="absolute -bottom-2 left-0 w-24 h-1 bg-[#fdc425] rounded-full" />
               </h2>
               <p className="text-[18px] leading-[28px] text-[#45464e] mb-6">
-                At theSpotlightChurch, we make Christ Known, Manifesting the Character of the Holy Spirit, Helping many find Purpose and through God's lifting Power Fulfilling It.
+                At theSpotlightChurch, we help people know Christ, grow in faith, and use their gifts in service.
               </p>
               <p className="text-[18px] leading-[28px] text-[#45464e] mb-10">
-                Our mission is rooted in the belief that faith should be active, community should be authentic, and the future should be shaped with intentionality. We don't just gather — we grow together.
+                Our mission guides how we worship, teach, serve, and build an authentic community together.
               </p>
               <div className="space-y-5">
                 {checks.map((c) => (
