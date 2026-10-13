@@ -227,7 +227,7 @@ export default function FeaturedEventPromo() {
                   <span className="material-symbols-outlined text-[17px]">arrow_forward</span>
                 </a>
               )}
-              <p className="mt-3 text-center text-[10px] text-[#76777f]">Shown once per session</p>
+              {/* <p className="mt-3 text-center text-[10px] text-[#76777f]">Shown once per session</p> */}
             </div>
           </section>
         </div>
