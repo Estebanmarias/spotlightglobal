@@ -34,3 +34,11 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+
+
+ran some changes in the confrencepreview page 
+fix(conference): remove undefined isRealEvent reference breaking build
+
+Replace the dead isRealEvent/eventLoading ternaries in ConferencePreview
+with direct text. Early returns already guarantee a loaded event, so the
+removed branches were unreachable. Fixes the Vercel type-check failure.

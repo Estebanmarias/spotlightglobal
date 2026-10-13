@@ -314,7 +314,7 @@ export default function ConferencePreview() {
               <h2 className="mt-1 text-[24px] font-bold text-[#081534]">Register for this event</h2>
             </div>
             <span className={`rounded-sm px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide ${registrationOpen ? "bg-green-100 text-green-800" : "bg-[#fff2c7] text-[#6d5200]"}`}>
-              {eventLoading ? "Checking availability" : registrationOpen ? "Registration open" : "Registration not open"}
+                            {registrationOpen ? "Registration open" : "Registration not open"}
             </span>
           </div>
 
@@ -324,13 +324,9 @@ export default function ConferencePreview() {
             </p>
           )}
 
-          {!registrationOpen && (
+                    {!registrationOpen && (
             <p className="mb-5 border-l-2 border-[#fdc425] bg-white px-4 py-3 text-[12px] leading-5 text-[#5b5d66]">
-              {eventLoading
-                ? "Loading event registration details…"
-                : isRealEvent
-                  ? "Registration is currently closed. Please contact the church team for updates."
-                  : "Media Ministry is preparing registration. This form will open when the event is added and registration is enabled in the Media event manager."}
+              Registration is currently closed. Please contact the church team for updates.
             </p>
           )}
 
