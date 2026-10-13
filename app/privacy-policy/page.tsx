@@ -16,7 +16,9 @@ const sections = [
             'Date of birth and home address (for membership records)',
             'WhatsApp and Telegram handles (for ministry communication)',
             'Partnership details and giving preferences',
-            'Testimonies and prayer requests submitted publicly',
+            'Testimonies submitted for public display and private prayer requests submitted through church forms',
+            'Event registration details, including attendance days, accommodation requests, accompanying children counts, special-session selections, and referral source',
+            'Optional special requests and prayer requests submitted with event registrations',
           ].map(item => (
             <li key={item} className="flex items-start gap-3">
               <span className="material-symbols-outlined text-[#fdc425] text-[18px] mt-0.5 shrink-0">check_circle</span>
@@ -73,12 +75,10 @@ const sections = [
     content: (
       <>
         <p>
-          We take the security of your personal data seriously. All data is stored securely in Supabase
-          with row-level security policies ensuring only authorised administrators can access member records.
+          We take the security of your personal data seriously. Member, event registration, and prayer-request data is stored in Supabase. Row-level security and server-side access checks restrict attendee records to approved Media Ministry managers; event prayer requests are additionally restricted to the super admin.
         </p>
         <p className="mt-4">
-          All connections to our platform are encrypted via SSL/TLS. Admin accounts require approved credentials
-          and are managed exclusively by the lead pastor (Setman). We never sell or share your data with third parties.
+          Connections are encrypted via SSL/TLS. We do not sell personal information. We use service providers, including Supabase for data storage, Brevo for email delivery, Vercel for hosting, and analytics providers described by their own policies, only to operate and improve the service. Payment card details are not collected by this event registration form.
         </p>
       </>
     ),
@@ -135,7 +135,7 @@ export default function PrivacyPolicyPage() {
               Privacy Policy
             </h1>
             <p className="text-[#45464e] text-[16px] sm:text-[18px] leading-[28px] max-w-2xl">
-              Last updated: July 2026. This policy describes how theSpotlightChurch collects,
+              Last updated: September 2026. This policy describes how theSpotlightChurch collects,
               uses, and protects your personal information.
             </p>
           </motion.div>

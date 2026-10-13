@@ -5,6 +5,7 @@ import { motion, Variants, AnimatePresence } from 'framer-motion'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import { getSupabaseClient } from '@/lib/supabase'
+import { isShiftConferenceTitle } from '@/lib/church-events'
 
 // ── CONFIG ──────────────────────────────────────────────────────
 const YT_API_KEY = process.env.NEXT_PUBLIC_YOUTUBE_API_KEY!
@@ -12,8 +13,9 @@ const YT_CHANNEL_ID = 'UCqKvr26isZoFXO02xEtX5UQ'
 
 type ChurchEvent = {
   id: string; title: string; description: string | null
-  event_date: string; event_time: string | null
+  event_date: string; event_end_date?: string | null; event_time: string | null
   flyer_url: string | null; location: string; is_featured: boolean
+  registration_enabled?: boolean
 }
 type CommunityPhoto = { id: string; image_url: string; caption: string | null }
 type Testimony = { id: string; name: string; testimony: string; created_at: string }
@@ -149,6 +151,8 @@ function EventsCarousel({ events }: { events: ChurchEvent[] }) {
       style={{ scrollbarWidth: 'none' }}>
       {events.map((e, i) => {
         const { day, month, full } = formatDate(e.event_date)
+        const isShiftConference = isShiftConferenceTitle(e.title)
+        const eventDetailsUrl = `/conference?event=${encodeURIComponent(e.id)}`
         const directionsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(e.location)}`
         return (
           <motion.div key={e.id}
@@ -193,15 +197,25 @@ function EventsCarousel({ events }: { events: ChurchEvent[] }) {
                 <span className="material-symbols-outlined text-[14px] text-[#fdc425]">location_on</span>
                 {e.location}
               </div>
-              <a
-                href={directionsUrl}
-                target="_blank"
-                rel="noreferrer"
-                className="flex w-full items-center justify-center gap-2 rounded-full border-2 border-[#081534] py-3 text-[13px] font-bold text-[#081534] transition-all hover:bg-[#081534] hover:text-white"
-              >
-                Get Directions
-                <span className="material-symbols-outlined text-[16px]">open_in_new</span>
-              </a>
+              {isShiftConference || e.registration_enabled ? (
+                <Link
+                  href={eventDetailsUrl}
+                  className="flex w-full items-center justify-center gap-2 rounded-full border-2 border-[#081534] py-3 text-[13px] font-bold text-[#081534] transition-all hover:bg-[#081534] hover:text-white"
+                >
+                  {isShiftConference ? "View Conference" : "Event Details"}
+                  <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
+                </Link>
+              ) : (
+                <a
+                  href={directionsUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="flex w-full items-center justify-center gap-2 rounded-full border-2 border-[#081534] py-3 text-[13px] font-bold text-[#081534] transition-all hover:bg-[#081534] hover:text-white"
+                >
+                  Get Directions
+                  <span className="material-symbols-outlined text-[16px]">open_in_new</span>
+                </a>
+              )}
             </div>
           </motion.div>
         )
@@ -326,10 +340,13 @@ function CommunityPageContent() {
 
   useEffect(() => {
     const load = async () => {
-      const today = new Date().toISOString().split('T')[0]
       const { data: ev } = await (supabase.from('church_events') as any)
-        .select('*').gte('event_date', today).order('event_date', { ascending: true }).limit(8)
-      setEvents(ev || []); setEventsLoading(false)
+        .select('*').order('event_date', { ascending: true }).limit(100)
+      const today = new Date()
+      const todayString = [today.getFullYear(), String(today.getMonth() + 1).padStart(2, '0'), String(today.getDate()).padStart(2, '0')].join('-')
+      const liveEvents = ((ev || []) as ChurchEvent[]).filter(event => (event.event_end_date || event.event_date) >= todayString)
+      setEvents(liveEvents.sort((a, b) => a.event_date.localeCompare(b.event_date)).slice(0, 8))
+      setEventsLoading(false)
 
       const { data: ph } = await (supabase.from('community_photos') as any)
         .select('*').order('sort_order', { ascending: true }).limit(6)
@@ -456,12 +473,18 @@ function CommunityPageContent() {
       </section>
 
       {/* ── UPCOMING EVENTS ───────────────────────────────────────── */}
-      <section className="py-24 px-6 bg-[#f2f4f6] overflow-hidden">
+      <section id="upcoming-events" className="scroll-mt-20 py-24 px-6 bg-[#f2f4f6] overflow-hidden">
         <div className="max-w-[1280px] mx-auto">
           <motion.div initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
             className="mb-12">
-            <h2 className="text-[28px] sm:text-[32px] font-bold text-[#081534] mb-2">Upcoming Services</h2>
-            <p className="text-[#45464e] text-[15px]">Save the date for these Upcoming Services.</p>
+            <h2 className="text-[28px] sm:text-[32px] font-bold text-[#081534] mb-2">Upcoming Services &amp; Events</h2>
+            <div className="flex flex-wrap items-center justify-between gap-4">
+              <p className="text-[#45464e] text-[15px]">See what’s coming up at theSpotlightChurch.</p>
+              <Link href="/events" className="inline-flex min-h-10 items-center gap-2 text-[12px] font-bold text-[#081534] hover:text-[#785a00]">
+                All events &amp; archive
+                <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
+              </Link>
+            </div>
           </motion.div>
 
           {eventsLoading ? (

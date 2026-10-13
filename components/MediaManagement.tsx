@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { getSupabaseClient } from '@/lib/supabase'
+import { formatEventRegistrationReference } from '@/lib/event-registration-reference'
 
 // ════════════════════════════════════════════════════════════════════
 // MediaManagement — Events + Gallery with Supabase Storage uploads
@@ -27,6 +28,48 @@ type ChurchEvent = {
   flyer_url: string | null
   location: string
   is_featured: boolean
+  event_end_date: string | null
+  registration_enabled: boolean
+  registration_capacity: number | null
+  registration_deadline: string | null
+  price_type: 'free' | 'paid'
+  price: number | null
+  currency: string
+  payment_instructions: string | null
+  special_session_label: string | null
+  special_session_date: string | null
+}
+
+type EventRegistration = {
+  id: string
+  created_at: string
+  full_name: string
+  email: string
+  phone: string
+  location: string
+  accommodation_needed: boolean
+  accommodation_notes: string | null
+  children_count: number
+  attendee_count: number
+  attendance_dates: string[]
+  special_session_attending: boolean
+  special_request: string | null
+  referral_source: string
+  registration_status: string
+  payment_status: string
+  amount_due: number
+  currency: string
+  payment_reference: string | null
+  amount_paid: number | null
+  paid_at: string | null
+}
+
+type EventPrayerRequest = {
+  id: string
+  full_name: string
+  request: string
+  created_at: string
+  status: 'new' | 'prayed' | 'follow_up'
 }
 
 type CommunityPhoto = {
@@ -39,6 +82,10 @@ type CommunityPhoto = {
 const blankEventForm = {
   title: '', description: '', event_date: '', event_time: '',
   flyer_url: '', location: 'Main Auditorium', is_featured: false,
+  event_end_date: '', registration_enabled: false, registration_capacity: '',
+  registration_deadline: '', price_type: 'free' as 'free' | 'paid',
+  price: '', currency: 'NGN', special_session_label: '', special_session_date: '',
+  payment_instructions: '',
 }
 
 const inputCls = 'w-full bg-[#f2f4f6] border-b-2 border-transparent focus:border-[#081534] outline-none px-4 py-3 rounded-t-lg text-[14px] transition-colors'
@@ -62,6 +109,10 @@ function generateFileName(file: File): string {
   return `${crypto.randomUUID()}.${ext}`
 }
 
+function paymentStatusLabel(status: string) {
+  return status === 'free' ? 'Confirmed' : status
+}
+
 export default function MediaManagement({ viewerRole }: MediaManagementProps) {
   const supabase = getSupabaseClient()
   const [tab, setTab] = useState<'events' | 'gallery'>('events')
@@ -69,11 +120,20 @@ export default function MediaManagement({ viewerRole }: MediaManagementProps) {
   // ── Events state ──────────────────────────────────────────────────
   const [events, setEvents] = useState<ChurchEvent[]>([])
   const [eventsLoading, setEventsLoading] = useState(true)
+  const [eventsError, setEventsError] = useState(false)
   const [showEventModal, setShowEventModal] = useState(false)
   const [editEvent, setEditEvent] = useState<ChurchEvent | null>(null)
   const [eventForm, setEventForm] = useState(blankEventForm)
   const [deleteEventTarget, setDeleteEventTarget] = useState<ChurchEvent | null>(null)
   const [savingEvent, setSavingEvent] = useState(false)
+  const [registrationsForEvent, setRegistrationsForEvent] = useState<ChurchEvent | null>(null)
+  const [registrations, setRegistrations] = useState<EventRegistration[]>([])
+  const [registrationsLoading, setRegistrationsLoading] = useState(false)
+  const [paymentReferenceById, setPaymentReferenceById] = useState<Record<string, string>>({})
+  const [prayerRequests, setPrayerRequests] = useState<EventPrayerRequest[]>([])
+  const [prayerRequestsLoading, setPrayerRequestsLoading] = useState(false)
+  const [showPrayerRequests, setShowPrayerRequests] = useState(false)
+  const [updatingPaymentId, setUpdatingPaymentId] = useState<string | null>(null)
 
   // flyer upload
   const flyerInputRef = useRef<HTMLInputElement>(null)
@@ -104,9 +164,16 @@ export default function MediaManagement({ viewerRole }: MediaManagementProps) {
   // ── Fetchers ──────────────────────────────────────────────────────
   const fetchEvents = async () => {
     setEventsLoading(true)
-    const { data } = await (supabase.from('church_events') as any)
+    const { data, error } = await (supabase.from('church_events') as any)
       .select('*').order('event_date', { ascending: true })
-    setEvents(data || [])
+    if (error) {
+      console.error('[MEDIA EVENTS] Could not load events:', error.message)
+      setEventsError(true)
+      setEvents([])
+    } else {
+      setEventsError(false)
+      setEvents(data || [])
+    }
     setEventsLoading(false)
   }
 
@@ -191,6 +258,16 @@ export default function MediaManagement({ viewerRole }: MediaManagementProps) {
       title: e.title, description: e.description ?? '',
       event_date: e.event_date, event_time: e.event_time ?? '',
       flyer_url: e.flyer_url ?? '', location: e.location, is_featured: e.is_featured,
+      event_end_date: e.event_end_date ?? '',
+      registration_enabled: e.registration_enabled ?? false,
+      registration_capacity: e.registration_capacity == null ? '' : String(e.registration_capacity),
+      registration_deadline: e.registration_deadline ?? '',
+      price_type: e.price_type ?? 'free',
+      price: e.price == null ? '' : String(e.price),
+      currency: e.currency ?? 'NGN',
+      payment_instructions: e.payment_instructions ?? '',
+      special_session_label: e.special_session_label ?? '',
+      special_session_date: e.special_session_date ?? '',
     })
     setEditEvent(e)
     setFlyerFile(null)
@@ -200,6 +277,29 @@ export default function MediaManagement({ viewerRole }: MediaManagementProps) {
 
   const handleSaveEvent = async () => {
     if (!eventForm.title.trim() || !eventForm.event_date) return
+    if (eventForm.event_end_date && eventForm.event_end_date < eventForm.event_date) {
+      showToast('Event end date must be on or after the start date', 'error')
+      return
+    }
+    if (eventForm.registration_deadline && eventForm.registration_deadline > eventForm.event_date) {
+      showToast('Registration deadline must be on or before the event start date', 'error')
+      return
+    }
+    if (eventForm.special_session_date && (
+      eventForm.special_session_date < eventForm.event_date ||
+      eventForm.special_session_date > (eventForm.event_end_date || eventForm.event_date)
+    )) {
+      showToast('Special session date must be within the event dates', 'error')
+      return
+    }
+    if (eventForm.price_type === 'paid' && (!eventForm.price || Number(eventForm.price) <= 0)) {
+      showToast('Enter a valid price for a paid event', 'error')
+      return
+    }
+    if (eventForm.registration_capacity && Number(eventForm.registration_capacity) < 1) {
+      showToast('Capacity must be at least one', 'error')
+      return
+    }
     setSavingEvent(true)
 
     const { data: { user } } = await supabase.auth.getUser()
@@ -225,6 +325,16 @@ export default function MediaManagement({ viewerRole }: MediaManagementProps) {
       flyer_url: finalFlyerUrl,
       location: eventForm.location.trim() || 'Main Auditorium',
       is_featured: eventForm.is_featured,
+      event_end_date: eventForm.event_end_date || null,
+      registration_enabled: eventForm.registration_enabled,
+      registration_capacity: eventForm.registration_capacity ? Number(eventForm.registration_capacity) : null,
+      registration_deadline: eventForm.registration_deadline || null,
+      price_type: eventForm.price_type,
+      price: eventForm.price_type === 'paid' ? Number(eventForm.price) : null,
+      currency: eventForm.currency.trim() || 'NGN',
+      payment_instructions: eventForm.price_type === 'paid' ? eventForm.payment_instructions.trim() || null : null,
+      special_session_label: eventForm.special_session_label.trim() || null,
+      special_session_date: eventForm.special_session_date || null,
       added_by: user?.id ?? null,
     }
 
@@ -248,6 +358,19 @@ export default function MediaManagement({ viewerRole }: MediaManagementProps) {
 
   const handleDeleteEvent = async () => {
     if (!deleteEventTarget) return
+    const { count, error: registrationCountError } = await supabase
+      .from('event_registrations')
+      .select('id', { count: 'exact', head: true })
+      .eq('event_id', deleteEventTarget.id)
+    if (registrationCountError) {
+      showToast('Cannot verify registrations. Apply the event-registration migration before deleting events.', 'error')
+      return
+    }
+    if ((count ?? 0) > 0) {
+      showToast('This event has attendee records and cannot be deleted. Close registration and keep it in the archive instead.', 'error')
+      setDeleteEventTarget(null)
+      return
+    }
     // Delete flyer from storage first
     await deleteFromStorage(deleteEventTarget.flyer_url)
     const { error } = await (supabase.from('church_events') as any)
@@ -255,6 +378,122 @@ export default function MediaManagement({ viewerRole }: MediaManagementProps) {
     if (error) { showToast('Failed to delete event', 'error'); setDeleteEventTarget(null); return }
     showToast('Event removed')
     setDeleteEventTarget(null)
+  }
+
+  const getEventAdminHeaders = async () => {
+    const { data: { session } } = await supabase.auth.getSession()
+    if (!session?.access_token) throw new Error('Your session has expired. Please sign in again.')
+    return {
+      Authorization: `Bearer ${session.access_token}`,
+      'Content-Type': 'application/json',
+    }
+  }
+
+  const openRegistrations = async (event: ChurchEvent) => {
+    setRegistrationsForEvent(event)
+    setShowPrayerRequests(false)
+    setRegistrationsLoading(true)
+    try {
+      const headers = await getEventAdminHeaders()
+      const response = await fetch(`/api/conference/registrations?event_id=${encodeURIComponent(event.id)}`, { headers })
+      const result = await response.json()
+      if (!response.ok) throw new Error(result.error || 'Could not load registrations')
+      setRegistrations(result.registrations || [])
+    } catch (error) {
+      showToast(error instanceof Error ? error.message : 'Could not load registrations', 'error')
+      setRegistrations([])
+    } finally {
+      setRegistrationsLoading(false)
+    }
+  }
+
+  const downloadRegistrationsCsv = () => {
+    if (!registrationsForEvent) return
+    const activeRegistrations = registrations.filter(registration => registration.registration_status === 'registered')
+    const escapeCsvValue = (value: string | number) => {
+      const text = String(value)
+      const safeText = /^[\t\r ]*[=+@-]/.test(text) ? `'${text}` : text
+      return `"${safeText.replace(/"/g, '""')}"`
+    }
+    const rows = [
+      ['Registration ref', 'Name', 'Email', 'Phone', 'Party size', 'Attendance days', 'Payment status'],
+      ...activeRegistrations.map(registration => [
+        formatEventRegistrationReference(registration.id),
+        registration.full_name,
+        registration.email,
+        registration.phone,
+        String(registration.attendee_count),
+        registration.attendance_dates.map(formatDate).join('; '),
+        paymentStatusLabel(registration.payment_status),
+      ]),
+    ]
+    const csv = rows.map(row => row.map(escapeCsvValue).join(',')).join('\r\n')
+    const fileName = registrationsForEvent.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'event'
+    const url = URL.createObjectURL(new Blob([`\uFEFF${csv}`], { type: 'text/csv;charset=utf-8' }))
+    const link = document.createElement('a')
+    link.href = url
+    link.download = `${fileName}-attendees.csv`
+    link.click()
+    URL.revokeObjectURL(url)
+  }
+
+  const printRegistrationRoster = () => {
+    if (!registrationsForEvent || registrationsLoading) return
+    window.print()
+  }
+
+  const loadPrayerRequests = async () => {
+    if (!registrationsForEvent || viewerRole !== 'super_admin') return
+    setShowPrayerRequests(true)
+    setPrayerRequestsLoading(true)
+    try {
+      const headers = await getEventAdminHeaders()
+      const response = await fetch(`/api/conference/prayer-requests?event_id=${encodeURIComponent(registrationsForEvent.id)}`, { headers })
+      const result = await response.json()
+      if (!response.ok) throw new Error(result.error || 'Could not load prayer requests')
+      setPrayerRequests(result.requests || [])
+    } catch (error) {
+      showToast(error instanceof Error ? error.message : 'Could not load prayer requests', 'error')
+      setPrayerRequests([])
+    } finally {
+      setPrayerRequestsLoading(false)
+    }
+  }
+
+  const updatePrayerRequest = async (requestId: string, status: EventPrayerRequest['status']) => {
+    try {
+      const headers = await getEventAdminHeaders()
+      const response = await fetch('/api/conference/prayer-requests', {
+        method: 'PATCH',
+        headers,
+        body: JSON.stringify({ requestId, status }),
+      })
+      const result = await response.json()
+      if (!response.ok) throw new Error(result.error || 'Could not update prayer request')
+      setPrayerRequests(current => current.map(request => request.id === requestId ? { ...request, status } : request))
+    } catch (error) {
+      showToast(error instanceof Error ? error.message : 'Could not update prayer request', 'error')
+    }
+  }
+
+  const confirmRegistrationPayment = async (registration: EventRegistration) => {
+    setUpdatingPaymentId(registration.id)
+    try {
+      const headers = await getEventAdminHeaders()
+      const response = await fetch(`/api/conference/registrations/${registration.id}/payment`, {
+        method: 'PATCH',
+        headers,
+        body: JSON.stringify({ payment_reference: paymentReferenceById[registration.id] || '' }),
+      })
+      const result = await response.json()
+      if (!response.ok) throw new Error(result.error || 'Could not confirm payment')
+      showToast(result.emailSent ? 'Payment confirmed and receipt emailed' : 'Payment confirmed; receipt email could not be sent')
+      if (registrationsForEvent) await openRegistrations(registrationsForEvent)
+    } catch (error) {
+      showToast(error instanceof Error ? error.message : 'Could not confirm payment', 'error')
+    } finally {
+      setUpdatingPaymentId(null)
+    }
   }
 
   // ── Photo CRUD ────────────────────────────────────────────────────
@@ -354,7 +593,12 @@ export default function MediaManagement({ viewerRole }: MediaManagementProps) {
               </button>
             </div>
 
-            {eventsLoading ? (
+            {eventsError ? (
+              <div role="alert" className="border border-[#f2b8b5] bg-[#ffefed] px-4 py-5 text-center">
+                <p className="text-[13px] font-semibold text-[#8f1717]">Events could not be loaded from the database</p>
+                <p className="mt-1 text-[11px] text-[#5b5d66]">Check your access and database setup, then refresh this page.</p>
+              </div>
+            ) : eventsLoading ? (
               <div className="space-y-2">
                 {[...Array(3)].map((_, i) => <div key={i} className="h-16 bg-[#f2f4f6] rounded-lg animate-pulse" />)}
               </div>
@@ -387,9 +631,19 @@ export default function MediaManagement({ viewerRole }: MediaManagementProps) {
                         <p className="text-[11px] text-[#45464e]">
                           {formatDate(e.event_date)}{e.event_time ? ` · ${e.event_time}` : ''}
                         </p>
+                        {e.registration_enabled && (
+                          <p className="mt-1 text-[10px] font-semibold text-[#785a00]">
+                            Registration open{e.price_type === 'paid' ? ` · ${e.currency} ${Number(e.price || 0).toLocaleString('en-NG')}` : ''}
+                          </p>
+                        )}
                       </div>
                     </div>
                     <div className="flex items-center gap-1 shrink-0">
+                      <button onClick={() => openRegistrations(e)}
+                        className="w-8 h-8 flex items-center justify-center rounded-lg text-[#45464e] hover:text-[#081534] hover:bg-white transition-all"
+                        title="Manage registrations" aria-label={`Manage registrations for ${e.title}`}>
+                        <span className="material-symbols-outlined text-[18px]">how_to_reg</span>
+                      </button>
                       <button onClick={() => openEditEvent(e)}
                         className="w-8 h-8 flex items-center justify-center rounded-lg text-[#45464e] hover:text-[#081534] hover:bg-white transition-all">
                         <span className="material-symbols-outlined text-[18px]">edit</span>
@@ -518,6 +772,91 @@ export default function MediaManagement({ viewerRole }: MediaManagementProps) {
                     </div>
                   </div>
 
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-[11px] font-bold text-[#45464e] uppercase tracking-wide">Last event day</label>
+                      <input type="date" min={eventForm.event_date || undefined} value={eventForm.event_end_date}
+                        onChange={e => setEventForm(p => ({ ...p, event_end_date: e.target.value }))}
+                        className={inputCls} />
+                    </div>
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-[11px] font-bold text-[#45464e] uppercase tracking-wide">Registration deadline</label>
+                      <input type="date" value={eventForm.registration_deadline}
+                        onChange={e => setEventForm(p => ({ ...p, registration_deadline: e.target.value }))}
+                        className={inputCls} />
+                    </div>
+                  </div>
+
+                  <label className="flex items-start gap-2.5 p-3 bg-[#f7f9fb] rounded-lg cursor-pointer">
+                    <input type="checkbox" checked={eventForm.registration_enabled}
+                      onChange={e => setEventForm(p => ({ ...p, registration_enabled: e.target.checked }))}
+                      className="mt-0.5 w-4 h-4 accent-[#081534]" />
+                    <span>
+                      <span className="block text-[13px] font-semibold text-[#191c1e]">Open attendee registration</span>
+                      <span className="block text-[11px] text-[#76777f]">Public form accepts registrations while enabled and before the deadline.</span>
+                    </span>
+                  </label>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-[11px] font-bold text-[#45464e] uppercase tracking-wide">Registration capacity</label>
+                      <input type="number" min="1" value={eventForm.registration_capacity}
+                        onChange={e => setEventForm(p => ({ ...p, registration_capacity: e.target.value }))}
+                        placeholder="No limit" className={inputCls} />
+                    </div>
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-[11px] font-bold text-[#45464e] uppercase tracking-wide">Registration fee</label>
+                      <select value={eventForm.price_type}
+                        onChange={e => setEventForm(p => ({ ...p, price_type: e.target.value as 'free' | 'paid' }))}
+                        className={inputCls}>
+                        <option value="free">Free</option>
+                        <option value="paid">Paid</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  {eventForm.price_type === 'paid' && (
+                    <div className="space-y-3">
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="flex flex-col gap-1.5">
+                          <label className="text-[11px] font-bold text-[#45464e] uppercase tracking-wide">Amount per registration</label>
+                          <input type="number" min="1" step="0.01" value={eventForm.price}
+                            onChange={e => setEventForm(p => ({ ...p, price: e.target.value }))}
+                            placeholder="Amount" className={inputCls} />
+                        </div>
+                        <div className="flex flex-col gap-1.5">
+                          <label className="text-[11px] font-bold text-[#45464e] uppercase tracking-wide">Currency</label>
+                          <select value={eventForm.currency}
+                            onChange={e => setEventForm(p => ({ ...p, currency: e.target.value }))}
+                            className={inputCls}>
+                            <option value="NGN">NGN · Naira</option>
+                            <option value="USD">USD · US Dollar</option>
+                            <option value="GBP">GBP · Pound</option>
+                          </select>
+                        </div>
+                      </div>
+                      <label className="block text-[11px] font-bold text-[#45464e] uppercase tracking-wide">
+                        Payment instructions
+                        <textarea rows={3} value={eventForm.payment_instructions}
+                          onChange={e => setEventForm(p => ({ ...p, payment_instructions: e.target.value }))}
+                          placeholder="Enter verified transfer/payment details for this event"
+                          className={`${inputCls} mt-1.5 resize-y`} />
+                      </label>
+                      <p className="text-[10px] leading-4 text-[#76777f]">These instructions are sent only for paid registrations. Verify account details before opening registration.</p>
+                    </div>
+                  )}
+                  <p className="text-[10px] leading-4 text-[#76777f]">The fee is per registrant. Accompanying children count toward event capacity but are not charged in this version.</p>
+
+                  <div className="border-t border-[#e2e2e9] pt-4 space-y-3">
+                    <p className="text-[11px] font-bold uppercase tracking-wide text-[#45464e]">Optional special session</p>
+                    <input value={eventForm.special_session_label}
+                      onChange={e => setEventForm(p => ({ ...p, special_session_label: e.target.value }))}
+                      placeholder="e.g. Friday morning Leaders / Business session" className={inputCls} />
+                    <input type="date" value={eventForm.special_session_date}
+                      onChange={e => setEventForm(p => ({ ...p, special_session_date: e.target.value }))}
+                      className={inputCls} />
+                  </div>
+
                   {/* Location */}
                   <div className="flex flex-col gap-1.5">
                     <label className="text-[11px] font-bold text-[#45464e] uppercase tracking-wide">Location</label>
@@ -606,6 +945,189 @@ export default function MediaManagement({ viewerRole }: MediaManagementProps) {
           </>
         )}
       </AnimatePresence>
+
+      {/* Attendees and pastoral prayer requests */}
+      <AnimatePresence>
+        {registrationsForEvent && (
+          <>
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm"
+              onClick={() => setRegistrationsForEvent(null)} />
+            <motion.div initial={{ opacity: 0, scale: 0.98, y: 12 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.98, y: 12 }}
+              className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6">
+              <section role="dialog" aria-modal="true" aria-labelledby="event-registrations-title"
+                className="flex max-h-[92dvh] w-full max-w-4xl flex-col overflow-hidden rounded-xl bg-white shadow-2xl">
+                <header className="flex items-start justify-between gap-4 border-b border-[#c6c6cf] px-5 py-4 sm:px-7">
+                  <div className="min-w-0">
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-[#785a00]">Media Ministry · Event management</p>
+                    <h3 id="event-registrations-title" className="mt-1 truncate text-[17px] font-bold text-[#081534]">{registrationsForEvent.title}</h3>
+                    <p className="mt-1 text-[11px] text-[#76777f]">
+                      {registrations.filter(registration => registration.registration_status === 'registered').length} registrations · {registrations.filter(registration => registration.registration_status === 'registered').reduce((total, registration) => total + registration.attendee_count, 0)} attendees
+                    </p>
+                  </div>
+                  <div className="flex shrink-0 items-center gap-1">
+                    {!showPrayerRequests && (
+                      <>
+                        <button type="button" onClick={printRegistrationRoster}
+                          disabled={registrationsLoading || registrations.length === 0}
+                          title="Print roster or save as PDF" aria-label="Print roster or save as PDF"
+                          className="flex min-h-9 items-center gap-1.5 rounded-md border border-[#c6c6cf] px-2.5 text-[11px] font-semibold text-[#45464e] hover:bg-[#f2f4f6] disabled:cursor-not-allowed disabled:opacity-40">
+                          <span className="material-symbols-outlined text-[17px]">picture_as_pdf</span>
+                          <span className="hidden sm:inline">Save PDF</span>
+                        </button>
+                        <button type="button" onClick={downloadRegistrationsCsv}
+                          disabled={registrationsLoading || registrations.length === 0}
+                          title="Download attendee CSV" aria-label="Download attendee CSV"
+                          className="flex min-h-9 items-center gap-1.5 rounded-md border border-[#c6c6cf] px-2.5 text-[11px] font-semibold text-[#45464e] hover:bg-[#f2f4f6] disabled:cursor-not-allowed disabled:opacity-40">
+                          <span className="material-symbols-outlined text-[17px]">download</span>
+                          <span className="hidden sm:inline">CSV</span>
+                        </button>
+                      </>
+                    )}
+                    <button type="button" onClick={() => setRegistrationsForEvent(null)} aria-label="Close attendee management"
+                      className="flex h-9 w-9 items-center justify-center rounded-md text-[#45464e] hover:bg-[#f2f4f6]">
+                      <span className="material-symbols-outlined">close</span>
+                    </button>
+                  </div>
+                </header>
+
+                <div className="flex items-center gap-2 border-b border-[#e2e2e9] px-5 py-3 sm:px-7">
+                  <button type="button" onClick={() => setShowPrayerRequests(false)}
+                    className={`min-h-9 rounded-md px-3 text-[12px] font-semibold ${!showPrayerRequests ? 'bg-[#081534] text-white' : 'text-[#45464e] hover:bg-[#f2f4f6]'}`}>
+                    Attendees
+                  </button>
+                  {viewerRole === 'super_admin' && (
+                    <button type="button" onClick={loadPrayerRequests}
+                      className={`min-h-9 rounded-md px-3 text-[12px] font-semibold ${showPrayerRequests ? 'bg-[#081534] text-white' : 'text-[#45464e] hover:bg-[#f2f4f6]'}`}>
+                      Pastoral prayer requests
+                    </button>
+                  )}
+                </div>
+
+                <div className="min-h-0 flex-1 overflow-y-auto p-4 sm:p-7">
+                  {showPrayerRequests ? (
+                    prayerRequestsLoading ? (
+                      <p className="py-10 text-center text-[13px] text-[#76777f]">Loading pastoral requests…</p>
+                    ) : prayerRequests.length === 0 ? (
+                      <p className="py-10 text-center text-[13px] text-[#76777f]">No prayer requests for this event.</p>
+                    ) : (
+                      <div className="space-y-3">
+                        {prayerRequests.map(request => (
+                          <article key={request.id} className="border border-[#e2e2e9] p-4">
+                            <div className="flex flex-wrap items-center justify-between gap-2">
+                              <p className="text-[13px] font-bold text-[#081534]">{request.full_name}</p>
+                              <select aria-label={`Prayer request status for ${request.full_name}`} value={request.status}
+                                onChange={event => updatePrayerRequest(request.id, event.target.value as EventPrayerRequest['status'])}
+                                className="min-h-9 rounded-md border border-[#c6c6cf] bg-white px-2 text-[11px] text-[#45464e]">
+                                <option value="new">New</option>
+                                <option value="prayed">Prayed</option>
+                                <option value="follow_up">Follow up</option>
+                              </select>
+                            </div>
+                            <p className="mt-3 whitespace-pre-wrap text-[13px] leading-6 text-[#45464e]">{request.request}</p>
+                          </article>
+                        ))}
+                      </div>
+                    )
+                  ) : registrationsLoading ? (
+                    <p className="py-10 text-center text-[13px] text-[#76777f]">Loading attendees…</p>
+                  ) : registrations.length === 0 ? (
+                    <p className="py-10 text-center text-[13px] text-[#76777f]">No registrations yet.</p>
+                  ) : (
+                    <div className="space-y-3">
+                      {registrations.map(registration => (
+                        <article key={registration.id} className="grid gap-4 border border-[#e2e2e9] p-4 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center">
+                          <div className="min-w-0">
+                            <div className="flex flex-wrap items-center gap-2">
+                              <h4 className="text-[14px] font-bold text-[#081534]">{registration.full_name}</h4>
+                              <span className={`rounded-sm px-2 py-0.5 text-[9px] font-bold uppercase ${registration.payment_status === 'paid' || registration.payment_status === 'free' ? 'bg-green-100 text-green-800' : 'bg-[#fff2c7] text-[#6d5200]'}`}>
+                                {paymentStatusLabel(registration.payment_status)}
+                              </span>
+                            </div>
+                            <p className="mt-1 text-[10px] font-bold uppercase tracking-wide text-[#785a00]">Ref {formatEventRegistrationReference(registration.id)}</p>
+                            <p className="mt-1 break-all text-[12px] text-[#45464e]">{registration.email} · {registration.phone}</p>
+                            <p className="mt-1 text-[11px] leading-5 text-[#76777f]">
+                              {registration.location} · {registration.attendee_count} attendee{registration.attendee_count === 1 ? '' : 's'} · {registration.attendance_dates.map(date => new Date(`${date}T00:00:00`).toLocaleDateString('en-NG', { day: 'numeric', month: 'short' })).join(', ')}
+                              {registration.special_session_attending ? ' · Friday special session' : ''}
+                              {registration.accommodation_needed ? ' · Accommodation requested' : ''}
+                            </p>
+                            {registration.special_request && <p className="mt-2 text-[11px] leading-5 text-[#45464e]">Request: {registration.special_request}</p>}
+                            {registration.payment_reference && <p className="mt-1 text-[10px] text-[#76777f]">Reference: {registration.payment_reference}</p>}
+                          </div>
+                          <div className="flex flex-wrap items-center gap-2 lg:justify-end">
+                            <span className="mr-1 text-[12px] font-bold text-[#081534]">{registration.currency} {Number(registration.amount_due).toLocaleString('en-NG')}</span>
+                            {registration.payment_status === 'pending' && (
+                              <>
+                                <input value={paymentReferenceById[registration.id] ?? ''}
+                                  onChange={event => setPaymentReferenceById(current => ({ ...current, [registration.id]: event.target.value }))}
+                                  placeholder="Transfer ref (optional)" aria-label={`Payment reference for ${registration.full_name}`}
+                                  className="min-h-9 min-w-0 flex-1 rounded-md border border-[#c6c6cf] px-2 text-[11px] lg:w-40 lg:flex-none" />
+                                <button type="button" onClick={() => confirmRegistrationPayment(registration)} disabled={updatingPaymentId === registration.id}
+                                  className="min-h-9 rounded-md bg-[#081534] px-3 text-[11px] font-bold text-white hover:bg-[#17305f] disabled:opacity-50">
+                                  {updatingPaymentId === registration.id ? 'Saving…' : 'Mark paid'}
+                                </button>
+                              </>
+                            )}
+                          </div>
+                        </article>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                <div className="event-attendee-print">
+                  <h1>{registrationsForEvent.title}</h1>
+                  <p>Attendee check-in roster · {formatDate(registrationsForEvent.event_date)}</p>
+                  <p>{registrations.filter(registration => registration.registration_status === 'registered').length} registrations · {registrations.filter(registration => registration.registration_status === 'registered').reduce((total, registration) => total + registration.attendee_count, 0)} attendees</p>
+                  <table>
+                    <thead>
+                      <tr><th>#</th><th>Registration ref</th><th>Name</th><th>Phone</th><th>Party</th><th>Attendance days</th><th>Payment</th><th>Checked in</th></tr>
+                    </thead>
+                    <tbody>
+                      {registrations.filter(registration => registration.registration_status === 'registered').map((registration, index) => (
+                        <tr key={registration.id}>
+                          <td>{index + 1}</td>
+                          <td>{formatEventRegistrationReference(registration.id)}</td>
+                          <td>{registration.full_name}</td>
+                          <td>{registration.phone}</td>
+                          <td>{registration.attendee_count}</td>
+                          <td>{registration.attendance_dates.map(formatDate).join(', ')}</td>
+                          <td>{paymentStatusLabel(registration.payment_status)}</td>
+                          <td><span className="check-in-box" /></td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </section>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
+      <style>{`
+        .event-attendee-print { display: none; }
+        @media print {
+          @page { size: A4 landscape; margin: 12mm; }
+          body * { visibility: hidden !important; }
+          .event-attendee-print, .event-attendee-print * { visibility: visible !important; }
+          .event-attendee-print {
+            display: block !important;
+            position: absolute !important;
+            inset: 0 auto auto 0 !important;
+            width: 100% !important;
+            color: #111 !important;
+            background: #fff !important;
+            font: 10pt Arial, sans-serif !important;
+          }
+          .event-attendee-print h1 { margin: 0 0 5mm; font-size: 18pt; }
+          .event-attendee-print p { margin: 0 0 2mm; }
+          .event-attendee-print table { width: 100%; margin-top: 8mm; border-collapse: collapse; }
+          .event-attendee-print th, .event-attendee-print td { border: 1px solid #777; padding: 2mm; text-align: left; }
+          .event-attendee-print th { background: #eee !important; }
+          .event-attendee-print tr { break-inside: avoid; }
+          .event-attendee-print .check-in-box { display: inline-block; width: 5mm; height: 5mm; border: 1px solid #333; }
+        }
+      `}</style>
 
       {/* ══════════════════════════════════════════════════════════════
           ADD PHOTO MODAL

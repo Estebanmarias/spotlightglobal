@@ -25,6 +25,12 @@ export default function SplashWrapper({
     }
   }, []);
 
+  useEffect(() => {
+    if (!ready) return;
+    document.documentElement.dataset.spotlightHomeReady = "true";
+    window.dispatchEvent(new Event("spotlight:home-ready"));
+  }, [ready]);
+
   const handleComplete = () => {
     sessionStorage.setItem("splash-seen", "1");
     setShowSplash(false);

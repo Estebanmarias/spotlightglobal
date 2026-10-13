@@ -3,6 +3,7 @@
 import { usePathname } from "next/navigation";
 import Navbar from "./Navbar";
 import Footer from "./Footer";
+import FeaturedEventPromo from "./FeaturedEventPromo";
 
 export default function LayoutWrapper({
   children,
@@ -19,6 +20,7 @@ export default function LayoutWrapper({
   return (
     <>
       <Navbar />
+      <FeaturedEventPromo />
       <div className="flex-grow">{children}</div>
       <Footer />
     </>
