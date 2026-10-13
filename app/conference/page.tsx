@@ -5,7 +5,7 @@ import ConferencePreview from "./ConferencePreview";
 export const metadata: Metadata = {
   title: "Soaring (Height & Sight) | SHIFT Conference 2026",
   description:
-    "Join the C6 SHIFT Conference 2026, Soaring (Height & Sight), November 6–8 at Icon Hotel Hall, New Nyanya, Abuja.",
+    "Join the C6 SHIFT Conference 2026, Soaring (Height & Sight), November 7–8 at Ivana Event and Recreational Centre, One Man Village.",
 };
 
 export default function ConferencePage() {

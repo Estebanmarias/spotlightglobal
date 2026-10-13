@@ -425,8 +425,8 @@ export default function ConferencePreview() {
                 </select>
               </label>
               <label className="block text-[12px] font-semibold text-[#45464e] sm:col-span-2">
-                Special request <span className="font-normal text-[#76777f]">(optional)</span>
-                <textarea rows={3} value={form.specialRequest} onChange={(event) => updateField("specialRequest", event.target.value)} className={`${textInputClass} mt-2 resize-y py-3`} placeholder="Share any request the event team should know about." />
+                Share Testimony <span className="font-normal text-[#76777f]">(optional)</span>
+                <textarea rows={3} value={form.specialRequest} onChange={(event) => updateField("specialRequest", event.target.value)} className={`${textInputClass} mt-2 resize-y py-3`} placeholder="Share what the Lord has done for you and Bless Others." />
               </label>
               <label className="block text-[12px] font-semibold text-[#45464e] sm:col-span-2">
                 Prayer request <span className="font-normal text-[#76777f]">(optional)</span>
