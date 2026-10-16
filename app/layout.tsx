@@ -5,6 +5,8 @@ import LayoutWrapper from "@/components/LayoutWrapper";
 import ChurchStructuredData from "@/components/ChurchStructuredData";
 import { GoogleAnalytics } from "@next/third-parties/google";
 import Script from "next/script";
+import CookieBanner from '@/components/CookieBanner'
+// import AnalyticsLoader from '@/components/AnalyticsLoader'
 
 const jakarta = Plus_Jakarta_Sans({
   subsets: ["latin"],
@@ -82,6 +84,8 @@ export default function RootLayout({
         <ChurchStructuredData />
         <LayoutWrapper>{children}</LayoutWrapper>
         <GoogleAnalytics gaId="G-0RJHPQC0DY" />
+        <CookieBanner />
+        {/* <AnalyticsLoader /> */}
         <Script id="microsoft-clarity" strategy="afterInteractive">
           {`
             (function(c,l,a,r,i,t,y){
