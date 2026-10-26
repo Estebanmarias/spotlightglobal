@@ -4,6 +4,10 @@ import ConnectSection from '@/components/ConnectSection'
 import SplashWrapper from '@/components/SplashWrapper'
 import Link from 'next/link'
 
+const CHURCH_MAPS_URL =
+  'https://www.google.com/maps/search/?api=1&query=' +
+  encodeURIComponent('Ado Guest House Event Centre, Ado Secretariat Junction, Abuja-Keffi Road, Karu, Nigeria')
+
 export const metadata = {
   title: 'theSpotlightChurch | Welcome Home',
   description: 'THIS IS CHURCH - the best place to be.',
@@ -32,10 +36,16 @@ function VisionSection() {
             A church family growing in faith and purpose
           </h2>
           <p className="text-[15px] sm:text-[16px] lg:text-[18px] leading-[24px] sm:leading-[26px] lg:leading-[28px] text-[#45464e] mb-6 sm:mb-8">
-            We gather in Karu, Abuja for worship, prayer, biblical teaching, and community.
+                        Every Sunday, we come together to worship, pray, learn the Word, and do life together. There's a seat for you here.
           </p>
-          <div className="flex items-start gap-4">
-            <div className="bg-[#1e2a4a] p-3 rounded-lg text-[#fdc425] shrink-0">
+          <a
+            href={CHURCH_MAPS_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Open church location in maps"
+            className="group flex items-start gap-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#fdc425] rounded-lg"
+          >
+            <div className="bg-[#1e2a4a] p-3 rounded-lg text-[#fdc425] shrink-0 transition-transform group-hover:scale-105">
               <span className="material-symbols-outlined">location_on</span>
             </div>
             <div>
@@ -45,8 +55,12 @@ function VisionSection() {
                 <br />
                 Sunday 8:30 AM - 10:30 AM
               </p>
+              <span className="mt-2 inline-flex items-center gap-1 text-[13px] font-bold text-[#785a00] group-hover:underline">
+                Get directions
+                <span className="material-symbols-outlined text-[16px]">arrow_outward</span>
+              </span>
             </div>
-          </div>
+          </a>
         </div>
 
         <div className="grid grid-cols-2 gap-4 sm:gap-6">

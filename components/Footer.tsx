@@ -1,5 +1,6 @@
 'use client'
 
+import CookieSettingsButton from '@/components/CookieSettingsButton'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 
@@ -63,9 +64,10 @@ export default function Footer() {
           <div>
             <h5 className="text-[11px] font-bold text-[#fdc425] uppercase tracking-widest mb-4">Legal</h5>
             <ul className="space-y-2.5">
-              {legalLinks.map(l => (
+                            {legalLinks.map(l => (
                 <li key={l.label}><Link href={l.href} className="text-[14px] text-white/70 hover:text-white transition-colors">{l.label}</Link></li>
               ))}
+              <li><CookieSettingsButton /></li>
             </ul>
           </div>
         </div>

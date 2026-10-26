@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { getSupabaseClient } from '@/lib/supabase'
 import { formatEventRegistrationReference } from '@/lib/event-registration-reference'
+import { createPortal } from 'react-dom'
 
 // ════════════════════════════════════════════════════════════════════
 // MediaManagement — Events + Gallery with Supabase Storage uploads
@@ -416,13 +417,14 @@ export default function MediaManagement({ viewerRole }: MediaManagementProps) {
       return `"${safeText.replace(/"/g, '""')}"`
     }
     const rows = [
-      ['Registration ref', 'Name', 'Email', 'Phone', 'Party size', 'Attendance days', 'Payment status'],
+      ['Registration ref', 'Name', 'Email', 'Phone', 'Party size', 'Additional guests', 'Attendance days', 'Payment status'],
       ...activeRegistrations.map(registration => [
         formatEventRegistrationReference(registration.id),
         registration.full_name,
         registration.email,
         registration.phone,
         String(registration.attendee_count),
+        String(Math.max(registration.attendee_count - 1, 0)),
         registration.attendance_dates.map(formatDate).join('; '),
         paymentStatusLabel(registration.payment_status),
       ]),
@@ -1074,6 +1076,7 @@ export default function MediaManagement({ viewerRole }: MediaManagementProps) {
                     </div>
                   )}
                 </div>
+                {typeof document !== 'undefined' && createPortal(
                 <div className="event-attendee-print">
                   <h1>{registrationsForEvent.title}</h1>
                   <p>Attendee check-in roster · {formatDate(registrationsForEvent.event_date)}</p>
@@ -1084,20 +1087,26 @@ export default function MediaManagement({ viewerRole }: MediaManagementProps) {
                     </thead>
                     <tbody>
                       {registrations.filter(registration => registration.registration_status === 'registered').map((registration, index) => (
-                        <tr key={registration.id}>
+                        <tr key={registration.id} className={registration.attendee_count > 1 ? 'has-party' : undefined}>
                           <td>{index + 1}</td>
                           <td>{formatEventRegistrationReference(registration.id)}</td>
-                          <td>{registration.full_name}</td>
+                          <td>
+                            {registration.full_name}
+                            {registration.attendee_count > 1 && (
+                              <span className="party-tag">+{registration.attendee_count - 1} guest{registration.attendee_count - 1 === 1 ? '' : 's'}</span>
+                            )}
+                          </td>
                           <td>{registration.phone}</td>
                           <td>{registration.attendee_count}</td>
                           <td>{registration.attendance_dates.map(formatDate).join(', ')}</td>
                           <td>{paymentStatusLabel(registration.payment_status)}</td>
-                          <td><span className="check-in-box" /></td>
+                          <td>{Array.from({ length: registration.attendee_count }).map((_, i) => <span key={i} className="check-in-box" />)}</td>
                         </tr>
                       ))}
                     </tbody>
                   </table>
-                </div>
+                </div>,
+                document.body)}
               </section>
             </motion.div>
           </>
@@ -1108,12 +1117,10 @@ export default function MediaManagement({ viewerRole }: MediaManagementProps) {
         .event-attendee-print { display: none; }
         @media print {
           @page { size: A4 landscape; margin: 12mm; }
-          body * { visibility: hidden !important; }
-          .event-attendee-print, .event-attendee-print * { visibility: visible !important; }
+          body > *:not(.event-attendee-print) { display: none !important; }
           .event-attendee-print {
             display: block !important;
-            position: absolute !important;
-            inset: 0 auto auto 0 !important;
+            position: static !important;
             width: 100% !important;
             color: #111 !important;
             background: #fff !important;
@@ -1124,11 +1131,14 @@ export default function MediaManagement({ viewerRole }: MediaManagementProps) {
           .event-attendee-print table { width: 100%; margin-top: 8mm; border-collapse: collapse; }
           .event-attendee-print th, .event-attendee-print td { border: 1px solid #777; padding: 2mm; text-align: left; }
           .event-attendee-print th { background: #eee !important; }
+          .event-attendee-print thead { display: table-header-group; }
           .event-attendee-print tr { break-inside: avoid; }
-          .event-attendee-print .check-in-box { display: inline-block; width: 5mm; height: 5mm; border: 1px solid #333; }
+          .event-attendee-print .check-in-box { display: inline-block; width: 5mm; height: 5mm; border: 1px solid #333; margin-right: 1.5mm; }
+          .event-attendee-print .party-tag { display: block; margin-top: 0.5mm; font-size: 8pt; font-weight: bold; color: #6d5200; }
+          .event-attendee-print tr.has-party td { background: #fff3c4 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
         }
       `}</style>
-
+      ['Registration ref', 'Name', 'Email', 'Phone', 'Party size', 'Attendance days', 'Payment status'],
       {/* ══════════════════════════════════════════════════════════════
           ADD PHOTO MODAL
       ══════════════════════════════════════════════════════════════ */}
