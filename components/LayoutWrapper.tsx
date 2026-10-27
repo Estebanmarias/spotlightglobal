@@ -4,6 +4,7 @@ import { usePathname } from "next/navigation";
 import Navbar from "./Navbar";
 import Footer from "./Footer";
 import FeaturedEventPromo from "./FeaturedEventPromo";
+import FaqChat from "./FaqChat";
 
 export default function LayoutWrapper({
   children,
@@ -23,6 +24,7 @@ export default function LayoutWrapper({
       <FeaturedEventPromo />
       <div className="flex-grow">{children}</div>
       <Footer />
+      {!pathname.startsWith("/conference") && <FaqChat />}
     </>
   );
 }

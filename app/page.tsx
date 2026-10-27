@@ -6,7 +6,7 @@ import Link from 'next/link'
 
 const CHURCH_MAPS_URL =
   'https://www.google.com/maps/search/?api=1&query=' +
-  encodeURIComponent('Ado Guest House Event Centre, Ado Secretariat Junction, Abuja-Keffi Road, Karu, Nigeria')
+  encodeURIComponent('Icon Hotel Hall, opposite Mai Angwan House by the transformer, Angwan Danlami, New Nyanya, Abuja-Keffi Express Way')
 
 export const metadata = {
   title: 'theSpotlightChurch | Welcome Home',
@@ -51,9 +51,11 @@ function VisionSection() {
             <div>
               <h4 className="text-[18px] sm:text-[22px] lg:text-[24px] font-semibold text-[#081534]">Join us in person</h4>
               <p className="text-[14px] sm:text-[15px] lg:text-[16px] text-[#45464e]">
-                Ado Guest house event centre, Ado secretariat junction, Abuja-Keffi road, Karu
+                Icon Hotel Hall, opposite Mai Angwan House by the transformer, Angwan Danlami, New Nyanya, Abuja-Keffi Express Way
                 <br />
                 Sunday 8:30 AM - 10:30 AM
+                <br />
+                Wednesday 6:00 PM
               </p>
               <span className="mt-2 inline-flex items-center gap-1 text-[13px] font-bold text-[#785a00] group-hover:underline">
                 Get directions

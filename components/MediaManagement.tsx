@@ -1138,7 +1138,7 @@ export default function MediaManagement({ viewerRole }: MediaManagementProps) {
           .event-attendee-print tr.has-party td { background: #fff3c4 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
         }
       `}</style>
-      ['Registration ref', 'Name', 'Email', 'Phone', 'Party size', 'Attendance days', 'Payment status'],
+
       {/* ══════════════════════════════════════════════════════════════
           ADD PHOTO MODAL
       ══════════════════════════════════════════════════════════════ */}

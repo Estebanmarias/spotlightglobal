@@ -17,7 +17,7 @@ export default function ChurchStructuredData() {
     image: `${baseUrl}/og-image.jpg`,
     address: {
       '@type': 'PostalAddress',
-      streetAddress: 'Ado Guest House Event Centre, Ado Secretariat Junction, Abuja-Keffi Road',
+      streetAddress: 'Icon Hotel Hall, opposite Mai Angwan House by the transformer, Angwan Danlami, New Nyanya, Abuja-Keffi Express Way',
       addressLocality: 'Karu',
       addressRegion: 'FCT',
       addressCountry: 'NG',

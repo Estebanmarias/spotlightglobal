@@ -93,8 +93,8 @@ export default function CookieConsent() {
                 <h2 className="text-[15px] font-bold">We value your privacy</h2>
                 <p className="mt-1 text-[12.5px] leading-relaxed text-white/70">
                   Essential cookies keep the site working. With your OK, we also use analytics
-                  (Google Analytics, Microsoft Clarity) and live chat (Brevo) to improve the site
-                  and help you faster. See our{' '}
+                  (Google Analytics, Microsoft Clarity) to understand how the site is used
+                  and improve it. See our{' '}
                   <Link href="/privacy-policy" className="text-[#fdc425] underline-offset-2 hover:underline">
                     Privacy Policy
                   </Link>
@@ -114,9 +114,9 @@ export default function CookieConsent() {
                 </div>
                 <div className="flex items-center justify-between gap-3">
                   <div>
-                    <p className="text-[13px] font-semibold">Analytics &amp; chat</p>
+                    <p className="text-[13px] font-semibold">Analytics</p>
                     <p className="text-[11.5px] text-white/50">
-                      Google Analytics, Microsoft Clarity and Brevo live chat.
+                      Google Analytics and Microsoft Clarity.
                     </p>
                   </div>
                   <Switch checked={analytics} onChange={setAnalytics} />
