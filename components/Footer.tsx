@@ -3,6 +3,7 @@
 import CookieSettingsButton from '@/components/CookieSettingsButton'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+// import CookieSettingsButton from '@/components/CookieSettingsButton '
 
 const exploreLinks = [
   { label: 'Our Vision',  href: '/vision' },
