@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
+import { usePathname } from 'next/navigation'
 import { AnimatePresence, motion } from 'framer-motion'
 import { CONSENT_EVENT, readConsent } from '@/lib/consent'
 import {
@@ -162,11 +163,11 @@ function Avatar({ size }: { size: number }) {
   )
 }
 
-function ActionButton({ action }: { action: Action }) {
+function ActionButton({ action, onNavigate }: { action: Action; onNavigate: () => void }) {
   const cls =
     'inline-flex min-h-10 items-center gap-1.5 rounded-full bg-[#081534] px-3.5 py-2 text-[12px] font-semibold text-white transition hover:bg-[#17305f] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#fdc425] active:scale-95'
   if (action.href.startsWith('/')) {
-    return <Link href={action.href} className={cls}>{action.icon}{action.label}</Link>
+    return <Link href={action.href} onClick={onNavigate} className={cls}>{action.icon}{action.label}</Link>
   }
   const external = action.href.startsWith('http')
   return (
@@ -197,11 +198,15 @@ export default function FaqChat() {
   const [open, setOpen] = useState(false)
   const [typing, setTyping] = useState(false)
   const [teaser, setTeaser] = useState(false)
-  const [consentPending, setConsentPending] = useState(false)
+  const [consentPending, setConsentPending] = useState(true)
   const [messages, setMessages] = useState<Message[]>([{ id: 0, from: 'bot', text: GREETING }])
   const nextId = useRef(1)
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
   const anchorRef = useRef<HTMLDivElement>(null)
+  const pathname = usePathname()
+
+  // Close the panel after navigating to another page
+  useEffect(() => { setOpen(false) }, [pathname])
 
   // Keep the latest question at the top of the panel so its answer reads downward
   const lastUser = messages.map(m => m.from).lastIndexOf('user')
@@ -302,7 +307,7 @@ export default function FaqChat() {
                         )}
                         {m.actions && (
                           <div className="mt-3 flex flex-wrap gap-2">
-                            {m.actions.map(a => <ActionButton key={a.label} action={a} />)}
+                            {m.actions.map(a => <ActionButton key={a.label} action={a} onNavigate={() => setOpen(false)} />)}
                           </div>
                         )}
                       </div>
