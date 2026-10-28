@@ -3,6 +3,8 @@ import MinistriesSection from '@/components/MinistriesSection'
 import ConnectSection from '@/components/ConnectSection'
 import SplashWrapper from '@/components/SplashWrapper'
 import Link from 'next/link'
+import Reveal from '@/components/Reveal'
+import Image from 'next/image'
 
 const CHURCH_MAPS_URL =
   'https://www.google.com/maps/search/?api=1&query=' +
@@ -31,12 +33,12 @@ function VisionSection() {
   return (
     <section className="py-16 sm:py-24 bg-[#f7f9fb]">
       <div className="px-4 sm:px-8 lg:px-16 w-full max-w-[1280px] mx-auto grid grid-cols-1 md:grid-cols-2 gap-10 sm:gap-12 lg:gap-16 items-center">
-        <div>
+        <Reveal>
           <h2 className="text-[24px] sm:text-[28px] lg:text-[32px] font-bold leading-[1.3] sm:leading-[40px] text-[#081534] mb-4 sm:mb-6">
             A church family growing in faith and purpose
           </h2>
           <p className="text-[15px] sm:text-[16px] lg:text-[18px] leading-[24px] sm:leading-[26px] lg:leading-[28px] text-[#45464e] mb-6 sm:mb-8">
-                        Every Sunday, we come together to worship, pray, learn the Word, and do life together. There's a seat for you here.
+                        Every Sunday, we come together to worship, pray, learn the Word, and do life together. There&apos;s a seat for you here.
           </p>
           <a
             href={CHURCH_MAPS_URL}
@@ -63,12 +65,13 @@ function VisionSection() {
               </span>
             </div>
           </a>
-        </div>
+        </Reveal>
 
-        <div className="grid grid-cols-2 gap-4 sm:gap-6">
+        <Reveal delay={0.1} className="grid grid-cols-2 gap-4 sm:gap-6">
           <div className="space-y-4 sm:space-y-6 mt-8 sm:mt-12">
-            <img src="/images/best.jpg"
-              alt="Church exterior" className="rounded-lg sm:rounded-xl w-full aspect-[4/5] object-cover shadow-sm" />
+            <Image src="/images/best.jpg" alt="Church exterior" width={600} height={750}
+              sizes="(min-width: 768px) 25vw, 50vw"
+              className="rounded-lg sm:rounded-xl w-full aspect-[4/5] object-cover shadow-sm" />
             <Link href="/vision" className="group flex flex-col justify-center bg-[#fdc425] p-4 sm:p-6 rounded-lg sm:rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#081534]">
               <h3 className="text-[16px] sm:text-[20px] lg:text-[24px] font-semibold text-[#6d5200] mb-1 sm:mb-2">Our Vision &amp; Mission</h3>
               <p className="text-[11px] sm:text-[13px] lg:text-[14px] font-semibold text-[#6d5200] opacity-80 leading-snug">
@@ -81,12 +84,14 @@ function VisionSection() {
             </Link>
           </div>
           <div className="space-y-4 sm:space-y-6">
-            <img src="/images/gallery/gallery-1.webp"
-              alt="Community" className="rounded-lg sm:rounded-xl w-full aspect-[4/5] object-cover shadow-sm" />
-            <img src="/images/hands-1.jpg"
-              alt="Service" className="rounded-lg sm:rounded-xl w-full aspect-square object-cover shadow-sm" />
+            <Image src="/images/gallery/gallery-1.webp" alt="Community" width={600} height={750}
+              sizes="(min-width: 768px) 25vw, 50vw"
+              className="rounded-lg sm:rounded-xl w-full aspect-[4/5] object-cover shadow-sm" />
+            <Image src="/images/hands-1.jpg" alt="Service" width={600} height={600}
+              sizes="(min-width: 768px) 25vw, 50vw"
+              className="rounded-lg sm:rounded-xl w-full aspect-square object-cover shadow-sm" />
           </div>
-        </div>
+        </Reveal>
       </div>
     </section>
   )

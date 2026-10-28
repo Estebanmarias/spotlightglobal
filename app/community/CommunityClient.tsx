@@ -8,8 +8,7 @@ import { getSupabaseClient } from '@/lib/supabase'
 import { isShiftConferenceTitle } from '@/lib/church-events'
 
 // ── CONFIG ──────────────────────────────────────────────────────
-const YT_API_KEY = process.env.NEXT_PUBLIC_YOUTUBE_API_KEY!
-const YT_CHANNEL_ID = 'UCqKvr26isZoFXO02xEtX5UQ' 
+
 
 type ChurchEvent = {
   id: string; title: string; description: string | null
@@ -42,9 +41,9 @@ function LatestSermon({ autoplay }: { autoplay: boolean }) {
   useEffect(() => {
     const fetch_ = async () => {
       try {
-        const res  = await fetch(`https://www.googleapis.com/youtube/v3/search?key=${YT_API_KEY}&channelId=${YT_CHANNEL_ID}&part=snippet&order=date&maxResults=1&type=video`)
+        const res  = await fetch('/api/youtube')
         const data = await res.json()
-        if (data.items?.[0]) { setVideoId(data.items[0].id.videoId); setTitle(data.items[0].snippet.title) }
+        if (data?.videoId) { setVideoId(data.videoId); setTitle(data.title) }
         else setError(true)
       } catch { setError(true) }
       finally  { setLoading(false) }

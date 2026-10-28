@@ -8,7 +8,7 @@ import { AnimatePresence, motion } from 'framer-motion'
 import { CONSENT_EVENT, readConsent } from '@/lib/consent'
 import {
   Car, CalendarDays, Clock, HandHeart, Handshake, Headphones,
-  HeartHandshake, MapPin, MessageCircle, Navigation, Phone, UserPlus, X,
+    HeartHandshake, MapPin, Navigation, Phone, UserPlus, X,
 } from 'lucide-react'
 
 // ── Edit contacts, links and logo here ───────────────────────────────

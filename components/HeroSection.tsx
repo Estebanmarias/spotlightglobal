@@ -3,9 +3,9 @@
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 
-const YT_API_KEY = process.env.NEXT_PUBLIC_YOUTUBE_API_KEY!;
-const YT_CHANNEL_ID = "UCqKvr26isZoFXO02xEtX5UQ";
+
 
 type HeroVideoState =
   | { type: "live"; videoId: string; title: string }
@@ -17,59 +17,18 @@ export default function HeroSection() {
     type: "none",
   });
 
-  useEffect(() => {
+    useEffect(() => {
     const controller = new AbortController();
 
-    const check = async () => {
-      try {
-        const [liveResponse, latestResponse] = await Promise.all([
-          fetch(
-            `https://www.googleapis.com/youtube/v3/search?key=${YT_API_KEY}&channelId=${YT_CHANNEL_ID}&part=snippet&eventType=live&type=video`,
-            { signal: controller.signal },
-          ),
-          fetch(
-            `https://www.googleapis.com/youtube/v3/search?key=${YT_API_KEY}&channelId=${YT_CHANNEL_ID}&part=snippet&order=date&maxResults=10&type=video`,
-            { signal: controller.signal },
-          ),
-        ]);
-
-        const liveData = await liveResponse.json();
-        if (liveData.items?.[0]) {
-          const v = liveData.items[0];
-          setVideoState({
-            type: "live",
-            videoId: v.id.videoId,
-            title: v.snippet.title,
-          });
-          return;
-        }
-
-        const searchData = await latestResponse.json();
-        if (!searchData.items?.length) return;
-
-        const ids = searchData.items.map((v: any) => v.id.videoId).join(",");
-        const videoRes = await fetch(
-          `https://www.googleapis.com/youtube/v3/videos?key=${YT_API_KEY}&id=${ids}&part=status,snippet`,
-          { signal: controller.signal },
-        );
-        const videoData = await videoRes.json();
-        const embeddable = videoData.items?.find(
-          (v: any) => v.status?.embeddable === true,
-        );
-
-        if (embeddable) {
-          setVideoState({
-            type: "latest",
-            videoId: embeddable.id,
-            title: embeddable.snippet.title,
-          });
-        }
-      } catch (error: any) {
+    fetch("/api/youtube", { signal: controller.signal })
+      .then((res) => res.json())
+      .then((data: HeroVideoState) => {
+        if (data?.type === "live" || data?.type === "latest") setVideoState(data);
+      })
+      .catch((error) => {
         if (error?.name === "AbortError") return;
-      }
-    };
+      });
 
-    check();
     return () => controller.abort();
   }, []);
 
@@ -84,10 +43,13 @@ export default function HeroSection() {
     <header className="relative w-full min-h-[560px] sm:min-h-[680px] lg:h-[870px] overflow-hidden flex items-center py-16 sm:py-0">
       {/* Background */}
       <div className="absolute inset-0 z-0">
-        <img
+        <Image
           src="/images/gallery/community-1.jpg"
           alt="Church service"
-          className="w-full h-full object-cover"
+          fill
+          priority
+          sizes="100vw"
+          className="object-cover"
         />
         <div
           className="absolute inset-0"

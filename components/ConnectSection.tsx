@@ -39,11 +39,11 @@ export default function ConnectSection() {
   return (
     <section
       id="connect"
-      className="py-24 bg-[#081534] relative overflow-hidden"
+      className="py-16 sm:py-24 bg-[#081534] relative overflow-hidden"
     >
       <div className="absolute top-0 right-0 w-1/3 h-full bg-[#fdc425]/5 -skew-x-12 transform translate-x-1/2" />
 
-      <div className="px-16 w-full max-w-[1280px] mx-auto grid grid-cols-1 lg:grid-cols-2 gap-20 items-center">
+      <div className="px-4 sm:px-8 lg:px-16 w-full max-w-[1280px] mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-center">
         <motion.div
           initial={{ opacity: 0, x: -20 }}
           whileInView={{ opacity: 1, x: 0 }}

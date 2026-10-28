@@ -41,14 +41,7 @@ export default function SplashWrapper({
     <>
       {showSplash && <SplashScreen onComplete={handleComplete} />}
       {/* Content fades in after splash */}
-      <div
-        style={{
-          opacity: ready ? 1 : 0,
-          transition: "opacity 0.5s ease",
-        }}
-      >
-        {children}
-      </div>
+      <div>{children}</div>
     </>
   );
 }

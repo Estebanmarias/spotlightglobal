@@ -1,6 +1,7 @@
 "use client";
 
 import { usePathname } from "next/navigation";
+import { MotionConfig } from "framer-motion";
 import Navbar from "./Navbar";
 import Footer from "./Footer";
 import FeaturedEventPromo from "./FeaturedEventPromo";
@@ -15,16 +16,16 @@ export default function LayoutWrapper({
   const isAdminRoute = pathname.startsWith("/admin");
 
   if (isAdminRoute) {
-    return <>{children}</>;
+    return <MotionConfig reducedMotion="user">{children}</MotionConfig>;
   }
 
   return (
-    <>
+    <MotionConfig reducedMotion="user">
       <Navbar />
       <FeaturedEventPromo />
       <div className="flex-grow">{children}</div>
       <Footer />
       {!pathname.startsWith("/conference") && <FaqChat />}
-    </>
+     </MotionConfig>
   );
 }

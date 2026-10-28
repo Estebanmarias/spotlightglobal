@@ -1,5 +1,6 @@
 'use client'
 
+import Image from 'next/image'
 import { motion } from 'framer-motion'
 
 const ministries = [
@@ -47,7 +48,13 @@ export default function MinistriesSection() {
               className={`${m.col} group relative overflow-hidden rounded-xl border border-[#c6c6cf] flex flex-col justify-end hover:border-[#081534] transition-all h-[220px] sm:h-[260px] md:h-auto`}
             >
               <div className="absolute inset-0 z-0">
-                <img src={m.img} alt={m.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
+                <Image
+                  src={m.img}
+                  alt={m.name}
+                  fill
+                  sizes="(min-width: 768px) 50vw, 100vw"
+                  className="object-cover transition-transform duration-500 group-hover:scale-110"
+                />
                 <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, rgba(8,21,52,0.9), transparent)' }} />
               </div>
               <div className="relative z-10 p-4 sm:p-6">
