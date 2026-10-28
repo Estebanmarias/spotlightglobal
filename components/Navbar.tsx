@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
+import Icon from '@/components/Icon'
 
 const links = [
   { label: 'Our Vision', href: '/vision' },
@@ -42,7 +43,7 @@ export default function Navbar() {
         <div className="flex justify-between items-center px-4 sm:px-8 lg:px-16 w-full max-w-[1280px] mx-auto">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2 min-w-0" onClick={() => setOpen(false)}>
-            <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuCSu9ztjFXXL57HPmU2Tzxi3_L64jT6N2N-it5rvbfUfWfdXYJHE01o-8vaDbMMklLymKGFy1h8bgWMuq6cFCbsAWGpAlzRdnIlqlCNZGURQg-bl42EaVtpB0oh1Ad-gK8evCtIRS5ux11Sgpvn686W0Zv9ySUxOUssIE11jsJlK62yZPqSHl64xThPfeKXmVOT7T--wIzDqUmNxAViuDnvS5k1CKHkBHX3FGjpWOScub8kqDfinr_Tsn0ifKgyAVbp8f2XdxntkwI"
+            <img src="/images/logo.png"
               alt="Spotlight Global Logo" className="h-8 sm:h-10 w-auto shrink-0" />
             <span className="font-bold text-[16px] sm:text-[20px] lg:text-[24px] leading-tight text-[#081534] truncate">
               theSpotlightChurch
@@ -73,7 +74,7 @@ export default function Navbar() {
             className="lg:hidden w-10 h-10 flex items-center justify-center rounded-lg text-[#081534] hover:bg-[#eceef0] transition-colors"
             aria-label={open ? 'Close menu' : 'Open menu'}
           >
-            <span className="material-symbols-outlined text-[26px]">{open ? 'close' : 'menu'}</span>
+            <Icon name={open ? 'close' : 'menu'} className="text-[26px]" />
           </button>
         </div>
       </motion.nav>

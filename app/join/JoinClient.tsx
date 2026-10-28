@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { motion } from 'framer-motion'
+import Icon from '@/components/Icon'
 import { getSupabaseClient } from '@/lib/supabase'
 
 const inputCls = 'w-full bg-[#f2f4f6] border-b-2 border-transparent focus:border-[#081534] outline-none px-4 py-3.5 rounded-t-lg text-[16px] transition-colors'
@@ -75,7 +76,7 @@ export default function JoinClient() {
             <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
               className="text-center py-16 bg-white rounded-2xl border border-[#c6c6cf] px-8">
               <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                <span className="material-symbols-outlined text-green-700 text-[40px]">check_circle</span>
+                <Icon name="check_circle" className="text-[40px] text-green-700" />
               </div>
               <h2 className="text-[24px] font-bold text-[#081534] mb-3">
                 Welcome, {form.first_name}! 🎉
@@ -155,7 +156,7 @@ export default function JoinClient() {
 
                 {error && (
                   <div className="flex items-start gap-2 p-3 bg-[#ffdad6] rounded-lg">
-                    <span className="material-symbols-outlined text-[#ba1a1a] text-[16px] shrink-0 mt-0.5">error</span>
+                    <Icon name="error" className="mt-0.5 text-[16px] text-[#ba1a1a]" />
                     <p className="text-[#ba1a1a] text-[13px] font-semibold">{error}</p>
                   </div>
                 )}
@@ -165,7 +166,7 @@ export default function JoinClient() {
                   {submitting ? (
                     <><span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> Registering...</>
                   ) : (
-                    <>Join the Family <span className="material-symbols-outlined text-[18px]">favorite</span></>
+                    <>Join the Family <Icon name="favorite" className="text-[18px]" /></>
                   )}
                 </motion.button>
 

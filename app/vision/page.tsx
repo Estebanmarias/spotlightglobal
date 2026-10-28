@@ -3,6 +3,7 @@
 import { useEffect, useRef } from 'react'
 import { motion, Variants } from 'framer-motion'
 import Link from 'next/link'
+import Icon from '@/components/Icon'
 
 const fadeUp: Variants = {
   hidden: { opacity: 0, y: 24 },
@@ -91,8 +92,8 @@ export default function VisionPage() {
           >
             "Manifesting the Character of the Holy Spirit, Helping many find Purpose and through God's lifting Power Fulfilling It."
           </motion.p>
-          <motion.div variants={fadeUp} custom={2} initial="hidden" animate="show">
-            <span className="material-symbols-outlined text-[#ffdf9a] text-[40px] animate-bounce">expand_more</span>
+          <motion.div variants={fadeUp} custom={2} initial="hidden" animate="show" className="flex justify-center">
+            <Icon name="expand_more" className="block text-[40px] text-[#ffdf9a] animate-bounce motion-reduce:animate-none" />
           </motion.div>
         </div>
       </header>
@@ -116,7 +117,7 @@ export default function VisionPage() {
                 {checks.map((c) => (
                   <div key={c.title} className="flex items-start gap-4">
                     <div className="mt-1 w-6 h-6 rounded-full bg-[#fdc425]/20 flex items-center justify-center flex-shrink-0">
-                      <span className="material-symbols-outlined text-[#785a00] text-[16px]" style={{ fontVariationSettings: "'wght' 700" }}>check</span>
+                      <Icon name="check" className="text-[16px] text-[#785a00]" />
                     </div>
                     <div>
                       <p className="font-bold text-[#081534] text-[15px]">{c.title}</p>
@@ -156,7 +157,7 @@ export default function VisionPage() {
                 style={{ transitionDelay: `${i * 80}ms` }}
               >
                 <div className="w-14 h-14 bg-[#081534] rounded-lg flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-                  <span className="material-symbols-outlined text-[#ffdf9a] text-[28px]" style={{ fontVariationSettings: "'FILL' 1" }}>{p.icon}</span>
+                  <Icon name={p.icon} className="text-[28px] text-[#ffdf9a]" />
                 </div>
                 <h3 className="text-[24px] font-semibold text-[#081534] mb-3">{p.title}</h3>
                 {p.list ? (

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { motion, AnimatePresence, Variants } from 'framer-motion'
+import Icon from '@/components/Icon'
 
 const fadeUp: Variants = {
   hidden: { opacity: 0, y: 24 },
@@ -40,13 +41,12 @@ const intlAccounts = [
   { id: 5, purpose: 'UK Partners (GBP)',      bank: 'Barclays',   accountName: 'Spotlight Global UK',  accountNo: '55667788',  sortCode: '20-00-00', swift: 'BARCGB22' },
 ]
 
-// Fires a GA4 event via the global gtag set up by @next/third-parties/google's
-// <GoogleAnalytics> component in the root layout. Safe no-op if analytics
-// hasn't loaded yet (e.g. ad blockers, slow connections).
+// Fires a GA4 event via the global gtag loaded by AnalyticsScripts after the
+// visitor accepts analytics. Safe no-op until then (or with ad blockers).
 function trackEvent(eventName: string, params: Record<string, string>) {
-  if (typeof window !== 'undefined' && typeof (window as any).gtag === 'function') {
-    ;(window as any).gtag('event', eventName, params)
-  }
+  if (typeof window === 'undefined') return
+  const w = window as Window & { gtag?: (...args: unknown[]) => void }
+  if (typeof w.gtag === 'function') w.gtag('event', eventName, params)
 }
 
 // ── Copyable row ─────────────────────────────────────────────────────
@@ -63,10 +63,10 @@ function CopyRow({ label, value, copied, onCopy }: { label: string; value: strin
         <AnimatePresence mode="wait">
           {copied ? (
             <motion.span key="check" initial={{ scale: 0.5, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
-              className="material-symbols-outlined text-[18px] text-green-600">check</motion.span>
+              className="flex text-green-600"><Icon name="check" className="text-[18px]" /></motion.span>
           ) : (
             <motion.span key="copy" initial={{ scale: 0.5, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
-              className="material-symbols-outlined text-[18px]">content_copy</motion.span>
+              className="flex"><Icon name="content_copy" className="text-[18px]" /></motion.span>
           )}
         </AnimatePresence>
       </button>
@@ -173,13 +173,13 @@ export default function GivingClient() {
                 className="reveal opacity-0 translate-y-8 transition-all duration-700 bg-white p-7 sm:p-8 rounded-xl border border-[#c6c6cf] hover:border-[#785a00] transition-all group"
                 style={{ transitionDelay: `${i * 80}ms` }}>
                 <div className="w-12 h-12 bg-[#fdc425] rounded-lg flex items-center justify-center mb-6">
-                  <span className="material-symbols-outlined text-[#6d5200]">{p.icon}</span>
+                  <Icon name={p.icon} className="text-[#6d5200]" />
                 </div>
                 <h3 className="text-[20px] sm:text-[22px] font-semibold text-[#081534] mb-3">{p.title}</h3>
                 <p className="text-[14px] sm:text-[15px] text-[#45464e] mb-6">{p.desc}</p>
                 <a className="inline-flex items-center gap-2 text-[13px] sm:text-[14px] font-bold text-[#785a00] group-hover:underline"
                   href={p.href}>
-                  Learn more <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
+                  Learn more <Icon name="arrow_forward" className="text-[16px]" />
                 </a>
               </div>
             ))}
@@ -243,10 +243,9 @@ export default function GivingClient() {
 
           {/* Trust note */}
           <div className="flex items-center justify-center gap-2 mt-10">
-            <span className="material-symbols-outlined text-[16px] text-[#081534]"
-              style={{ fontVariationSettings: "'FILL' 1" }}>verified_user</span>
+            <Icon name="info" className="text-[16px] text-[#081534]" />
             <span className="text-[12px] font-semibold text-[#45464e]">
-              All accounts are officially registered under Spotlight Global
+              Please confirm the account name in your banking app before you send.
             </span>
           </div>
         </div>
@@ -263,7 +262,7 @@ export default function GivingClient() {
             ].map(w => (
               <div key={w.title} className="flex flex-col items-center">
                 <div className="w-16 h-16 rounded-full bg-white/10 flex items-center justify-center mb-4">
-                  <span className="material-symbols-outlined text-[32px]">{w.icon}</span>
+                  <Icon name={w.icon} className="text-[32px]" />
                 </div>
                 <h4 className="text-[20px] sm:text-[22px] font-semibold mb-2">{w.title}</h4>
                 <p className="text-[14px] sm:text-[15px] text-white/70">{w.desc}</p>

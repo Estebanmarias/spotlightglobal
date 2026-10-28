@@ -3,6 +3,8 @@
 import { motion } from 'framer-motion'
 import type { Variants } from 'framer-motion'
 import Link from 'next/link'
+import Icon from '@/components/Icon'
+import BrandIcon from '@/components/BrandIcon'
 
 const fadeUp: Variants = {
   hidden: { opacity: 0, y: 24 },
@@ -63,9 +65,7 @@ export default function PastorPage() {
             rel="noreferrer"
             className="flex items-center gap-2 bg-[#fdc425] text-[#6d5200] px-8 py-4 rounded-full text-[13px] font-bold hover:brightness-110 transition-all active:scale-95"
           >
-            <span className="material-symbols-outlined text-[18px]" style={{ fontVariationSettings: "'FILL' 1" }}>
-              play_circle
-            </span>
+            <Icon name="play_circle" className="text-[18px]" />
             Watch Sermons
           </a>
 
@@ -75,7 +75,7 @@ export default function PastorPage() {
             rel="noreferrer"
             className="flex items-center gap-2 border-2 border-white text-white px-8 py-4 rounded-full text-[13px] font-bold hover:bg-white/10 transition-all active:scale-95"
           >
-            <span className="material-symbols-outlined text-[18px]">radio_button_checked</span>
+            <BrandIcon name="telegram" className="h-[18px] w-[18px]" />
             Join Live Prayer
           </a>
         </div>
@@ -119,8 +119,7 @@ export default function PastorPage() {
                 {statCards.map(s => (
                   <div key={s.label}
                     className="bg-white p-5 rounded-xl border border-[#c6c6cf] flex flex-col items-center text-center hover:shadow-md transition-all">
-                    <span className="material-symbols-outlined text-[#fdc425] text-[28px] mb-2"
-                      style={{ fontVariationSettings: "'FILL' 1" }}>{s.icon}</span>
+                    <Icon name={s.icon} className="mb-2 text-[28px] text-[#fdc425]" />
                     <span className="text-[11px] text-[#45464e] font-semibold uppercase tracking-wide mb-0.5">{s.label}</span>
                     <span className="text-[13px] font-bold text-[#081534] text-center leading-snug">{s.value}</span>
                   </div>
@@ -205,7 +204,7 @@ export default function PastorPage() {
                       <a href="https://kingdomboiz.com/download-music-edet-kingsley-holy-spirit-oyoyo/"
                         target="_blank" rel="noreferrer"
                         className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity bg-[#fdc425] text-[#6d5200] px-3 py-1.5 rounded-full text-[11px] font-bold flex items-center gap-1">
-                        <span className="material-symbols-outlined text-[14px]">music_note</span>
+                        <Icon name="music_note" className="text-[14px]" />
                         Listen
                       </a>
                     </div>
@@ -226,7 +225,7 @@ export default function PastorPage() {
                       </div>
                       <a href="https://www.youtube.com/@pstedetkingsley" target="_blank" rel="noreferrer"
                         className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity bg-white/20 backdrop-blur-sm text-white px-3 py-1.5 rounded-full text-[11px] font-bold flex items-center gap-1 border border-white/30">
-                        <span className="material-symbols-outlined text-[14px]">play_circle</span>
+                        <Icon name="play_circle" className="text-[14px]" />
                         Watch
                       </a>
                     </div>

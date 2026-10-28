@@ -3,6 +3,8 @@
 import { useState } from 'react'
 import { motion, Variants } from 'framer-motion'
 import Link from 'next/link'
+import Icon from '@/components/Icon'
+import CountUp from '@/components/CountUp'
 import { getSupabaseClient } from '@/lib/supabase'
 
 const fadeUp: Variants = {
@@ -11,9 +13,9 @@ const fadeUp: Variants = {
 }
 
 const stats = [
-  { icon: 'public',         value: '45+',   label: 'Global Partners' },
-  { icon: 'travel_explore', value: '12',    label: 'Countries Reached' },
-  { icon: 'favorite',       value: '150k+', label: 'Lives Impacted Yearly' },
+  { icon: 'public',         to: 45,     suffix: '+', label: 'Global Partners' },
+  { icon: 'travel_explore', to: 5,     suffix: '',  label: 'Countries Reached' },
+  { icon: 'favorite',       to: 1000, suffix: '+', label: 'Lives Impacted Yearly' },
 ]
 
 const packages = [
@@ -140,7 +142,7 @@ export default function PartnerClient() {
               className="flex flex-wrap gap-4">
               <a href="#form"
                 className="bg-[#fdc425] text-[#6d5200] px-8 py-4 rounded-lg text-[14px] font-bold hover:brightness-110 transition-all active:scale-95 inline-flex items-center gap-2">
-                Become a Partner <span className="material-symbols-outlined text-[18px]">arrow_downward</span>
+                Become a Partner <Icon name="arrow_downward" className="text-[18px]" />
               </a>
               <Link href="/vision"
                 className="border border-white/30 text-white px-8 py-4 rounded-lg text-[14px] font-bold hover:bg-white/10 transition-all active:scale-95">
@@ -160,9 +162,10 @@ export default function PartnerClient() {
                 initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }} transition={{ delay: i * 0.1 }}
                 className="p-10 bg-white border border-[#c6c6cf] rounded-xl text-center hover:border-[#081534] hover:shadow-md transition-all">
-                <span className="material-symbols-outlined text-[40px] text-[#081534] mb-4 block"
-                  style={{ fontVariationSettings: "'FILL' 1" }}>{s.icon}</span>
-                <div className="text-[40px] sm:text-[48px] font-bold text-[#081534] mb-2">{s.value}</div>
+                <Icon name={s.icon} className="mx-auto mb-4 block text-[40px] text-[#081534]" />
+                <div className="text-[40px] sm:text-[48px] font-bold text-[#081534] mb-2">
+                  <CountUp to={s.to} suffix={s.suffix} />
+                </div>
                 <div className="text-[12px] font-bold text-[#45464e] uppercase tracking-widest">{s.label}</div>
               </motion.div>
             ))}
@@ -178,7 +181,7 @@ export default function PartnerClient() {
             <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
               className="text-center py-20">
               <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                <span className="material-symbols-outlined text-green-700 text-[40px]">check_circle</span>
+                <Icon name="check_circle" className="text-[40px] text-green-700" />
               </div>
               <h2 className="text-[28px] font-bold text-[#081534] mb-4">Thank You, {fullName.split(' ')[0]}!</h2>
               <p className="text-[16px] text-[#45464e] max-w-lg mx-auto mb-8">
@@ -187,7 +190,7 @@ export default function PartnerClient() {
               </p>
               <a href="https://chat.whatsapp.com/K8COE4v0LtiF7WUJOsuBOL?s=cl&p=a&mlu=0&ilr=0" target="_blank" rel="noreferrer"
                 className="inline-flex items-center gap-2 px-8 py-3 bg-[#081534] text-white rounded-lg font-bold hover:opacity-90 transition-opacity">
-                <span className="material-symbols-outlined text-[18px]">groups</span>
+                <Icon name="groups" className="text-[18px]" />
                 Join the Community
               </a>
             </motion.div>
@@ -209,7 +212,7 @@ export default function PartnerClient() {
                 <motion.div initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
                   className="space-y-8">
                   <div className="flex items-center gap-3 border-b border-[#c6c6cf] pb-3">
-                    <span className="material-symbols-outlined text-[#081534]">person</span>
+                    <Icon name="person" className="text-[#081534]" />
                     <h3 className="text-[20px] sm:text-[22px] font-bold text-[#081534]">Personal Information</h3>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -259,7 +262,7 @@ export default function PartnerClient() {
                 <motion.div initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
                   className="space-y-8">
                   <div className="flex items-center gap-3 border-b border-[#c6c6cf] pb-3">
-                    <span className="material-symbols-outlined text-[#081534]">contact_mail</span>
+                    <Icon name="contact_mail" className="text-[#081534]" />
                     <h3 className="text-[20px] sm:text-[22px] font-bold text-[#081534]">
                       How do you prefer to be contacted? *
                     </h3>
@@ -292,7 +295,7 @@ export default function PartnerClient() {
                 <motion.div initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
                   className="space-y-6">
                   <div className="flex items-center gap-3 border-b border-[#c6c6cf] pb-3">
-                    <span className="material-symbols-outlined text-[#081534]">loyalty</span>
+                    <Icon name="loyalty" className="text-[#081534]" />
                     <h3 className="text-[20px] sm:text-[22px] font-bold text-[#081534]">Partnership Package *</h3>
                   </div>
                   <p className="text-[14px] text-[#45464e] italic">
@@ -337,7 +340,7 @@ export default function PartnerClient() {
                     </div>
                     <a href="https://chat.whatsapp.com/K8COE4v0LtiF7WUJOsuBOL?s=cl&p=a&mlu=0&ilr=0" target="_blank" rel="noreferrer"
                       className="px-8 py-3 bg-[#081534] text-white rounded-lg text-[14px] font-bold flex items-center gap-2 hover:opacity-90 transition-opacity whitespace-nowrap">
-                      <span className="material-symbols-outlined text-[18px]">groups</span> Join the Community
+                      <Icon name="groups" className="text-[18px]" /> Join the Community
                     </a>
                   </div>
                 </motion.div>
@@ -360,9 +363,9 @@ export default function PartnerClient() {
                     <motion.button type="submit" disabled={submitting} whileTap={{ scale: 0.97 }}
                       className="flex-1 md:flex-none px-10 py-4 bg-[#081534] text-white rounded-lg text-[14px] font-bold hover:shadow-lg transition-all disabled:opacity-60 flex items-center justify-center gap-2">
                       {submitting ? (
-                        <>Submitting... <span className="material-symbols-outlined text-[18px] animate-spin">progress_activity</span></>
+                        <>Submitting... <Icon name="progress_activity" className="text-[18px] animate-spin" /></>
                       ) : (
-                        <>Submit Partnership <span className="material-symbols-outlined text-[18px]">handshake</span></>
+                        <>Submit Partnership <Icon name="handshake" className="text-[18px]" /></>
                       )}
                     </motion.button>
                   </div>
