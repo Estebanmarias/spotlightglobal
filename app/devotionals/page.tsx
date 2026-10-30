@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import Link from 'next/link'
 import { getSupabaseClient } from '@/lib/supabase'
+import Icon from '@/components/Icon'
 
 type Post = {
   id: string
@@ -75,7 +76,7 @@ export default function DevotionalsPage() {
         <div className="max-w-[1100px] mx-auto relative z-10">
           <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}>
             <span className="inline-flex items-center gap-2 px-4 py-1.5 bg-[#fdc425]/20 text-[#fdc425] border border-[#fdc425]/30 rounded-full text-[11px] font-bold uppercase tracking-widest mb-6">
-              <span className="material-symbols-outlined text-[14px]">auto_stories</span>
+              <Icon name="auto_stories" className="text-[14px]" />
               Fresh Word
             </span>
             <h1 className="text-white text-[36px] sm:text-[48px] lg:text-[56px] font-bold leading-tight mb-4">
@@ -113,7 +114,7 @@ export default function DevotionalsPage() {
           </div>
         ) : filtered.length === 0 ? (
           <div className="text-center py-20 bg-white rounded-2xl border border-[#eceef0]">
-            <span className="material-symbols-outlined text-[56px] text-[#c6c6cf] block mb-3">article</span>
+            <Icon name="article" className="text-[56px] text-[#c6c6cf] block mb-3" />
             <p className="text-[#45464e] font-semibold text-[16px]">No posts yet</p>
             <p className="text-[13px] text-[#76777f] mt-1">Check back soon for fresh word from Apostle Edet Kingsley</p>
           </div>
@@ -133,8 +134,7 @@ export default function DevotionalsPage() {
                       </div>
                     ) : (
                       <div className="h-64 md:h-full bg-[#081534] flex items-center justify-center">
-                        <span className="material-symbols-outlined text-[#fdc425] text-[64px]"
-                          style={{ fontVariationSettings: "'FILL' 1" }}>auto_stories</span>
+                        <Icon name="auto_stories" className="text-[#fdc425] text-[64px]" />
                       </div>
                     )}
                     <div className="p-7 sm:p-10 flex flex-col justify-center">
@@ -156,7 +156,7 @@ export default function DevotionalsPage() {
                       )}
                       <div className="flex items-center gap-3 text-[12px] text-[#76777f]">
                         <span className="flex items-center gap-1">
-                          <span className="material-symbols-outlined text-[14px]">person</span>
+                          <Icon name="person" className="text-[14px]" />
                           {featured.author_name}
                         </span>
                         <span>·</span>
@@ -165,7 +165,7 @@ export default function DevotionalsPage() {
                         <span>{readTime(featured.excerpt)} min read</span>
                       </div>
                       <div className="mt-6 flex items-center gap-2 text-[#081534] text-[13px] font-bold group-hover:gap-3 transition-all">
-                        Read Post <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
+                        Read Post <Icon name="arrow_forward" className="text-[16px]" />
                       </div>
                     </div>
                   </div>
@@ -189,8 +189,7 @@ export default function DevotionalsPage() {
                         </div>
                       ) : (
                         <div className="h-44 bg-[#081534] flex items-center justify-center">
-                          <span className="material-symbols-outlined text-[#fdc425] text-[40px]"
-                            style={{ fontVariationSettings: "'FILL' 1" }}>auto_stories</span>
+                          <Icon name="auto_stories" className="text-[#fdc425] text-[40px]" />
                         </div>
                       )}
                       <div className="p-5">

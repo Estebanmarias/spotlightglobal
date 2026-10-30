@@ -10,10 +10,15 @@ ChevronRight, Church, Smartphone, CircleAlert, CircleCheck, CircleDot, CirclePla
   UserCheck, UserMinus, UserPlus, UserX, Users, Video, X, type LucideIcon,
 } from 'lucide-react'
 
-import { Gem, GraduationCap, Zap } from 'lucide-react'
+import { Gem, GraduationCap, PartyPopper, Zap } from 'lucide-react'
+import { ChartColumn, Cookie, Lightbulb, Megaphone, RefreshCw, Settings, Table } from 'lucide-react'
 
 const ICONS: Record<string, LucideIcon> = {
-    add: Plus, bolt: Zap, diamond: Gem, school: GraduationCap, menu_book: BookOpen, add_circle: CirclePlus, add_photo_alternate: ImagePlus,
+  refresh: RefreshCw, group_add: UserPlus, chat_bubble_outline: MessageCircle,
+  lightbulb: Lightbulb, description: FileText, cookie: Cookie,
+  settings: Settings, analytics: ChartColumn, campaign: Megaphone, space_dashboard: LayoutDashboard,
+  table_rows: Table, grid_view: LayoutGrid,
+    add: Plus, bolt: Zap, celebration: PartyPopper, diamond: Gem, school: GraduationCap, menu_book: BookOpen, add_circle: CirclePlus, add_photo_alternate: ImagePlus,
   arrow_back: ArrowLeft, arrow_downward: ArrowDown, arrow_forward: ArrowRight, arrow_outward: ArrowUpRight,
   article: FileText, auto_stories: BookOpen, badge: IdCard, block: Ban,
   cake: Cake, calendar_month: Calendar, calendar_today: Calendar, call: Phone,
@@ -45,7 +50,7 @@ export default function Icon({ name, className = '' }: { name: string; className
   const Glyph = ICONS[name]
   if (!Glyph) {
     if (process.env.NODE_ENV !== 'production') console.warn(`[Icon] no icon mapped for "${name}"`)
-    return null
+    return <span aria-hidden="true" className={`material-symbols-outlined ${className}`}>{name}</span>
   }
   return (
     <Glyph

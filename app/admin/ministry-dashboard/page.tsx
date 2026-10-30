@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { getSupabaseClient } from '@/lib/supabase'
 import { useAdminAccess } from '@/lib/use-admin-permissions'
 import MediaManagement from '@/components/MediaManagement'
+import Icon from '@/components/Icon'
 
 type Ministry = {
   id: string
@@ -267,13 +268,13 @@ function MinistryDashboardContent() {
     isPureLeader ? (
       <button onClick={handleSignOut}
         className="flex items-center gap-1.5 px-3 py-2 border border-[#c6c6cf] text-[#45464e] rounded-lg text-[12px] font-semibold hover:bg-[#f2f4f6] hover:text-[#ba1a1a] transition-colors">
-        <span className="material-symbols-outlined text-[16px]">logout</span>
+        <Icon name="logout" className="text-[16px]" />
         <span className="hidden sm:inline">Sign Out</span>
       </button>
     ) : (
       <button onClick={() => router.push(requestedMinistryId ? '/admin/ministries' : '/admin/dashboard')}
         className="flex items-center gap-1.5 px-3 py-2 border border-[#c6c6cf] text-[#45464e] rounded-lg text-[12px] font-semibold hover:bg-[#f2f4f6] transition-colors">
-        <span className="material-symbols-outlined text-[16px]">arrow_back</span>
+        <Icon name="arrow_back" className="text-[16px]" />
         <span className="hidden sm:inline">{requestedMinistryId ? 'Back to Ministries' : 'Back to Dashboard'}</span>
       </button>
     )
@@ -291,7 +292,7 @@ function MinistryDashboardContent() {
     return (
       <div className="min-h-screen bg-[#f7f9fb] flex items-center justify-center p-6">
         <div className="text-center max-w-sm">
-          <span className="material-symbols-outlined text-[56px] text-[#c6c6cf] block mb-3">church</span>
+          <Icon name="church" className="text-[56px] text-[#c6c6cf] block mb-3" />
           <h2 className="text-[18px] font-bold text-[#081534] mb-2">No Ministry Assigned</h2>
           <p className="text-[13px] text-[#45464e] mb-6">
             You haven't been assigned as a leader of any ministry yet. Contact Setman to get set up.
@@ -352,9 +353,7 @@ function MinistryDashboardContent() {
           <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
             className="bg-[#081534] rounded-2xl p-6 sm:p-8 text-white relative overflow-hidden">
             <div className="absolute -right-10 -bottom-10 opacity-10">
-              <span className="material-symbols-outlined text-[160px]" style={{ fontVariationSettings: "'FILL' 1" }}>
-                {activeMinistry.icon}
-              </span>
+              <Icon name={activeMinistry.icon} className="text-[160px]" />
             </div>
             <div className="relative z-10">
               <h3 className="text-[24px] sm:text-[28px] font-bold mb-2">{activeMinistry.name}</h3>
@@ -389,7 +388,7 @@ function MinistryDashboardContent() {
             className="bg-white border border-[#fdc425] rounded-xl p-5 sm:p-6">
             <div className="flex items-center justify-between gap-3 flex-wrap">
               <div className="flex items-center gap-3">
-                <span className="material-symbols-outlined text-[#785a00] text-[22px]">notifications_active</span>
+                <Icon name="notifications_active" className="text-[#785a00] text-[22px]" />
                 <div>
                   <p className="text-[14px] font-bold text-[#081534]">Send Meeting Reminders</p>
                   <p className="text-[12px] text-[#45464e]">Pick a date, then message each member individually.</p>
@@ -424,7 +423,7 @@ function MinistryDashboardContent() {
               <h3 className="text-[16px] font-bold text-[#081534]">Department Members</h3>
               <button onClick={openAddMember}
                 className="flex items-center gap-1.5 bg-[#081534] text-white px-4 py-2 rounded-lg text-[12px] font-semibold hover:opacity-90 transition-opacity">
-                <span className="material-symbols-outlined text-[16px]">person_add</span> Add Member
+                <Icon name="person_add" className="text-[16px]" /> Add Member
               </button>
             </div>
 
@@ -432,7 +431,7 @@ function MinistryDashboardContent() {
               <div className="space-y-3">{[1,2,3].map(i => <div key={i} className="h-16 bg-[#f2f4f6] rounded-xl animate-pulse" />)}</div>
             ) : ministryMembers.length === 0 ? (
               <div className="text-center py-12">
-                <span className="material-symbols-outlined text-[48px] text-[#c6c6cf] block mb-2">group_off</span>
+                <Icon name="group_off" className="text-[48px] text-[#c6c6cf] block mb-2" />
                 <p className="text-[#45464e] font-semibold text-[14px]">No members in this department yet</p>
                 <p className="text-[12px] text-[#76777f] mt-1">Add members from the church congregation above</p>
               </div>
@@ -457,19 +456,19 @@ function MinistryDashboardContent() {
                             {showReminderBar && reminderDate && waNumber && (
                               <a href={waLink(waNumber, reminderMessage(m.first_name))} target="_blank" rel="noopener noreferrer"
                                 className="p-2 rounded-lg bg-[#fdc425]/20 text-[#785a00] hover:bg-[#fdc425]/30 transition-colors" title="Send reminder via WhatsApp">
-                                <span className="material-symbols-outlined text-[18px]">notifications_active</span>
+                                <Icon name="notifications_active" className="text-[18px]" />
                               </a>
                             )}
                             {waNumber && (
                               <a href={waLink(waNumber, '')} target="_blank" rel="noopener noreferrer"
                                 className="p-2 rounded-lg bg-green-50 text-green-700 hover:bg-green-100 transition-colors" title={m.whatsapp ? 'Message on WhatsApp' : 'Message on WhatsApp (using phone number)'}>
-                                <span className="material-symbols-outlined text-[18px]">chat</span>
+                                <Icon name="chat" className="text-[18px]" />
                               </a>
                             )}
                             {m.telegram && (
                               <a href={tgLink(m.telegram)} target="_blank" rel="noopener noreferrer"
                                 className="p-2 rounded-lg bg-blue-50 text-blue-700 hover:bg-blue-100 transition-colors" title="Message on Telegram">
-                                <span className="material-symbols-outlined text-[18px]">send</span>
+                                <Icon name="send" className="text-[18px]" />
                               </a>
                             )}
                             {!waNumber && !m.telegram && (
@@ -480,7 +479,7 @@ function MinistryDashboardContent() {
                       })()}
                       <button onClick={() => setRemoveTarget(m)}
                         className="p-2 rounded-lg text-[#45464e] hover:text-[#ba1a1a] hover:bg-[#ffdad6] transition-colors">
-                        <span className="material-symbols-outlined text-[18px]">person_remove</span>
+                        <Icon name="person_remove" className="text-[18px]" />
                       </button>
                     </div>
                   </div>
@@ -504,7 +503,7 @@ function MinistryDashboardContent() {
                 <div className="flex items-center justify-between px-6 py-5 border-b border-[#c6c6cf]">
                   <h3 className="text-[18px] font-bold text-[#081534]">Add Member to {activeMinistry?.name}</h3>
                   <button onClick={() => setShowAddMember(false)} className="w-8 h-8 flex items-center justify-center rounded-lg text-[#45464e] hover:bg-[#f2f4f6]">
-                    <span className="material-symbols-outlined text-[20px]">close</span>
+                    <Icon name="close" className="text-[20px]" />
                   </button>
                 </div>
                 <div className="px-6 py-4">
@@ -518,7 +517,7 @@ function MinistryDashboardContent() {
                     <button key={m.id} onClick={() => handleAddMember(m.id)} disabled={adding}
                       className="w-full flex items-center justify-between p-3 bg-[#f7f9fb] rounded-lg hover:bg-[#f2f4f6] transition-colors disabled:opacity-50">
                       <span className="text-[13px] font-semibold text-[#191c1e]">{m.first_name} {m.last_name}</span>
-                      <span className="material-symbols-outlined text-[18px] text-[#785a00]">add_circle</span>
+                      <Icon name="add_circle" className="text-[18px] text-[#785a00]" />
                     </button>
                   ))}
                 </div>
@@ -562,7 +561,7 @@ function MinistryDashboardContent() {
         {toast && (
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 20 }}
             className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-[#081534] text-white px-5 py-3 rounded-full text-[13px] font-semibold shadow-lg flex items-center gap-2">
-            <span className="material-symbols-outlined text-[#fdc425] text-[16px]">check_circle</span>
+            <Icon name="check_circle" className="text-[#fdc425] text-[16px]" />
             {toast}
           </motion.div>
         )}

@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { getSupabaseClient } from '@/lib/supabase'
+import Icon from '@/components/Icon'
 
 export default function ResetPasswordPage() {
   const router = useRouter()
@@ -98,7 +99,7 @@ export default function ResetPasswordPage() {
               className="text-center space-y-4"
             >
               <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto">
-                <span className="material-symbols-outlined text-green-700 text-[32px]">check_circle</span>
+                <Icon name="check_circle" className="text-green-700 text-[32px]" />
               </div>
               <h3 className="text-[18px] font-bold text-[#081534]">Password updated</h3>
               <p className="text-[14px] text-[#45464e]">
@@ -113,9 +114,7 @@ export default function ResetPasswordPage() {
                   New Password
                 </label>
                 <div className="relative group">
-                  <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[#76777f] group-focus-within:text-[#081534] transition-colors text-[20px]">
-                    lock
-                  </span>
+                  <Icon name="lock" className="absolute left-3 top-1/2 -translate-y-1/2 text-[#76777f] group-focus-within:text-[#081534] transition-colors text-[20px]" />
                   <input
                     type={showPw ? 'text' : 'password'}
                     required
@@ -126,9 +125,7 @@ export default function ResetPasswordPage() {
                   />
                   <button type="button" onClick={() => setShowPw(p => !p)}
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-[#76777f] hover:text-[#081534] transition-colors">
-                    <span className="material-symbols-outlined text-[20px]">
-                      {showPw ? 'visibility_off' : 'visibility'}
-                    </span>
+                    <Icon name={showPw ? 'visibility_off' : 'visibility'} className="text-[20px]" />
                   </button>
                 </div>
                 {pwStrength && (
@@ -147,9 +144,7 @@ export default function ResetPasswordPage() {
                   Confirm Password
                 </label>
                 <div className="relative group">
-                  <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[#76777f] group-focus-within:text-[#081534] transition-colors text-[20px]">
-                    lock_reset
-                  </span>
+                  <Icon name="lock_reset" className="absolute left-3 top-1/2 -translate-y-1/2 text-[#76777f] group-focus-within:text-[#081534] transition-colors text-[20px]" />
                   <input
                     type={showConfirm ? 'text' : 'password'}
                     required
@@ -160,9 +155,7 @@ export default function ResetPasswordPage() {
                   />
                   <button type="button" onClick={() => setShowConfirm(p => !p)}
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-[#76777f] hover:text-[#081534] transition-colors">
-                    <span className="material-symbols-outlined text-[20px]">
-                      {showConfirm ? 'visibility_off' : 'visibility'}
-                    </span>
+                    <Icon name={showConfirm ? 'visibility_off' : 'visibility'} className="text-[20px]" />
                   </button>
                 </div>
                 {confirm && password && confirm !== password && (
@@ -170,7 +163,7 @@ export default function ResetPasswordPage() {
                 )}
                 {confirm && password && confirm === password && (
                   <p className="text-[12px] text-green-600 mt-1 flex items-center gap-1">
-                    <span className="material-symbols-outlined text-[14px]">check_circle</span> Passwords match
+                    <Icon name="check_circle" className="text-[14px]" /> Passwords match
                   </p>
                 )}
               </div>
@@ -190,7 +183,7 @@ export default function ResetPasswordPage() {
                 className="w-full py-4 bg-[#081534] text-white text-[14px] font-bold rounded-lg shadow-sm hover:brightness-110 transition-all disabled:opacity-60 flex justify-center items-center gap-2"
               >
                 {loading ? 'Updating...' : 'Update Password'}
-                {!loading && <span className="material-symbols-outlined text-[18px]">lock_reset</span>}
+                {!loading && <Icon name="lock_reset" className="text-[18px]" />}
               </motion.button>
 
               <button
@@ -198,7 +191,7 @@ export default function ResetPasswordPage() {
                 onClick={() => router.push('/admin')}
                 className="w-full text-center text-[13px] font-semibold text-[#45464e] hover:text-[#081534] transition-colors flex items-center justify-center gap-1"
               >
-                <span className="material-symbols-outlined text-[16px]">arrow_back</span>
+                <Icon name="arrow_back" className="text-[16px]" />
                 Back to Sign In
               </button>
             </form>
@@ -206,7 +199,7 @@ export default function ResetPasswordPage() {
         </div>
 
         <p className="mt-8 text-[12px] text-[#c6c6cf] flex items-center gap-1">
-          <span className="material-symbols-outlined text-[14px]">verified_user</span>
+          <Icon name="verified_user" className="text-[14px]" />
           Authorized Access Only — End-to-End Encrypted
         </p>
       </motion.div>

@@ -10,6 +10,7 @@ import {
   ALL_PAGES,
   PageKey,
 } from "@/lib/use-admin-permissions";
+import Icon from '@/components/Icon'
 
 type Member = {
   id: string;
@@ -68,12 +69,7 @@ function BlogDashboardCard() {
       <div className="flex items-center justify-between px-5 py-4 border-b border-[#c6c6cf]">
         <div className="flex items-center gap-3">
           <div className="w-9 h-9 bg-[#081534] text-[#fdc425] rounded-lg flex items-center justify-center">
-            <span
-              className="material-symbols-outlined text-[18px]"
-              style={{ fontVariationSettings: "'FILL' 1" }}
-            >
-              auto_stories
-            </span>
+            <Icon name="auto_stories" className="text-[18px]" />
           </div>
           <div>
             <h3 className="text-[14px] font-bold text-[#081534]">
@@ -90,7 +86,7 @@ function BlogDashboardCard() {
           onClick={() => router.push("/admin/blog")}
           className="flex items-center gap-1.5 bg-[#081534] text-white px-3 py-1.5 rounded-lg text-[11px] font-bold hover:opacity-90 transition-opacity"
         >
-          <span className="material-symbols-outlined text-[14px]">add</span>
+          <Icon name="add" className="text-[14px]" />
           New Post
         </button>
       </div>
@@ -137,9 +133,7 @@ function BlogDashboardCard() {
                   }
                   className="flex items-center gap-1.5 px-3 py-1.5 bg-[#fdc425] text-[#6d5200] rounded-lg text-[11px] font-bold hover:brightness-110 transition-all whitespace-nowrap"
                 >
-                  <span className="material-symbols-outlined text-[14px]">
-                    send
-                  </span>
+                  <Icon name="send" className="text-[14px]" />
                   Broadcast
                 </button>
               )}
@@ -147,9 +141,7 @@ function BlogDashboardCard() {
                 onClick={() => router.push("/admin/blog")}
                 className="flex items-center gap-1.5 px-3 py-1.5 bg-[#f2f4f6] text-[#45464e] rounded-lg text-[11px] font-semibold hover:bg-[#eceef0] transition-all whitespace-nowrap"
               >
-                <span className="material-symbols-outlined text-[14px]">
-                  open_in_new
-                </span>
+                <Icon name="open_in_new" className="text-[14px]" />
                 Manage
               </button>
             </div>
@@ -402,9 +394,7 @@ export default function AdminDashboard() {
               className="bg-white/10 backdrop-blur-sm border border-white/10 rounded-xl p-2.5 sm:p-4 min-w-0"
             >
               <div className="flex items-center gap-1 sm:gap-2 mb-1">
-                <span className="material-symbols-outlined text-[#fdc425] text-[14px] sm:text-[16px] shrink-0">
-                  {s.icon}
-                </span>
+                <Icon name={s.icon} className="text-[#fdc425] text-[14px] sm:text-[16px] shrink-0" />
                 <span className="text-white/60 text-[9px] sm:text-[11px] font-semibold truncate">
                   {s.label}
                 </span>
@@ -434,12 +424,7 @@ export default function AdminDashboard() {
                   onClick={() => router.push(a.href)}
                   className={`${a.bg} ${a.text} border border-[#c6c6cf] rounded-xl p-4 sm:p-5 text-left hover:shadow-md hover:-translate-y-0.5 transition-all group`}
                 >
-                  <span
-                    className="material-symbols-outlined text-[24px] mb-3 block"
-                    style={{ fontVariationSettings: "'FILL' 1" }}
-                  >
-                    {a.icon}
-                  </span>
+                  <Icon name={a.icon} className="text-[24px] mb-3 block" />
                   <p className="font-bold text-[14px]">{a.label}</p>
                   <p
                     className={`text-[11px] mt-0.5 ${a.bg === "bg-[#081534]" ? "text-white/60" : a.bg === "bg-[#fdc425]" ? "text-[#6d5200]/70" : "text-[#45464e]"}`}
@@ -530,9 +515,7 @@ export default function AdminDashboard() {
                   className="text-[11px] font-semibold text-[#785a00] hover:underline flex items-center gap-1"
                 >
                   See all{" "}
-                  <span className="material-symbols-outlined text-[14px]">
-                    arrow_forward
-                  </span>
+                  <Icon name="arrow_forward" className="text-[14px]" />
                 </button>
               )}
             </div>
@@ -547,9 +530,7 @@ export default function AdminDashboard() {
               </div>
             ) : recentMembers.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-10 text-center">
-                <span className="material-symbols-outlined text-[48px] text-[#c6c6cf] mb-2">
-                  group_add
-                </span>
+                <Icon name="group_add" className="text-[48px] text-[#c6c6cf] mb-2" />
                 <p className="text-[#45464e] font-semibold text-[14px]">
                   No members yet
                 </p>
@@ -613,12 +594,7 @@ export default function AdminDashboard() {
               className="bg-white border border-[#c6c6cf] rounded-xl p-5 cursor-pointer hover:shadow-md hover:-translate-y-0.5 transition-all group"
             >
               <div className="w-10 h-10 bg-[#002960] text-[#adc6ff] rounded-xl flex items-center justify-center mb-4">
-                <span
-                  className="material-symbols-outlined"
-                  style={{ fontVariationSettings: "'FILL' 1" }}
-                >
-                  church
-                </span>
+                <Icon name="church" />
               </div>
               <h3 className="text-[15px] font-bold text-[#081534] mb-1">
                 Ministries
@@ -628,9 +604,7 @@ export default function AdminDashboard() {
               </p>
               <div className="flex items-center gap-1 text-[#785a00] text-[12px] font-semibold group-hover:gap-2 transition-all">
                 Open{" "}
-                <span className="material-symbols-outlined text-[14px]">
-                  arrow_forward
-                </span>
+                <Icon name="arrow_forward" className="text-[14px]" />
               </div>
             </motion.div>
           )}
@@ -644,17 +618,10 @@ export default function AdminDashboard() {
               className="bg-[#081534] rounded-xl p-5 cursor-pointer hover:shadow-md hover:-translate-y-0.5 transition-all group relative overflow-hidden"
             >
               <div className="absolute -right-4 -bottom-4 opacity-10">
-                <span className="material-symbols-outlined text-[100px] text-white">
-                  analytics
-                </span>
+                <Icon name="analytics" className="text-[100px] text-white" />
               </div>
               <div className="w-10 h-10 bg-[#fdc425] text-[#6d5200] rounded-xl flex items-center justify-center mb-4 relative z-10">
-                <span
-                  className="material-symbols-outlined"
-                  style={{ fontVariationSettings: "'FILL' 1" }}
-                >
-                  analytics
-                </span>
+                <Icon name="analytics" />
               </div>
               <h3 className="text-[15px] font-bold text-white mb-1 relative z-10">
                 Analytics
@@ -664,9 +631,7 @@ export default function AdminDashboard() {
               </p>
               <div className="flex items-center gap-1 text-[#fdc425] text-[12px] font-semibold group-hover:gap-2 transition-all relative z-10">
                 Open{" "}
-                <span className="material-symbols-outlined text-[14px]">
-                  arrow_forward
-                </span>
+                <Icon name="arrow_forward" className="text-[14px]" />
               </div>
             </motion.div>
           )}
@@ -681,12 +646,7 @@ export default function AdminDashboard() {
               className="bg-[#fdc425] rounded-xl p-5 cursor-pointer hover:shadow-md hover:-translate-y-0.5 transition-all group relative overflow-hidden"
             >
               <div className="w-10 h-10 bg-[#081534] text-[#fdc425] rounded-xl flex items-center justify-center mb-4">
-                <span
-                  className="material-symbols-outlined"
-                  style={{ fontVariationSettings: "'FILL' 1" }}
-                >
-                  volunteer_activism
-                </span>
+                <Icon name="volunteer_activism" />
               </div>
               <h3 className="text-[15px] font-bold text-[#081534] mb-1">
                 Giving & Records
@@ -696,9 +656,7 @@ export default function AdminDashboard() {
               </p>
               <div className="flex items-center gap-1 text-[#081534] text-[12px] font-semibold group-hover:gap-2 transition-all">
                 Open{" "}
-                <span className="material-symbols-outlined text-[14px]">
-                  arrow_forward
-                </span>
+                <Icon name="arrow_forward" className="text-[14px]" />
               </div>
             </motion.div>
           )}
@@ -713,12 +671,7 @@ export default function AdminDashboard() {
               className="bg-white border border-[#c6c6cf] rounded-xl p-5 cursor-pointer hover:shadow-md hover:-translate-y-0.5 transition-all group"
             >
               <div className="w-10 h-10 bg-[#fdc425]/20 text-[#785a00] rounded-xl flex items-center justify-center mb-4">
-                <span
-                  className="material-symbols-outlined"
-                  style={{ fontVariationSettings: "'FILL' 1" }}
-                >
-                  settings
-                </span>
+                <Icon name="settings" />
               </div>
               <h3 className="text-[15px] font-bold text-[#081534] mb-1">
                 Settings
@@ -728,9 +681,7 @@ export default function AdminDashboard() {
               </p>
               <div className="flex items-center gap-1 text-[#785a00] text-[12px] font-semibold group-hover:gap-2 transition-all">
                 Open{" "}
-                <span className="material-symbols-outlined text-[14px]">
-                  arrow_forward
-                </span>
+                <Icon name="arrow_forward" className="text-[14px]" />
               </div>
             </motion.div>
           )}
@@ -747,12 +698,7 @@ export default function AdminDashboard() {
           >
             <div className="flex items-center justify-between mb-4">
               <div className="w-10 h-10 bg-[#081534] text-[#fdc425] rounded-xl flex items-center justify-center">
-                <span
-                  className="material-symbols-outlined"
-                  style={{ fontVariationSettings: "'FILL' 1" }}
-                >
-                  handshake
-                </span>
+                <Icon name="handshake" />
               </div>
               {!loading && newPartnerCount > 0 && (
                 <span className="px-2.5 py-1 bg-[#fdc425] text-[#6d5200] text-[11px] font-bold rounded-full">
@@ -770,9 +716,7 @@ export default function AdminDashboard() {
             </p>
             <div className="flex items-center gap-1 text-[#785a00] text-[12px] font-semibold group-hover:gap-2 transition-all">
               View all{" "}
-              <span className="material-symbols-outlined text-[14px]">
-                arrow_forward
-              </span>
+              <Icon name="arrow_forward" className="text-[14px]" />
             </div>
           </motion.div>
         )}
@@ -788,12 +732,7 @@ export default function AdminDashboard() {
             <div className="flex items-center justify-between px-5 py-4 border-b border-[#c6c6cf]">
               <div className="flex items-center gap-3">
                 <div className="w-9 h-9 bg-[#fdc425]/20 text-[#785a00] rounded-lg flex items-center justify-center">
-                  <span
-                    className="material-symbols-outlined text-[18px]"
-                    style={{ fontVariationSettings: "'FILL' 1" }}
-                  >
-                    chat_bubble
-                  </span>
+                  <Icon name="chat_bubble" className="text-[18px]" />
                 </div>
                 <div>
                   <h3 className="text-[14px] font-bold text-[#081534]">
@@ -807,9 +746,7 @@ export default function AdminDashboard() {
             </div>
             {testimonies.length === 0 ? (
               <div className="text-center py-10">
-                <span className="material-symbols-outlined text-[40px] text-[#c6c6cf] block mb-2">
-                  chat_bubble_outline
-                </span>
+                <Icon name="chat_bubble_outline" className="text-[40px] text-[#c6c6cf] block mb-2" />
                 <p className="text-[13px] text-[#76777f]">
                   No testimonies submitted yet
                 </p>
@@ -855,9 +792,7 @@ export default function AdminDashboard() {
                       }}
                       className="shrink-0 p-1.5 text-[#45464e] hover:text-[#ba1a1a] hover:bg-[#ffdad6] rounded-lg transition-colors disabled:opacity-40"
                     >
-                      <span className="material-symbols-outlined text-[16px]">
-                        delete
-                      </span>
+                      <Icon name="delete" className="text-[16px]" />
                     </button>
                   </div>
                 ))}
@@ -870,12 +805,7 @@ export default function AdminDashboard() {
 
         {/* ── Footer note ── */}
         <div className="bg-[#ffdf9a] border border-[#fdc425] rounded-xl p-4 sm:p-5 flex items-start sm:items-center gap-4">
-          <span
-            className="material-symbols-outlined text-[#785a00] text-[24px] shrink-0"
-            style={{ fontVariationSettings: "'FILL' 1" }}
-          >
-            volunteer_activism
-          </span>
+          <Icon name="volunteer_activism" className="text-[#785a00] text-[24px] shrink-0" />
           <div>
             <p className="text-[13px] font-bold text-[#081534]">
               Company of the Blessed

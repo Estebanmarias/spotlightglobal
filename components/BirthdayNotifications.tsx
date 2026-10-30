@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { getSupabaseClient } from "@/lib/supabase";
 import type { PageKey } from "@/lib/use-admin-permissions";
+import Icon from '@/components/Icon'
 
 type NotificationAccess = {
   loading: boolean;
@@ -268,12 +269,7 @@ export default function BirthdayNotifications({ access, activeOn }: Props) {
         aria-controls={panelId}
         className="relative flex h-11 w-11 items-center justify-center rounded-full border border-[#c6c6cf] bg-white text-[#081534] shadow-sm transition-colors hover:bg-[#f2f4f6] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#fdc425]"
       >
-        <span
-          className="material-symbols-outlined text-[22px]"
-          style={{ fontVariationSettings: "'FILL' 1" }}
-        >
-          notifications
-        </span>
+        <Icon name="notifications" className="text-[22px]" />
         {!loading && notificationCount > 0 && (
           <span className="absolute -right-1 -top-1 flex h-4.75 min-w-4.75 items-center justify-center rounded-full border-2 border-white bg-[#ba1a1a] px-1 text-[10px] font-bold leading-none text-white">
             {notificationCount > 9 ? "9+" : notificationCount}
@@ -324,9 +320,7 @@ export default function BirthdayNotifications({ access, activeOn }: Props) {
                       className="flex w-full items-start gap-3 px-4 py-3 text-left transition-colors hover:bg-[#f7f9fb] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#fdc425]"
                     >
                       <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#f2f4f6] text-[#081534]">
-                        <span className="material-symbols-outlined text-[18px]">
-                          {icon}
-                        </span>
+                        <Icon name={icon} className="text-[18px]" />
                       </span>
                       <span className="min-w-0 flex-1">
                         <span className="block truncate text-[13px] font-semibold text-[#081534]">

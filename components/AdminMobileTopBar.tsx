@@ -5,6 +5,7 @@ import { useRouter, usePathname } from "next/navigation";
 import { getSupabaseClient } from "@/lib/supabase";
 import { PageKey } from "@/lib/use-admin-permissions";
 import BirthdayNotifications from "@/components/BirthdayNotifications";
+import Icon from '@/components/Icon'
 
 type NavItem = {
   icon: string;
@@ -32,6 +33,12 @@ const navItems: NavItem[] = [
     label: "Ministries",
     href: "/admin/ministries",
     page: "ministries",
+  },
+  {
+    icon: "school",
+    label: "Classes",
+    href: "/admin/classes",
+    page: "classes",
   },
   {
     icon: "analytics",
@@ -142,7 +149,7 @@ export default function AdminMobileTopBar() {
           className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#081534] text-white"
           aria-label="Open menu"
         >
-          <span className="material-symbols-outlined text-[20px]">menu</span>
+          <Icon name="menu" className="text-[20px]" />
         </button>
         <span className="min-w-0 flex-1 truncate text-[15px] font-bold text-[#081534]">
           {pageTitle(pathname)}
@@ -172,7 +179,7 @@ export default function AdminMobileTopBar() {
           className="absolute top-4 right-4 text-white/50 hover:text-white"
           aria-label="Close menu"
         >
-          <span className="material-symbols-outlined">close</span>
+          <Icon name="close" />
         </button>
 
         {/* Brand */}
@@ -222,9 +229,7 @@ export default function AdminMobileTopBar() {
                 </span>
                 <span className="text-[13px] flex-1">{item.label}</span>
                 {loaded && !allowed && (
-                  <span className="material-symbols-outlined text-[14px] text-white/20">
-                    lock
-                  </span>
+                  <Icon name="lock" className="text-[14px] text-white/20" />
                 )}
               </button>
             );
@@ -237,9 +242,7 @@ export default function AdminMobileTopBar() {
             onClick={handleLogout}
             className="w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-white/60 hover:bg-white/10 hover:text-white transition-all text-left font-semibold"
           >
-            <span className="material-symbols-outlined text-[20px]">
-              logout
-            </span>
+            <Icon name="logout" className="text-[20px]" />
             <span className="text-[13px]">Logout</span>
           </button>
         </div>

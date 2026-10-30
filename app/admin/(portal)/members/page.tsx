@@ -6,6 +6,7 @@ import { getSupabaseClient } from '@/lib/supabase'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useAdminAccess } from '@/lib/use-admin-permissions'
 import AdminLoader from '@/components/AdminLoader'
+import Icon from '@/components/Icon'
 
 type Member = {
   id: string
@@ -85,12 +86,11 @@ function MemberDrawer({
       >
         <div className="bg-[#081534] px-6 pt-8 pb-10 relative overflow-hidden shrink-0">
           <div className="absolute -right-8 -bottom-8 opacity-10">
-            <span className="material-symbols-outlined text-[140px] text-white"
-              style={{ fontVariationSettings: "'FILL' 1" }}>person</span>
+            <Icon name="person" className="text-[140px] text-white" />
           </div>
           <button onClick={onClose}
             className="absolute top-4 right-4 w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors">
-            <span className="material-symbols-outlined text-[18px]">close</span>
+            <Icon name="close" className="text-[18px]" />
           </button>
 
           <div className="flex items-center gap-4 relative z-10">
@@ -121,7 +121,7 @@ function MemberDrawer({
               ].map(item => (
                 <div key={item.label} className="flex items-start gap-3 p-3 bg-[#f7f9fb] rounded-xl">
                   <div className="w-9 h-9 rounded-lg bg-[#081534]/5 flex items-center justify-center shrink-0">
-                    <span className="material-symbols-outlined text-[#081534] text-[18px]">{item.icon}</span>
+                    <Icon name={item.icon} className="text-[#081534] text-[18px]" />
                   </div>
                   <div className="min-w-0">
                     <p className="text-[11px] font-semibold text-[#45464e]">{item.label}</p>
@@ -143,7 +143,7 @@ function MemberDrawer({
               ].map(item => (
                 <div key={item.label} className="p-3 bg-[#f7f9fb] rounded-xl">
                   <div className="flex items-center gap-1.5 mb-1">
-                    <span className="material-symbols-outlined text-[#45464e] text-[14px]">{item.icon}</span>
+                    <Icon name={item.icon} className="text-[#45464e] text-[14px]" />
                     <p className="text-[10px] font-semibold text-[#45464e]">{item.label}</p>
                   </div>
                   <p className="text-[13px] font-bold text-[#191c1e]">{item.value}</p>
@@ -193,12 +193,12 @@ function MemberDrawer({
         <div className="shrink-0 border-t border-[#c6c6cf] p-4 flex gap-3 bg-white">
           <button onClick={() => onEdit(member)}
             className="flex-1 flex items-center justify-center gap-2 bg-[#081534] text-white py-2.5 rounded-xl text-[13px] font-bold hover:opacity-90 transition-opacity">
-            <span className="material-symbols-outlined text-[16px]">edit</span>
+            <Icon name="edit" className="text-[16px]" />
             Edit Member
           </button>
           <button onClick={() => setConfirmDelete(true)}
             className="flex items-center justify-center gap-2 bg-[#ffdad6] text-[#ba1a1a] px-4 py-2.5 rounded-xl text-[13px] font-bold hover:opacity-90 transition-opacity">
-            <span className="material-symbols-outlined text-[16px]">delete</span>
+            <Icon name="delete" className="text-[16px]" />
           </button>
         </div>
       </motion.aside>
@@ -208,11 +208,12 @@ function MemberDrawer({
 
 // ── Edit Member Modal ───────────────────────────────────────────────
 function EditMemberModal({
-  member, onClose, onSaved,
+  member, onClose, onSaved, canEditStatus,
 }: {
   member: Member
   onClose: () => void
   onSaved: () => void
+  canEditStatus: boolean
 }) {
   const supabase = getSupabaseClient()
   const [form, setForm] = useState({
@@ -249,9 +250,13 @@ function EditMemberModal({
     // see the correct value. Uses the ORIGINAL email as the Brevo contact
     // identifier, since that's what the contact is keyed by there.
     try {
+      const { data: sessionData } = await supabase.auth.getSession()
       await fetch('/api/admin/sync-brevo-status', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${sessionData.session?.access_token ?? ''}`,
+        },
         body: JSON.stringify({ email: member.email, guest_status: form.guest_status, old_guest_status: member.guest_status }),
       })
     } catch (err) {
@@ -274,7 +279,7 @@ function EditMemberModal({
           <div className="flex items-center justify-between px-6 py-5 border-b border-[#c6c6cf]">
             <h3 className="text-[18px] font-bold text-[#081534]">Edit Member</h3>
             <button onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-lg text-[#45464e] hover:bg-[#f2f4f6]">
-              <span className="material-symbols-outlined text-[20px]">close</span>
+              <Icon name="close" className="text-[20px]" />
             </button>
           </div>
 
@@ -308,12 +313,18 @@ function EditMemberModal({
               <input value={form.address} onChange={e => setForm(p => ({ ...p, address: e.target.value }))} className={inputCls} />
             </div>
             <div className="flex flex-col gap-1.5">
-              <label className="text-[12px] font-bold text-[#45464e] uppercase tracking-wide">Guest Status</label>
-              <select value={form.guest_status} onChange={e => setForm(p => ({ ...p, guest_status: e.target.value }))} className={inputCls}>
-                <option value="First_Timer">First Timer</option>
-                <option value="Attending">Attending</option>
-                <option value="Member">Member</option>
-              </select>
+              <label className="text-[12px] font-bold text-[#45464e] uppercase tracking-wide">Status</label>
+              {canEditStatus ? (
+                <select value={form.guest_status} onChange={e => setForm(p => ({ ...p, guest_status: e.target.value }))} className={inputCls}>
+                  <option value="Attending">Attending</option>
+                  <option value="Member">Member</option>
+                </select>
+              ) : (
+                <p className="rounded-t-lg bg-[#f2f4f6] px-4 py-3 text-[14px] text-[#45464e]">
+                  {statusConfig[form.guest_status]?.label ?? form.guest_status}
+                  <span className="block text-[11px] text-[#76777f]">Changes when they complete Membership Class. Only Setman can override it.</span>
+                </p>
+              )}
             </div>
             {error && <p className="text-[#ba1a1a] text-[13px] font-medium">{error}</p>}
           </div>
@@ -435,7 +446,7 @@ export default function MembersPage() {
           <div className="flex items-center gap-2 flex-wrap">
             <button onClick={() => router.push('/admin/dashboard')}
               className="flex items-center gap-1.5 bg-white border border-[#c6c6cf] px-3 py-2 rounded-lg text-[12px] font-semibold text-[#45464e] hover:bg-[#eceef0] transition-all">
-              <span className="material-symbols-outlined text-[16px]">arrow_back</span>
+              <Icon name="arrow_back" className="text-[16px]" />
               <span className="hidden sm:inline">Dashboard</span>
             </button>
             <div className="flex bg-[#f2f4f6] rounded-lg p-1 gap-1">
@@ -443,21 +454,19 @@ export default function MembersPage() {
                 <button key={v} onClick={() => setView(v)}
                   className={`px-3 py-1.5 rounded-md text-[12px] font-semibold transition-all flex items-center gap-1.5
                     ${view === v ? 'bg-white text-[#081534] shadow-sm' : 'text-[#45464e]'}`}>
-                  <span className="material-symbols-outlined text-[16px]">
-                    {v === 'table' ? 'table_rows' : 'grid_view'}
-                  </span>
+                  <Icon name={v === 'table' ? 'table_rows' : 'grid_view'} className="text-[16px]" />
                   <span className="hidden sm:inline capitalize">{v === 'table' ? 'Table' : 'Cards'}</span>
                 </button>
               ))}
             </div>
             <button onClick={exportCSV}
               className="flex items-center gap-1.5 bg-white border border-[#c6c6cf] px-3 py-2 rounded-lg text-[12px] font-semibold text-[#45464e] hover:bg-[#eceef0] transition-all">
-              <span className="material-symbols-outlined text-[16px]">download</span>
+              <Icon name="download" className="text-[16px]" />
               {selected.size > 0 ? `Export (${selected.size})` : 'Export'}
             </button>
             <button onClick={() => router.push('/admin/add-member')}
               className="flex items-center gap-1.5 bg-[#081534] text-white px-4 py-2 rounded-lg text-[12px] font-semibold hover:opacity-90 transition-opacity">
-              <span className="material-symbols-outlined text-[16px]">person_add</span>
+              <Icon name="person_add" className="text-[16px]" />
               Add Member
             </button>
           </div>
@@ -466,7 +475,7 @@ export default function MembersPage() {
         {/* Search + filters */}
         <div className="px-4 sm:px-8 pb-3 flex flex-col sm:flex-row gap-3">
           <div className="relative w-full sm:w-72">
-            <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[#76777f] text-[18px]">search</span>
+            <Icon name="search" className="absolute left-3 top-1/2 -translate-y-1/2 text-[#76777f] text-[18px]" />
             <input value={search}
               onChange={e => { setSearch(e.target.value); setPage(0) }}
               placeholder="Search name, email or phone…"
@@ -500,7 +509,7 @@ export default function MembersPage() {
               <div className="flex gap-3">
                 <button onClick={exportCSV}
                   className="flex items-center gap-1.5 bg-white/10 hover:bg-white/20 px-3 py-1.5 rounded-lg text-[12px] font-semibold transition-all">
-                  <span className="material-symbols-outlined text-[16px]">download</span> Export
+                  <Icon name="download" className="text-[16px]" /> Export
                 </button>
                 <button onClick={() => setSelected(new Set())}
                   className="text-white/60 hover:text-white text-[12px] font-semibold transition-colors">
@@ -539,7 +548,7 @@ export default function MembersPage() {
                   ) : members.length === 0 ? (
                     <tr>
                       <td colSpan={7} className="px-6 py-20 text-center">
-                        <span className="material-symbols-outlined text-[56px] text-[#c6c6cf] block mb-3">manage_search</span>
+                        <Icon name="manage_search" className="text-[56px] text-[#c6c6cf] block mb-3" />
                         <p className="text-[#45464e] font-bold text-[15px]">No members found</p>
                         <p className="text-[12px] text-[#76777f] mt-1">Try a different search or filter</p>
                       </td>
@@ -586,7 +595,7 @@ export default function MembersPage() {
                         <td className="px-4 py-3">
                           <button onClick={() => setActive(m)}
                             className="w-8 h-8 rounded-lg flex items-center justify-center text-[#45464e] hover:bg-[#f2f4f6] hover:text-[#081534] transition-all">
-                            <span className="material-symbols-outlined text-[18px]">chevron_right</span>
+                            <Icon name="chevron_right" className="text-[18px]" />
                           </button>
                         </td>
                       </motion.tr>
@@ -603,12 +612,12 @@ export default function MembersPage() {
               <div className="flex items-center gap-2">
                 <button onClick={() => setPage(p => Math.max(0, p - 1))} disabled={page === 0}
                   className="w-8 h-8 rounded-lg border border-[#c6c6cf] flex items-center justify-center text-[#45464e] hover:bg-white hover:text-[#081534] disabled:opacity-40 transition-all">
-                  <span className="material-symbols-outlined text-[18px]">chevron_left</span>
+                  <Icon name="chevron_left" className="text-[18px]" />
                 </button>
                 <span className="text-[12px] font-semibold text-[#45464e] px-2">{page + 1} / {totalPages || 1}</span>
                 <button onClick={() => setPage(p => Math.min(totalPages - 1, p + 1))} disabled={page >= totalPages - 1}
                   className="w-8 h-8 rounded-lg border border-[#c6c6cf] flex items-center justify-center text-[#45464e] hover:bg-white hover:text-[#081534] disabled:opacity-40 transition-all">
-                  <span className="material-symbols-outlined text-[18px]">chevron_right</span>
+                  <Icon name="chevron_right" className="text-[18px]" />
                 </button>
               </div>
             </div>
@@ -622,7 +631,7 @@ export default function MembersPage() {
               <AdminLoader label="Loading members..." />
             ) : members.length === 0 ? (
               <div className="text-center py-20">
-                <span className="material-symbols-outlined text-[56px] text-[#c6c6cf] block mb-3">manage_search</span>
+                <Icon name="manage_search" className="text-[56px] text-[#c6c6cf] block mb-3" />
                 <p className="text-[#45464e] font-bold">No members found</p>
               </div>
             ) : (
@@ -645,7 +654,7 @@ export default function MembersPage() {
                         <div onClick={e => { e.stopPropagation(); toggleSelect(m.id) }}
                           className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all cursor-pointer
                             ${isSelected ? 'bg-[#081534] border-[#081534]' : 'border-[#c6c6cf]'}`}>
-                          {isSelected && <span className="material-symbols-outlined text-white text-[14px]">check</span>}
+                          {isSelected && <Icon name="check" className="text-white text-[14px]" />}
                         </div>
                       </div>
 
@@ -672,12 +681,12 @@ export default function MembersPage() {
               <div className="mt-6 flex items-center justify-center gap-3">
                 <button onClick={() => setPage(p => Math.max(0, p - 1))} disabled={page === 0}
                   className="flex items-center gap-1.5 px-4 py-2 rounded-lg border border-[#c6c6cf] text-[13px] font-semibold text-[#45464e] hover:bg-white disabled:opacity-40 transition-all">
-                  <span className="material-symbols-outlined text-[16px]">chevron_left</span> Prev
+                  <Icon name="chevron_left" className="text-[16px]" /> Prev
                 </button>
                 <span className="text-[13px] text-[#45464e]">{page + 1} of {totalPages}</span>
                 <button onClick={() => setPage(p => Math.min(totalPages - 1, p + 1))} disabled={page >= totalPages - 1}
                   className="flex items-center gap-1.5 px-4 py-2 rounded-lg border border-[#c6c6cf] text-[13px] font-semibold text-[#45464e] hover:bg-white disabled:opacity-40 transition-all">
-                  Next <span className="material-symbols-outlined text-[16px]">chevron_right</span>
+                  Next <Icon name="chevron_right" className="text-[16px]" />
                 </button>
               </div>
             )}
@@ -704,6 +713,7 @@ export default function MembersPage() {
             member={editTarget}
             onClose={() => setEditTarget(null)}
             onSaved={handleSaved}
+            canEditStatus={access.isSuperAdmin}
           />
         )}
       </AnimatePresence>
@@ -713,7 +723,7 @@ export default function MembersPage() {
         {toast && (
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 20 }}
             className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-[#081534] text-white px-5 py-3 rounded-full text-[13px] font-semibold shadow-lg flex items-center gap-2">
-            <span className="material-symbols-outlined text-[#fdc425] text-[16px]">check_circle</span>
+            <Icon name="check_circle" className="text-[#fdc425] text-[16px]" />
             {toast}
           </motion.div>
         )}

@@ -2,6 +2,7 @@
 
 import { motion } from 'framer-motion'
 import Link from 'next/link'
+import Icon from '@/components/Icon'
 
 const sections = [
   {
@@ -21,7 +22,7 @@ const sections = [
             'Optional special requests and prayer requests submitted with event registrations',
           ].map(item => (
             <li key={item} className="flex items-start gap-3">
-              <span className="material-symbols-outlined text-[#fdc425] text-[18px] mt-0.5 shrink-0">check_circle</span>
+              <Icon name="check_circle" className="text-[#fdc425] text-[18px] mt-0.5 shrink-0" />
               <span>{item}</span>
             </li>
           ))}
@@ -97,7 +98,7 @@ const sections = [
             'Withdraw consent for communications at any time',
           ].map(item => (
             <li key={item} className="flex items-start gap-3">
-              <span className="material-symbols-outlined text-[#fdc425] text-[18px] mt-0.5 shrink-0">check_circle</span>
+              <Icon name="check_circle" className="text-[#fdc425] text-[18px] mt-0.5 shrink-0" />
               <span>{item}</span>
             </li>
           ))}
@@ -128,7 +129,7 @@ export default function PrivacyPolicyPage() {
         <div className="max-w-[860px] mx-auto">
           <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}>
             <span className="inline-flex items-center gap-2 px-4 py-1.5 bg-[#fdc425]/15 text-[#081534] border border-[#fdc425]/20 rounded-full text-[11px] font-bold uppercase tracking-widest mb-6">
-              <span className="material-symbols-outlined text-[#fdc425] text-[14px]">verified_user</span>
+              <Icon name="verified_user" className="text-[#fdc425] text-[14px]" />
               Legal & Security
             </span>
             <h1 className="text-[#081534] text-[36px] sm:text-[48px] font-bold leading-tight mb-4">
@@ -154,7 +155,7 @@ export default function PrivacyPolicyPage() {
                   {/* Section header */}
                   <div className="flex items-center gap-4 mb-6">
                     <div className="w-12 h-12 rounded-xl bg-[#f2f4f6] flex items-center justify-center shrink-0">
-                      <span className="material-symbols-outlined text-[#081534] text-[24px]">{s.icon}</span>
+                      <Icon name={s.icon} className="text-[#081534] text-[24px]" />
                     </div>
                     <h2 className="text-[#081534] text-[20px] sm:text-[24px] font-bold">{s.title}</h2>
                   </div>
@@ -184,7 +185,7 @@ export default function PrivacyPolicyPage() {
                 </p>
                 <a href="mailto:officialspotlightglobal@gmail.com"
                   className="inline-flex items-center gap-2 bg-[#fdc425] text-[#6d5200] px-8 py-3 rounded-full text-[13px] font-bold hover:brightness-110 transition-all active:scale-95">
-                  <span className="material-symbols-outlined text-[16px]">mail</span>
+                  <Icon name="mail" className="text-[16px]" />
                   Contact Us
                 </a>
               </div>

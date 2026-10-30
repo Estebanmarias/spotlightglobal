@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { getSupabaseClient } from '@/lib/supabase'
 import { useAdminAccess } from '@/lib/use-admin-permissions'
 import AdminLoader from '@/components/AdminLoader'
+import Icon from '@/components/Icon'
 
 // ── Types ─────────────────────────────────────────────────────────────
 type Ministry = {
@@ -300,7 +301,7 @@ export default function MinistriesPage() {
           </div>
           <button onClick={openAdd}
             className="flex items-center gap-2 bg-[#081534] text-white px-5 py-2.5 rounded-xl text-[13px] font-semibold hover:opacity-90 transition-opacity shadow-sm w-fit">
-            <span className="material-symbols-outlined text-[18px]">add</span> Add Ministry
+            <Icon name="add" className="text-[18px]" /> Add Ministry
           </button>
         </div>
       </div>
@@ -321,7 +322,7 @@ export default function MinistriesPage() {
               <p className="text-[10px] text-[#45464e] uppercase tracking-widest font-bold mb-2">{s.label}</p>
               <p className="text-[26px] sm:text-[30px] font-bold text-[#081534]">{loading ? '—' : s.value}</p>
               <p className="text-[11px] text-[#785a00] flex items-center gap-1 mt-2">
-                <span className="material-symbols-outlined text-[14px]">{s.icon}</span>{s.sub}
+                <Icon name={s.icon} className="text-[14px]" />{s.sub}
               </p>
             </motion.div>
           ))}
@@ -334,7 +335,7 @@ export default function MinistriesPage() {
           </div>
         ) : ministries.length === 0 ? (
           <div className="bg-white border border-[#c6c6cf] rounded-xl py-20 text-center mb-8">
-            <span className="material-symbols-outlined text-[56px] text-[#c6c6cf] block mb-3">church</span>
+            <Icon name="church" className="text-[56px] text-[#c6c6cf] block mb-3" />
             <p className="text-[#45464e] font-bold text-[15px]">No ministries yet</p>
             <p className="text-[12px] text-[#76777f] mt-1 mb-6">Create your first ministry department to get started</p>
             <button onClick={openAdd}
@@ -391,29 +392,29 @@ export default function MinistriesPage() {
                               <button
                                 onClick={() => router.push(`/admin/ministry-dashboard?ministryId=${m.id}`)}
                                 className="flex items-center gap-1.5 px-3 py-1.5 bg-[#081534] text-white rounded-lg text-[11px] font-bold hover:opacity-90 transition-opacity">
-                                <span className="material-symbols-outlined text-[14px]">dashboard</span>
+                                <Icon name="dashboard" className="text-[14px]" />
                                 Dashboard
                               </button>
                             ) : (
                               <button disabled
                                 title="You are not the leader of this ministry"
                                 className="flex items-center gap-1.5 px-3 py-1.5 bg-[#f2f4f6] text-[#c6c6cf] rounded-lg text-[11px] font-semibold cursor-not-allowed border border-[#eceef0]">
-                                <span className="material-symbols-outlined text-[14px]">lock</span>
+                                <Icon name="lock" className="text-[14px]" />
                                 No Access
                               </button>
                             )
                           })()}
                           <button type="button" onClick={() => openAssignLeader(m)} className="p-2 text-[#45464e] hover:text-[#081534] hover:bg-[#f2f4f6] rounded-lg transition-all shrink-0" title="Assign Leader">
-                            <span className="material-symbols-outlined text-[18px]">badge</span>
+                            <Icon name="badge" className="text-[18px]" />
                           </button>
                           <button type="button" onClick={() => setDetail(m)} className="p-2 text-[#45464e] hover:text-[#081534] hover:bg-[#f2f4f6] rounded-lg transition-all shrink-0">
-                            <span className="material-symbols-outlined text-[18px]">open_in_new</span>
+                            <Icon name="open_in_new" className="text-[18px]" />
                           </button>
                           <button type="button" onClick={() => openEdit(m)} className="p-2 text-[#45464e] hover:text-[#081534] hover:bg-[#f2f4f6] rounded-lg transition-all shrink-0">
-                            <span className="material-symbols-outlined text-[18px]">edit</span>
+                            <Icon name="edit" className="text-[18px]" />
                           </button>
                           <button type="button" onClick={() => setDeleteTarget(m)} className="p-2 text-[#45464e] hover:text-[#ba1a1a] hover:bg-[#ffdad6] rounded-lg transition-all shrink-0">
-                            <span className="material-symbols-outlined text-[18px]">delete</span>
+                            <Icon name="delete" className="text-[18px]" />
                           </button>
                         </div>
                       </div>
@@ -422,7 +423,7 @@ export default function MinistriesPage() {
                     <div className="p-5 sm:p-6 flex flex-col justify-between h-full min-h-[220px]">
                       <div>
                         <div className={`w-11 h-11 ${m.icon_bg} ${m.icon_color} rounded-xl flex items-center justify-center mb-4`}>
-                          <span className="material-symbols-outlined text-[20px]" style={{ fontVariationSettings: "'FILL' 1" }}>{m.icon}</span>
+                          <Icon name={m.icon} className="text-[20px]" />
                         </div>
                         <h3 className="text-[16px] sm:text-[18px] font-bold text-[#081534] mb-1">{m.name}</h3>
                         <p className="text-[12px] text-[#45464e] mb-4 line-clamp-2">{m.description}</p>
@@ -453,24 +454,24 @@ export default function MinistriesPage() {
                             <button type="button"
                               onClick={() => router.push(`/admin/ministry-dashboard?ministryId=${m.id}`)}
                               className="px-3 bg-[#081534] text-white rounded-lg hover:opacity-90 transition-colors" title="View Dashboard">
-                              <span className="material-symbols-outlined text-[18px]">dashboard</span>
+                              <Icon name="dashboard" className="text-[18px]" />
                             </button>
                           ) : (
                             <button type="button" disabled
                               title="You are not the leader of this ministry"
                               className="px-3 bg-[#f2f4f6] text-[#c6c6cf] rounded-lg cursor-not-allowed">
-                              <span className="material-symbols-outlined text-[18px]">lock</span>
+                              <Icon name="lock" className="text-[18px]" />
                             </button>
                           )
                         })()}
                         <button type="button" onClick={() => openAssignLeader(m)} className="px-3 bg-[#f2f4f6] text-[#45464e] rounded-lg hover:bg-[#eceef0] transition-colors" title="Assign Leader">
-                          <span className="material-symbols-outlined text-[18px]">badge</span>
+                          <Icon name="badge" className="text-[18px]" />
                         </button>
                         <button type="button" onClick={() => openEdit(m)} className="px-3 bg-[#f2f4f6] text-[#45464e] rounded-lg hover:bg-[#eceef0] transition-colors">
-                          <span className="material-symbols-outlined text-[18px]">edit</span>
+                          <Icon name="edit" className="text-[18px]" />
                         </button>
                         <button type="button" onClick={() => setDeleteTarget(m)} className="px-3 bg-[#f2f4f6] text-[#45464e] rounded-lg hover:bg-[#ffdad6] hover:text-[#ba1a1a] transition-colors">
-                          <span className="material-symbols-outlined text-[18px]">delete</span>
+                          <Icon name="delete" className="text-[18px]" />
                         </button>
                       </div>
                     </div>
@@ -493,10 +494,10 @@ export default function MinistriesPage() {
               className="fixed top-0 right-0 h-full w-full sm:w-[420px] bg-white z-50 flex flex-col shadow-2xl">
               <div className="bg-[#081534] px-6 py-6 relative">
                 <button onClick={() => setDetail(null)} className="absolute top-4 right-4 text-white/60 hover:text-white">
-                  <span className="material-symbols-outlined">close</span>
+                  <Icon name="close" />
                 </button>
                 <div className={`w-12 h-12 ${detailMinistry.icon_bg} ${detailMinistry.icon_color} rounded-xl flex items-center justify-center mb-4`}>
-                  <span className="material-symbols-outlined text-[22px]" style={{ fontVariationSettings: "'FILL' 1" }}>{detailMinistry.icon}</span>
+                  <Icon name={detailMinistry.icon} className="text-[22px]" />
                 </div>
                 <h2 className="text-white text-[20px] font-bold">{detailMinistry.name}</h2>
                 {detailMinistry.tag && (
@@ -519,7 +520,7 @@ export default function MinistriesPage() {
                   ].map(f => (
                     <div key={f.label} className="bg-[#f7f9fb] rounded-xl p-4">
                       <div className="flex items-center gap-1.5 mb-1">
-                        <span className="material-symbols-outlined text-[14px] text-[#45464e]">{f.icon}</span>
+                        <Icon name={f.icon} className="text-[14px] text-[#45464e]" />
                         <p className="text-[10px] font-bold text-[#45464e] uppercase tracking-wider">{f.label}</p>
                       </div>
                       <p className="text-[15px] font-bold text-[#081534]">{f.value}</p>
@@ -535,11 +536,11 @@ export default function MinistriesPage() {
               <div className="px-6 py-4 border-t border-[#c6c6cf] flex gap-3">
                 <button onClick={() => { openEdit(detailMinistry); setDetail(null) }}
                   className="flex-1 flex items-center justify-center gap-2 bg-[#081534] text-white py-3 rounded-xl text-[13px] font-bold hover:opacity-90">
-                  <span className="material-symbols-outlined text-[18px]">edit</span> Edit Ministry
+                  <Icon name="edit" className="text-[18px]" /> Edit Ministry
                 </button>
                 <button onClick={() => { setDeleteTarget(detailMinistry); setDetail(null) }}
                   className="px-4 py-3 border border-[#c6c6cf] text-[#ba1a1a] rounded-xl hover:bg-[#ffdad6] hover:border-[#ba1a1a] transition-all">
-                  <span className="material-symbols-outlined text-[18px]">delete</span>
+                  <Icon name="delete" className="text-[18px]" />
                 </button>
               </div>
             </motion.div>
@@ -563,7 +564,7 @@ export default function MinistriesPage() {
                     <p className="text-[12px] text-[#45464e] mt-0.5">{editMinistry ? 'Update ministry information' : 'Create a new ministry department'}</p>
                   </div>
                   <button onClick={() => setShowModal(false)} className="w-8 h-8 flex items-center justify-center rounded-lg text-[#45464e] hover:bg-[#f2f4f6]">
-                    <span className="material-symbols-outlined text-[20px]">close</span>
+                    <Icon name="close" className="text-[20px]" />
                   </button>
                 </div>
                 <div className="px-6 py-6 space-y-5">
@@ -613,7 +614,7 @@ export default function MinistriesPage() {
                       {ICON_OPTIONS.map(ic => (
                         <button key={ic} type="button" onClick={() => setForm(p => ({...p, icon: ic}))}
                           className={`w-10 h-10 rounded-lg flex items-center justify-center transition-all ${form.icon === ic ? 'bg-[#081534] text-white' : 'bg-[#f2f4f6] text-[#45464e] hover:bg-[#eceef0]'}`}>
-                          <span className="material-symbols-outlined text-[18px]">{ic}</span>
+                          <Icon name={ic} className="text-[18px]" />
                         </button>
                       ))}
                     </div>
@@ -631,7 +632,7 @@ export default function MinistriesPage() {
                   </div>
                   <div className="bg-[#f7f9fb] rounded-xl p-4 flex items-center gap-4">
                     <div className={`w-12 h-12 ${form.icon_bg} ${form.icon_color} rounded-xl flex items-center justify-center shrink-0`}>
-                      <span className="material-symbols-outlined text-[22px]" style={{ fontVariationSettings: "'FILL' 1" }}>{form.icon}</span>
+                      <Icon name={form.icon} className="text-[22px]" />
                     </div>
                     <div>
                       <p className="text-[14px] font-bold text-[#081534]">{form.name || 'Ministry Name'}</p>
@@ -671,7 +672,7 @@ export default function MinistriesPage() {
                     <p className="text-[12px] text-[#45464e] mt-0.5">{assignTarget.name}</p>
                   </div>
                   <button onClick={() => setAssignTarget(null)} className="w-8 h-8 flex items-center justify-center rounded-lg text-[#45464e] hover:bg-[#f2f4f6]">
-                    <span className="material-symbols-outlined text-[20px]">close</span>
+                    <Icon name="close" className="text-[20px]" />
                   </button>
                 </div>
 
@@ -783,7 +784,7 @@ export default function MinistriesPage() {
               className="fixed inset-0 z-50 flex items-center justify-center p-4">
               <div className="bg-white rounded-2xl w-full max-w-[400px] p-6 shadow-2xl">
                 <div className="w-12 h-12 bg-[#ffdad6] rounded-full flex items-center justify-center mx-auto mb-4">
-                  <span className="material-symbols-outlined text-[#ba1a1a] text-[24px]">delete</span>
+                  <Icon name="delete" className="text-[#ba1a1a] text-[24px]" />
                 </div>
                 <h3 className="text-[18px] font-bold text-[#081534] text-center mb-2">Remove Ministry</h3>
                 <p className="text-[13px] text-[#45464e] text-center mb-6">
@@ -810,7 +811,7 @@ export default function MinistriesPage() {
         {toast && (
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 20 }}
             className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-[#081534] text-white px-5 py-3 rounded-full text-[13px] font-semibold shadow-lg flex items-center gap-2">
-            <span className="material-symbols-outlined text-[#fdc425] text-[16px]">check_circle</span>
+            <Icon name="check_circle" className="text-[#fdc425] text-[16px]" />
             {toast}
           </motion.div>
         )}

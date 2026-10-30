@@ -4,6 +4,7 @@ import { useRouter, usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { getSupabaseClient } from "@/lib/supabase";
 import { PageKey } from "@/lib/use-admin-permissions";
+import Icon from '@/components/Icon'
 
 type NavItem = {
   icon: string;
@@ -31,6 +32,12 @@ const navItems: NavItem[] = [
     label: "Ministries",
     href: "/admin/ministries",
     page: "ministries",
+  },
+  {
+    icon: "school",
+    label: "Classes",
+    href: "/admin/classes",
+    page: "classes",
   },
   {
     icon: "analytics",
@@ -167,9 +174,7 @@ export default function AdminSidebar() {
               <span className="text-[13px] flex-1">{item.label}</span>
               {/* Lock icon for restricted pages */}
               {loaded && !allowed && (
-                <span className="material-symbols-outlined text-[14px] text-white/20">
-                  lock
-                </span>
+                <Icon name="lock" className="text-[14px] text-white/20" />
               )}
             </button>
           );
@@ -188,9 +193,7 @@ export default function AdminSidebar() {
                   : "text-white/60 hover:bg-white/10 hover:text-white font-semibold"
               }`}
           >
-            <span className="material-symbols-outlined text-[20px]">
-              person_add
-            </span>
+            <Icon name="person_add" className="text-[20px]" />
             <span className="text-[13px]">Add New Member</span>
           </button>
         )}
@@ -198,7 +201,7 @@ export default function AdminSidebar() {
           onClick={handleLogout}
           className="w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-white/60 hover:bg-white/10 hover:text-white transition-all text-left font-semibold"
         >
-          <span className="material-symbols-outlined text-[20px]">logout</span>
+          <Icon name="logout" className="text-[20px]" />
           <span className="text-[13px]">Logout</span>
         </button>
       </div>

@@ -5,6 +5,7 @@ import { useParams } from 'next/navigation'
 import { motion } from 'framer-motion'
 import Link from 'next/link'
 import { getSupabaseClient } from '@/lib/supabase'
+import Icon from '@/components/Icon'
 
 type Post = {
   id: string
@@ -67,7 +68,7 @@ export default function DevotionalPostPage() {
 
   if (!post) return (
     <div className="min-h-screen bg-[#f7f9fb] flex flex-col items-center justify-center text-center p-6">
-      <span className="material-symbols-outlined text-[56px] text-[#c6c6cf] block mb-3">article</span>
+      <Icon name="article" className="text-[56px] text-[#c6c6cf] block mb-3" />
       <h1 className="text-[#081534] text-[24px] font-bold mb-2">Post not found</h1>
       <p className="text-[#45464e] mb-6">This post may have been removed or is no longer published.</p>
       <Link href="/devotionals"
@@ -94,7 +95,7 @@ export default function DevotionalPostPage() {
         {/* Back */}
         <Link href="/devotionals"
           className="inline-flex items-center gap-1.5 text-[#45464e] text-[13px] font-semibold hover:text-[#081534] transition-colors mb-8">
-          <span className="material-symbols-outlined text-[16px]">arrow_back</span>
+          <Icon name="arrow_back" className="text-[16px]" />
           Back to Devotionals
         </Link>
 
@@ -138,12 +139,12 @@ export default function DevotionalPostPage() {
             <a href={`https://wa.me/?text=${encodeURIComponent(`${post.title} - ${typeof window !== 'undefined' ? window.location.href : ''}`)}`}
               target="_blank" rel="noreferrer"
               className="flex items-center gap-2 px-4 py-2.5 bg-green-500 text-white rounded-full text-[12px] font-bold hover:opacity-90 transition-all">
-              <span className="material-symbols-outlined text-[16px]">share</span> WhatsApp
+              <Icon name="share" className="text-[16px]" /> WhatsApp
             </a>
             <a href={`https://t.me/share/url?url=${encodeURIComponent(typeof window !== 'undefined' ? window.location.href : '')}&text=${encodeURIComponent(post.title)}`}
               target="_blank" rel="noreferrer"
               className="flex items-center gap-2 px-4 py-2.5 bg-[#229ED9] text-white rounded-full text-[12px] font-bold hover:opacity-90 transition-all">
-              <span className="material-symbols-outlined text-[16px]">send</span> Telegram
+              <Icon name="send" className="text-[16px]" /> Telegram
             </a>
           </div>
         </div>

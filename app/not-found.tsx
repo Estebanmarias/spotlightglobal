@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
 import type { Variants } from 'framer-motion'
+import Icon from '@/components/Icon'
 
 const messages = [
   "Looks like this page wandered off — but you haven't.",
@@ -276,12 +277,7 @@ export default function NotFound() {
                     draggable={false}
                   />
                 ) : (
-                  <span
-                    className="material-symbols-outlined text-[#fdc425]"
-                    style={{ fontSize: '0.4em', fontVariationSettings: "'FILL' 1" }}
-                  >
-                    lightbulb
-                  </span>
+                  <Icon name="lightbulb" className="text-[#fdc425]" />
                 )}
               </motion.button>
 
@@ -332,7 +328,7 @@ export default function NotFound() {
           transition={{ delay: 0.5, duration: 0.45 }}
           className="mt-5 inline-flex max-w-full items-center gap-2 rounded-full border border-white/15 bg-white/[0.06] px-4 py-2 text-[12px] text-white/60"
         >
-          <span className="material-symbols-outlined shrink-0 text-[16px] text-[#fdc425]">travel_explore</span>
+          <Icon name="travel_explore" className="shrink-0 text-[16px] text-[#fdc425]" />
           <span className="shrink-0">We couldn&apos;t find</span>
           <code className="truncate font-mono text-[#fdc425]">{pathname}</code>
         </motion.div>
@@ -347,7 +343,7 @@ export default function NotFound() {
             href="/"
             className="inline-flex items-center justify-center gap-2 rounded-full bg-[#fdc425] px-8 py-3.5 text-[14px] font-bold text-[#6d5200] shadow-[0_0_24px_rgba(253,196,37,0.35)] transition-all hover:scale-105 hover:brightness-110 active:scale-95"
           >
-            <span className="material-symbols-outlined text-[18px]">home</span>
+            <Icon name="home" className="text-[18px]" />
             Take Me Home
           </Link>
           <button
@@ -355,7 +351,7 @@ export default function NotFound() {
             onClick={goBack}
             className="inline-flex items-center justify-center gap-2 rounded-full border border-white/30 px-8 py-3.5 text-[14px] font-bold text-white transition-all hover:bg-white/10 active:scale-95"
           >
-            <span className="material-symbols-outlined text-[18px]">arrow_back</span>
+            <Icon name="arrow_back" className="text-[18px]" />
             Go Back
           </button>
         </motion.div>
@@ -377,7 +373,7 @@ export default function NotFound() {
                 className="group flex h-full flex-col gap-2 rounded-2xl border border-white/10 bg-white/[0.05] p-4 transition-all hover:-translate-y-1 hover:border-[#fdc425]/60 hover:bg-white/[0.09] sm:p-5"
               >
                 <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#fdc425]/15 text-[#fdc425] transition-colors group-hover:bg-[#fdc425] group-hover:text-[#6d5200]">
-                  <span className="material-symbols-outlined text-[20px]">{link.icon}</span>
+                  <Icon name={link.icon} className="text-[20px]" />
                 </span>
                 <span className="text-[14px] font-bold text-white">{link.label}</span>
                 <span className="text-[12px] leading-snug text-white/50">{link.desc}</span>

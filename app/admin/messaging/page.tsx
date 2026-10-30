@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import { getSupabaseClient } from '@/lib/supabase'
 import { useAdminAccess } from '@/lib/use-admin-permissions'
+import Icon from '@/components/Icon'
 
 type BroadcastRecord = {
   id: string
@@ -146,7 +147,7 @@ export default function MessagingPage() {
     return (
       <div className="min-h-screen bg-[#f7f9fb] flex items-center justify-center p-6">
         <div className="text-center max-w-sm">
-          <span className="material-symbols-outlined text-[56px] text-[#c6c6cf] block mb-3">lock</span>
+          <Icon name="lock" className="text-[56px] text-[#c6c6cf] block mb-3" />
           <h2 className="text-[18px] font-bold text-[#081534] mb-2">Restricted Access</h2>
           <p className="text-[13px] text-[#45464e] mb-6">You don't have permission to send broadcast messages.</p>
           <button onClick={() => router.push('/admin/dashboard')}
@@ -166,7 +167,7 @@ export default function MessagingPage() {
         <div className="flex items-center gap-3">
           <button onClick={() => router.push('/admin/dashboard')}
             className="hidden lg:flex items-center gap-1.5 px-3 py-2 border border-[#c6c6cf] text-[#45464e] rounded-lg text-[13px] font-semibold hover:bg-[#f2f4f6] hover:text-[#081534] transition-colors shrink-0">
-            <span className="material-symbols-outlined text-[18px]">arrow_back</span>
+            <Icon name="arrow_back" className="text-[18px]" />
           </button>
           <div>
             <h2 className="text-[20px] sm:text-[24px] font-bold text-[#081534]">Broadcast Message</h2>
@@ -285,9 +286,7 @@ export default function MessagingPage() {
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 20 }}
             className={`fixed bottom-6 left-1/2 -translate-x-1/2 z-50 px-5 py-3 rounded-full text-[13px] font-semibold shadow-lg flex items-center gap-2
               ${toast.type === 'error' ? 'bg-[#ba1a1a] text-white' : 'bg-[#081534] text-white'}`}>
-            <span className="material-symbols-outlined text-[16px]">
-              {toast.type === 'error' ? 'error' : 'check_circle'}
-            </span>
+            <Icon name={toast.type === 'error' ? 'error' : 'check_circle'} className="text-[16px]" />
             {toast.msg}
           </motion.div>
         )}

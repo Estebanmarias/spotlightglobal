@@ -5,6 +5,7 @@ import Image from "next/image";
 import { useSearchParams } from "next/navigation";
 import { getSupabaseClient } from "@/lib/supabase";
 import { isShiftConferenceTitle, type ChurchEventPreview } from "@/lib/church-events";
+import Icon from '@/components/Icon'
 
 type ConferenceForm = {
   fullName: string;
@@ -106,7 +107,7 @@ export default function ConferencePreview() {
   if (!event) {
     return (
       <main className="flex min-h-[60vh] flex-col items-center justify-center bg-[#f7f9fb] px-6 text-center">
-        <span className="material-symbols-outlined text-[48px] text-[#a3a4ab]">event_busy</span>
+        <Icon name="event_busy" className="text-[48px] text-[#a3a4ab]" />
         <h1 className="mt-4 text-[25px] font-bold text-[#081534]">{eventLoadError ? "Event details unavailable" : "Event not published"}</h1>
         <p className="mt-2 text-[14px] text-[#5b5d66]">{eventLoadError ? "We could not load this event right now. Please try again later." : "This event has not been published to the event directory."}</p>
         <a href="/events" className="mt-6 inline-flex min-h-11 items-center bg-[#081534] px-5 text-[13px] font-bold text-white">Browse events</a>
@@ -207,11 +208,11 @@ export default function ConferencePreview() {
             </p>
             <div className="mt-8 flex flex-wrap items-center gap-3 text-[13px] font-semibold text-white/90">
               <span className="inline-flex items-center gap-2 rounded-full border border-white/25 bg-[#081534]/35 px-4 py-2">
-                <span className="material-symbols-outlined text-[17px] text-[#fdc425]">event</span>
+                <Icon name="event" className="text-[17px] text-[#fdc425]" />
                 {new Date(`${event.event_date}T00:00:00`).toLocaleDateString("en-NG", { day: "numeric", month: "short" })}–{new Date(`${event.event_end_date || event.event_date}T00:00:00`).toLocaleDateString("en-NG", { day: "numeric", month: "short", year: "numeric" })}
               </span>
               <span className="inline-flex items-center gap-2 rounded-full border border-white/25 bg-[#081534]/35 px-4 py-2">
-                <span className="material-symbols-outlined text-[17px] text-[#fdc425]">schedule</span>
+                <Icon name="schedule" className="text-[17px] text-[#fdc425]" />
                 {event.event_time || "Time to be announced"}
               </span>
             </div>
@@ -220,7 +221,7 @@ export default function ConferencePreview() {
               className="mt-9 inline-flex min-h-12 items-center gap-2 rounded-md bg-[#fdc425] px-6 text-[14px] font-bold text-[#081534] transition hover:bg-[#ffe07a] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
             >
               {registrationOpen ? "Register now" : "Registration details"}
-              <span className="material-symbols-outlined text-[18px]">arrow_downward</span>
+              <Icon name="arrow_downward" className="text-[18px]" />
             </a>
           </div>
           {event.flyer_url ? (
@@ -237,7 +238,7 @@ export default function ConferencePreview() {
             />
           ) : (
             <div className="order-1 mx-auto flex aspect-4/5 w-full max-w-[24rem] flex-col items-center justify-center gap-3 bg-white/5 text-center text-white/70 md:order-2 md:max-w-[15rem] lg:max-w-104">
-              <span className="material-symbols-outlined text-[48px] text-[#fdc425]">event</span>
+              <Icon name="event" className="text-[48px] text-[#fdc425]" />
               <span className="px-8 text-[13px] font-semibold">{event.title}</span>
             </div>
           )}
@@ -247,21 +248,21 @@ export default function ConferencePreview() {
       <section className="border-b border-[#d9dbe0] bg-white">
         <div className="mx-auto grid max-w-7xl grid-cols-1 divide-y divide-[#e2e2e9] px-5 sm:grid-cols-3 sm:divide-x sm:divide-y-0 sm:px-8 lg:px-12">
           <div className="flex items-center gap-3 py-5 sm:px-6 sm:first:pl-0">
-            <span className="material-symbols-outlined text-[22px] text-[#785a00]">calendar_month</span>
+            <Icon name="calendar_month" className="text-[22px] text-[#785a00]" />
             <div>
               <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-[#76777f]">Dates</p>
               <p className="mt-0.5 text-[14px] font-semibold text-[#081534]">{new Date(`${event.event_date}T00:00:00`).toLocaleDateString("en-NG", { day: "numeric", month: "short" })}–{new Date(`${event.event_end_date || event.event_date}T00:00:00`).toLocaleDateString("en-NG", { day: "numeric", month: "short", year: "numeric" })}</p>
             </div>
           </div>
           <div className="flex items-center gap-3 py-5 sm:px-6">
-            <span className="material-symbols-outlined text-[22px] text-[#785a00]">place</span>
+            <Icon name="place" className="text-[22px] text-[#785a00]" />
             <div>
               <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-[#76777f]">Sessions</p>
               <p className="mt-0.5 text-[14px] font-semibold text-[#081534]">{event.event_time || "To be announced"}</p>
             </div>
           </div>
           <div className="flex items-center gap-3 py-5 sm:px-6 sm:last:pr-0">
-            <span className="material-symbols-outlined text-[22px] text-[#785a00]">place</span>
+            <Icon name="place" className="text-[22px] text-[#785a00]" />
             <div>
               <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-[#76777f]">Venue</p>
               <p className="mt-0.5 text-[14px] font-semibold text-[#081534]">{event.location}</p>
@@ -446,7 +447,7 @@ export default function ConferencePreview() {
               </p>
               <button type="submit" disabled={!registrationOpen || submitState === "submitting" || submitState === "success"} className="inline-flex min-h-12 shrink-0 items-center justify-center gap-2 rounded-md bg-[#081534] px-6 text-[13px] font-bold text-white transition hover:bg-[#17305f] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#fdc425] disabled:cursor-not-allowed disabled:opacity-50">
                 {submitState === "submitting" ? "Submitting…" : submitState === "success" ? "Registration received" : registrationOpen ? "Complete registration" : "Registration not open"}
-                <span className="material-symbols-outlined text-[17px]">arrow_forward</span>
+                <Icon name="arrow_forward" className="text-[17px]" />
               </button>
             </div>
           </form>

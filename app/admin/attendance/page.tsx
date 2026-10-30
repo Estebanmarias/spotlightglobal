@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { getSupabaseClient } from '@/lib/supabase'
 import { useAdminAccess } from '@/lib/use-admin-permissions'
 import AdminLoader from '@/components/AdminLoader'
+import Icon from '@/components/Icon'
 
 type AttendanceRecord = {
   id: string
@@ -134,7 +135,7 @@ export default function AttendancePage() {
         <div className="flex items-center gap-3">
           <button onClick={() => router.push('/admin/dashboard')}
             className="flex items-center justify-center w-9 h-9 border border-[#c6c6cf] text-[#45464e] rounded-lg hover:bg-[#f2f4f6] hover:text-[#081534] transition-colors shrink-0">
-            <span className="material-symbols-outlined text-[18px]">arrow_back</span>
+            <Icon name="arrow_back" className="text-[18px]" />
           </button>
           <div className="pl-3 lg:pl-0">
             <h2 className="text-[20px] sm:text-[24px] font-bold text-[#081534]">Attendance</h2>
@@ -195,7 +196,7 @@ export default function AttendancePage() {
             ].map(f => (
               <div key={f.key} className="flex flex-col gap-1.5 sm:gap-2">
                 <label className="text-[10px] sm:text-[12px] font-bold text-[#45464e] uppercase tracking-wide flex items-center gap-1 sm:gap-1.5">
-                  <span className="material-symbols-outlined text-[12px] sm:text-[14px]">{f.icon}</span>
+                  <Icon name={f.icon} className="text-[12px] sm:text-[14px]" />
                   <span className="truncate">{f.label}</span>
                 </label>
                 <input type="number" min="0"
@@ -238,7 +239,7 @@ export default function AttendancePage() {
             <AdminLoader label="Loading attendance history..." />
           ) : records.length === 0 ? (
             <div className="text-center py-12">
-              <span className="material-symbols-outlined text-[48px] text-[#c6c6cf] block mb-2">fact_check</span>
+              <Icon name="fact_check" className="text-[48px] text-[#c6c6cf] block mb-2" />
               <p className="text-[#45464e] font-semibold text-[14px]">No attendance records yet</p>
               <p className="text-[12px] text-[#76777f] mt-1">Record your first Sunday headcount above</p>
             </div>
@@ -257,10 +258,10 @@ export default function AttendancePage() {
                       </div>
                       <div className="flex sm:hidden gap-1 shrink-0">
                         <button onClick={() => openEdit(r)} className="p-1.5 text-[#45464e] hover:text-[#081534] hover:bg-[#f2f4f6] rounded">
-                          <span className="material-symbols-outlined text-[16px]">edit</span>
+                          <Icon name="edit" className="text-[16px]" />
                         </button>
                         <button onClick={() => setDeleteTarget(r)} className="p-1.5 text-[#45464e] hover:text-[#ba1a1a] hover:bg-[#ffdad6] rounded">
-                          <span className="material-symbols-outlined text-[16px]">delete</span>
+                          <Icon name="delete" className="text-[16px]" />
                         </button>
                       </div>
                     </div>
@@ -281,10 +282,10 @@ export default function AttendancePage() {
                     </div>
                     <div className="hidden sm:flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
                       <button onClick={() => openEdit(r)} className="p-1.5 text-[#45464e] hover:text-[#081534] hover:bg-[#f2f4f6] rounded">
-                        <span className="material-symbols-outlined text-[16px]">edit</span>
+                        <Icon name="edit" className="text-[16px]" />
                       </button>
                       <button onClick={() => setDeleteTarget(r)} className="p-1.5 text-[#45464e] hover:text-[#ba1a1a] hover:bg-[#ffdad6] rounded">
-                        <span className="material-symbols-outlined text-[16px]">delete</span>
+                        <Icon name="delete" className="text-[16px]" />
                       </button>
                     </div>
                   </div>
@@ -305,7 +306,7 @@ export default function AttendancePage() {
               className="fixed inset-0 z-50 flex items-center justify-center p-4">
               <div className="bg-white rounded-2xl w-full max-w-[400px] p-6 shadow-2xl">
                 <div className="w-12 h-12 bg-[#ffdad6] rounded-full flex items-center justify-center mx-auto mb-4">
-                  <span className="material-symbols-outlined text-[#ba1a1a] text-[24px]">delete</span>
+                  <Icon name="delete" className="text-[#ba1a1a] text-[24px]" />
                 </div>
                 <h3 className="text-[18px] font-bold text-[#081534] text-center mb-2">Remove Record</h3>
                 <p className="text-[13px] text-[#45464e] text-center mb-6">
@@ -332,7 +333,7 @@ export default function AttendancePage() {
         {toast && (
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 20 }}
             className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-[#081534] text-white px-5 py-3 rounded-full text-[13px] font-semibold shadow-lg flex items-center gap-2">
-            <span className="material-symbols-outlined text-[#fdc425] text-[16px]">check_circle</span>
+            <Icon name="check_circle" className="text-[#fdc425] text-[16px]" />
             {toast}
           </motion.div>
         )}

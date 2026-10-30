@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { AnimatePresence, motion } from 'framer-motion'
 import { OPEN_PREFS_EVENT, clearAnalyticsCookies, readConsent, writeConsent } from '@/lib/consent'
+import Icon from '@/components/Icon'
 
 function Switch({
   checked, onChange, disabled = false,
@@ -82,12 +83,7 @@ export default function CookieConsent() {
           <div className="rounded-2xl border border-white/10 bg-[#081534] p-5 text-white shadow-2xl">
             <div className="flex items-start gap-3">
               <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#fdc425] text-[#6d5200]">
-                <span
-                  className="material-symbols-outlined text-[22px]"
-                  style={{ fontVariationSettings: "'FILL' 1" }}
-                >
-                  cookie
-                </span>
+                <Icon name="cookie" className="text-[22px]" />
               </span>
               <div>
                 <h2 className="text-[15px] font-bold">We value your privacy</h2>

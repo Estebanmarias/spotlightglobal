@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import Icon from '@/components/Icon'
 
 
 
@@ -105,9 +106,7 @@ export default function HeroSection() {
               className="bg-[#fdc425] text-[#6d5200] px-6 sm:px-8 py-3.5 sm:py-4 rounded-lg text-[13px] sm:text-[14px] font-bold flex items-center gap-2 hover:brightness-110 transition-all active:scale-95"
             >
               Start Your Journey
-              <span className="material-symbols-outlined text-[18px]">
-                arrow_forward
-              </span>
+              <Icon name="arrow_forward" className="text-[18px]" />
             </button>
 
             {/* Dynamic button — Live / Latest Sermon / fallback */}
@@ -124,9 +123,7 @@ export default function HeroSection() {
                 href="/community?autoplay=1"
                 className="bg-white/10 backdrop-blur-md border border-white/20 text-white px-6 sm:px-8 py-3.5 sm:py-4 rounded-lg text-[13px] sm:text-[14px] font-bold hover:bg-white/20 transition-all active:scale-95 flex items-center gap-2"
               >
-                <span className="material-symbols-outlined text-[18px]">
-                  play_circle
-                </span>
+                <Icon name="play_circle" className="text-[18px]" />
                 Latest Sermon
               </Link>
             ) : (
@@ -136,9 +133,7 @@ export default function HeroSection() {
                 rel="noreferrer"
                 className="bg-white/10 backdrop-blur-md border border-white/20 text-white px-6 sm:px-8 py-3.5 sm:py-4 rounded-lg text-[13px] sm:text-[14px] font-bold hover:bg-white/20 transition-all active:scale-95 flex items-center gap-2"
               >
-                <span className="material-symbols-outlined text-[18px]">
-                  play_circle
-                </span>
+                <Icon name="play_circle" className="text-[18px]" />
                 Watch on YouTube
               </a>
             )}

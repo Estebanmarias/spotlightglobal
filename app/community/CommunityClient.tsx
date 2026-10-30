@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import { getSupabaseClient } from '@/lib/supabase'
 import { isShiftConferenceTitle } from '@/lib/church-events'
+import Icon from '@/components/Icon'
 
 // ── CONFIG ──────────────────────────────────────────────────────
 
@@ -71,7 +72,7 @@ function LatestSermon({ autoplay }: { autoplay: boolean }) {
               </motion.div>
             ) : (
               <div className="w-full aspect-video rounded-2xl overflow-hidden shadow-2xl ring-1 ring-white/10 bg-white/5 flex flex-col items-center justify-center gap-4">
-                <span className="material-symbols-outlined text-white/20 text-[64px]">play_circle</span>
+                <Icon name="play_circle" className="text-white/20 text-[64px]" />
                 <p className="text-white/40 text-[14px]">Sermon coming soon</p>
               </div>
             )}
@@ -88,7 +89,7 @@ function LatestSermon({ autoplay }: { autoplay: boolean }) {
             </p>
             <a href="https://www.youtube.com/@thespotlightchurch" target="_blank" rel="noreferrer"
               className="inline-flex items-center gap-2 text-[#fdc425] font-bold hover:gap-4 transition-all text-[14px]">
-              View All Sermons <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
+              View All Sermons <Icon name="arrow_forward" className="text-[18px]" />
             </a>
           </div>
         </div>
@@ -138,7 +139,7 @@ function EventsCarousel({ events }: { events: ChurchEvent[] }) {
 
   if (events.length === 0) return (
     <div className="text-center py-20 bg-white rounded-3xl border border-[#c6c6cf]">
-      <span className="material-symbols-outlined text-[56px] text-[#c6c6cf] block mb-3">event</span>
+      <Icon name="event" className="text-[56px] text-[#c6c6cf] block mb-3" />
       <p className="text-[#45464e] font-semibold text-[16px]">No upcoming Services scheduled yet</p>
       <p className="text-[13px] text-[#76777f] mt-1">Check back soon, or join us this Sunday</p>
     </div>
@@ -193,7 +194,7 @@ function EventsCarousel({ events }: { events: ChurchEvent[] }) {
                 <p className="text-[#45464e] text-[13px] mb-4 line-clamp-2 leading-relaxed">{e.description}</p>
               )}
               <div className="flex items-center gap-1.5 text-[12px] text-[#76777f] mb-4">
-                <span className="material-symbols-outlined text-[14px] text-[#fdc425]">location_on</span>
+                <Icon name="location_on" className="text-[14px] text-[#fdc425]" />
                 {e.location}
               </div>
               {isShiftConference || e.registration_enabled ? (
@@ -202,7 +203,7 @@ function EventsCarousel({ events }: { events: ChurchEvent[] }) {
                   className="flex w-full items-center justify-center gap-2 rounded-full border-2 border-[#081534] py-3 text-[13px] font-bold text-[#081534] transition-all hover:bg-[#081534] hover:text-white"
                 >
                   {isShiftConference ? "View Conference" : "Event Details"}
-                  <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
+                  <Icon name="arrow_forward" className="text-[16px]" />
                 </Link>
               ) : (
                 <a
@@ -212,7 +213,7 @@ function EventsCarousel({ events }: { events: ChurchEvent[] }) {
                   className="flex w-full items-center justify-center gap-2 rounded-full border-2 border-[#081534] py-3 text-[13px] font-bold text-[#081534] transition-all hover:bg-[#081534] hover:text-white"
                 >
                   Get Directions
-                  <span className="material-symbols-outlined text-[16px]">open_in_new</span>
+                  <Icon name="open_in_new" className="text-[16px]" />
                 </a>
               )}
             </div>
@@ -258,7 +259,7 @@ function TestimonyModal({ onClose, onSuccess }: { onClose: () => void; onSuccess
               <p className="text-white/60 text-[12px] mt-0.5">Let the family hear what God has done</p>
             </div>
             <button onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-lg text-white/60 hover:text-white hover:bg-white/10 transition-all">
-              <span className="material-symbols-outlined text-[20px]">close</span>
+              <Icon name="close" className="text-[20px]" />
             </button>
           </div>
           <form onSubmit={handleSubmit} className="p-6 space-y-4">
@@ -276,7 +277,7 @@ function TestimonyModal({ onClose, onSuccess }: { onClose: () => void; onSuccess
             </div>
             {error && (
               <div className="flex items-center gap-2 p-3 bg-[#ffdad6] rounded-lg">
-                <span className="material-symbols-outlined text-[#ba1a1a] text-[16px]">error</span>
+                <Icon name="error" className="text-[#ba1a1a] text-[16px]" />
                 <p className="text-[#ba1a1a] text-[12px] font-semibold">{error}</p>
               </div>
             )}
@@ -407,7 +408,7 @@ function CommunityPageContent() {
               </a>
               <a href="#sermon"
                 className="border-2 border-white text-white px-10 py-4 rounded-full text-[14px] font-bold hover:bg-white hover:text-[#081534] active:scale-95 transition-all flex items-center gap-2 justify-center">
-                <span className="material-symbols-outlined text-[18px]">play_circle</span>
+                <Icon name="play_circle" className="text-[18px]" />
                 Latest Sermon
               </a>
             </motion.div>
@@ -429,7 +430,7 @@ function CommunityPageContent() {
           </div>
           <button onClick={() => setShowTestimonyModal(true)}
             className="bg-[#fdc425] text-[#6d5200] px-6 py-2.5 rounded-full text-[13px] font-bold hover:brightness-110 hover:scale-105 transition-all shadow-md flex items-center gap-2 active:scale-95">
-            <span className="material-symbols-outlined text-[16px]">chat_bubble</span>
+            <Icon name="chat_bubble" className="text-[16px]" />
             Share Yours
           </button>
         </div>
@@ -481,7 +482,7 @@ function CommunityPageContent() {
               <p className="text-[#45464e] text-[15px]">See what’s coming up at theSpotlightChurch.</p>
               <Link href="/events" className="inline-flex min-h-10 items-center gap-2 text-[12px] font-bold text-[#081534] hover:text-[#785a00]">
                 All events &amp; archive
-                <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
+                <Icon name="arrow_forward" className="text-[16px]" />
               </Link>
             </div>
           </motion.div>
@@ -523,7 +524,7 @@ function CommunityPageContent() {
             </div>
           ) : photos.length === 0 ? (
             <div className="text-center py-16 bg-[#f7f9fb] rounded-2xl border border-[#c6c6cf]">
-              <span className="material-symbols-outlined text-[48px] text-[#c6c6cf] block mb-3">photo_library</span>
+              <Icon name="photo_library" className="text-[48px] text-[#c6c6cf] block mb-3" />
               <p className="text-[#45464e] font-semibold">Gallery coming soon</p>
               <p className="text-[13px] text-[#76777f] mt-1">Follow us on Instagram for the latest moments</p>
             </div>
@@ -571,7 +572,7 @@ function CommunityPageContent() {
                 className="flex items-center justify-between p-6 bg-white rounded-2xl shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all group">
                 <div className="flex items-center gap-4">
                   <div className="w-12 h-12 rounded-full bg-[#f2f4f6] flex items-center justify-center text-[#785a00] group-hover:bg-[#785a00] group-hover:text-white transition-colors shrink-0">
-                    <span className="material-symbols-outlined text-[22px]">{item.icon}</span>
+                    <Icon name={item.icon} className="text-[22px]" />
                   </div>
                   <div>
                     <div className="flex items-center gap-2">
@@ -581,7 +582,7 @@ function CommunityPageContent() {
                     {item.meta && <p className="text-[12px] text-[#45464e] mt-0.5">{item.meta}</p>}
                   </div>
                 </div>
-                <span className="material-symbols-outlined text-[#76777f] group-hover:translate-x-1 transition-transform">chevron_right</span>
+                <Icon name="chevron_right" className="text-[#76777f] group-hover:translate-x-1 transition-transform" />
               </motion.a>
             ))}
           </div>
@@ -596,18 +597,18 @@ function CommunityPageContent() {
             onClick={closeLightbox}>
             <button onClick={closeLightbox}
               className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white z-10">
-              <span className="material-symbols-outlined text-[22px]">close</span>
+              <Icon name="close" className="text-[22px]" />
             </button>
             <div className="absolute top-4 left-1/2 -translate-x-1/2 bg-white/10 backdrop-blur-sm px-4 py-1.5 rounded-full z-10">
               <span className="text-white text-[12px] font-semibold">{lightboxIndex + 1} / {photos.length}</span>
             </div>
             <button onClick={e => { e.stopPropagation(); lightboxPrev() }}
               className="absolute left-4 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white z-10">
-              <span className="material-symbols-outlined text-[22px]">chevron_left</span>
+              <Icon name="chevron_left" className="text-[22px]" />
             </button>
             <button onClick={e => { e.stopPropagation(); lightboxNext() }}
               className="absolute right-4 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white z-10">
-              <span className="material-symbols-outlined text-[22px]">chevron_right</span>
+              <Icon name="chevron_right" className="text-[22px]" />
             </button>
             <motion.div key={lightboxIndex}
               initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.96 }}
@@ -645,7 +646,7 @@ function CommunityPageContent() {
         {showSuccessToast && (
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 20 }}
             className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-[#081534] text-white px-6 py-3 rounded-full text-[13px] font-semibold shadow-lg flex items-center gap-2">
-            <span className="material-symbols-outlined text-[#fdc425] text-[16px]">favorite</span>
+            <Icon name="favorite" className="text-[#fdc425] text-[16px]" />
             Testimony submitted — God bless you! 🙏
           </motion.div>
         )}

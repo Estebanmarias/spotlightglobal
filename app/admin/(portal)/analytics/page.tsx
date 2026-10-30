@@ -21,6 +21,7 @@ import {
   Cell,
   Legend,
 } from "recharts";
+import Icon from '@/components/Icon'
 
 type StatusCounts = {
   First_Timer: number;
@@ -329,18 +330,14 @@ export default function AnalyticsPage() {
               onClick={loadData}
               className="px-4 py-2 rounded-lg border border-[#c6c6cf] text-[13px] font-semibold text-[#191c1e] hover:bg-[#eceef0] flex items-center gap-1.5"
             >
-              <span className="material-symbols-outlined text-[16px]">
-                refresh
-              </span>
+              <Icon name="refresh" className="text-[16px]" />
               <span className="hidden sm:inline">Refresh</span>
             </button>
             <button
               onClick={handleExport}
               className="px-4 py-2 rounded-lg bg-[#081534] text-white text-[13px] font-semibold hover:opacity-90 flex items-center gap-1.5"
             >
-              <span className="material-symbols-outlined text-[16px]">
-                download
-              </span>
+              <Icon name="download" className="text-[16px]" />
               <span className="hidden sm:inline">Export CSV</span>
             </button>
           </div>
@@ -389,9 +386,7 @@ export default function AnalyticsPage() {
             >
               <div className="flex justify-between items-start mb-3">
                 <div className={`p-2 rounded-lg ${m.color} text-white`}>
-                  <span className="material-symbols-outlined text-[18px]">
-                    {m.icon}
-                  </span>
+                  <Icon name={m.icon} className="text-[18px]" />
                 </div>
               </div>
               <p className="text-[10px] sm:text-[11px] uppercase tracking-widest text-[#45464e] font-semibold">
@@ -531,9 +526,7 @@ export default function AnalyticsPage() {
             </div>
           ) : attendanceWeeks.length === 0 ? (
             <div className="text-center py-12">
-              <span className="material-symbols-outlined text-[48px] text-[#c6c6cf] block mb-2">
-                fact_check
-              </span>
+              <Icon name="fact_check" className="text-[48px] text-[#c6c6cf] block mb-2" />
               <p className="text-[#45464e] font-semibold text-[14px]">
                 No attendance recorded yet
               </p>
@@ -645,9 +638,7 @@ export default function AnalyticsPage() {
                 </div>
               ) : givingTotal === 0 ? (
                 <div className="text-center py-12">
-                  <span className="material-symbols-outlined text-[48px] text-[#c6c6cf] block mb-2">
-                    volunteer_activism
-                  </span>
+                  <Icon name="volunteer_activism" className="text-[48px] text-[#c6c6cf] block mb-2" />
                   <p className="text-[#45464e] font-semibold text-[14px]">
                     No giving recorded yet
                   </p>

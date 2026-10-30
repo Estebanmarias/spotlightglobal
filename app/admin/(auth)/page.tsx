@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { getSupabaseClient } from "@/lib/supabase";
 import { motion } from "framer-motion";
 import { Suspense } from "react";
+import Icon from '@/components/Icon'
 
 const isPermissionsEmpty = (perms: string[] | null | undefined) =>
   !perms || perms.length === 0 || (perms.length === 1 && perms[0] === 'dashboard')
@@ -99,9 +100,7 @@ function AdminLoginContent() {
                 Administrator Email
               </label>
               <div className="relative group">
-                <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[#76777f] group-focus-within:text-[#081534] transition-colors text-[20px]">
-                  mail
-                </span>
+                <Icon name="mail" className="absolute left-3 top-1/2 -translate-y-1/2 text-[#76777f] group-focus-within:text-[#081534] transition-colors text-[20px]" />
                 <input
                   type="email" required value={email}
                   onChange={(e) => setEmail(e.target.value)}
@@ -122,9 +121,7 @@ function AdminLoginContent() {
                 </button>
               </div>
               <div className="relative group">
-                <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[#76777f] group-focus-within:text-[#081534] transition-colors text-[20px]">
-                  lock
-                </span>
+                <Icon name="lock" className="absolute left-3 top-1/2 -translate-y-1/2 text-[#76777f] group-focus-within:text-[#081534] transition-colors text-[20px]" />
                 <input
                   type={showPw ? "text" : "password"} required value={password}
                   onChange={(e) => setPassword(e.target.value)}
@@ -133,16 +130,14 @@ function AdminLoginContent() {
                 />
                 <button type="button" onClick={() => setShowPw((p) => !p)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-[#76777f] hover:text-[#081534] transition-colors">
-                  <span className="material-symbols-outlined text-[20px]">
-                    {showPw ? "visibility_off" : "visibility"}
-                  </span>
+                  <Icon name={showPw ? "visibility_off" : "visibility"} className="text-[20px]" />
                 </button>
               </div>
             </div>
 
             {error && (
               <div className="flex items-start gap-2 p-3 bg-[#ffdad6] rounded-lg">
-                <span className="material-symbols-outlined text-[#ba1a1a] text-[16px] shrink-0 mt-0.5">error</span>
+                <Icon name="error" className="text-[#ba1a1a] text-[16px] shrink-0 mt-0.5" />
                 <p className="text-[#ba1a1a] text-[13px] font-semibold">{error}</p>
               </div>
             )}
@@ -155,14 +150,14 @@ function AdminLoginContent() {
               {loading ? (
                 <><span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> Authenticating...</>
               ) : (
-                <>Sign In to Portal <span className="material-symbols-outlined text-[18px]">arrow_forward</span></>
+                <>Sign In to Portal <Icon name="arrow_forward" className="text-[18px]" /></>
               )}
             </motion.button>
           </form>
         </div>
 
         <p className="mt-8 text-[12px] text-[#c6c6cf] flex items-center gap-1">
-          <span className="material-symbols-outlined text-[14px]">verified_user</span>
+          <Icon name="verified_user" className="text-[14px]" />
           Authorized Access Only — End-to-End Encrypted
         </p>
       </motion.div>

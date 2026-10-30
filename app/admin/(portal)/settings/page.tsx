@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { getSupabaseClient } from '@/lib/supabase'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ALL_PAGES, PageKey, useAdminAccess } from '@/lib/use-admin-permissions'
+import Icon from '@/components/Icon'
 
 const ROLES = ['admin'] // Only one Setman (super_admin) can ever exist — not creatable from this form
 const roleLabel = (r: string) => r === 'super_admin' ? 'Setman' : 'Admin'
@@ -227,7 +228,7 @@ export default function SettingsPage() {
           {isSuperAdmin && pendingRequests.length > 0 && (
             <button onClick={() => setActiveTab(1)}
               className="relative flex items-center gap-2 bg-[#fdc425] text-[#6d5200] px-4 py-2.5 rounded-xl text-[13px] font-bold hover:brightness-105 transition-all shrink-0">
-              <span className="material-symbols-outlined text-[18px]">notifications</span>
+              <Icon name="notifications" className="text-[18px]" />
               <span className="hidden sm:inline">Pending Requests</span>
               <span className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-[#ba1a1a] text-white rounded-full text-[10px] font-bold flex items-center justify-center">
                 {pendingRequests.length}
@@ -297,8 +298,8 @@ export default function SettingsPage() {
                   </div>
                 ))}
               </div>
-              {pwError && <p className="mt-4 text-[#ba1a1a] text-[13px] font-medium flex items-center gap-1.5"><span className="material-symbols-outlined text-[16px]">error</span>{pwError}</p>}
-              {pwSuccess && <p className="mt-4 text-green-600 text-[13px] font-medium flex items-center gap-1.5"><span className="material-symbols-outlined text-[16px]">check_circle</span> Password updated successfully.</p>}
+              {pwError && <p className="mt-4 text-[#ba1a1a] text-[13px] font-medium flex items-center gap-1.5"><Icon name="error" className="text-[16px]" />{pwError}</p>}
+              {pwSuccess && <p className="mt-4 text-green-600 text-[13px] font-medium flex items-center gap-1.5"><Icon name="check_circle" className="text-[16px]" /> Password updated successfully.</p>}
               <div className="mt-6">
                 <button onClick={handleChangePassword} disabled={pwLoading}
                   className="bg-[#fdc425] text-[#6d5200] px-6 py-2.5 rounded-lg text-[13px] font-bold hover:opacity-90 transition-opacity disabled:opacity-60">
@@ -329,7 +330,7 @@ export default function SettingsPage() {
               <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
                 className="bg-white border border-[#fdc425] rounded-xl p-6 sm:p-8">
                 <div className="flex items-center gap-2 mb-6">
-                  <span className="material-symbols-outlined text-[#785a00] text-[20px]">notifications_active</span>
+                  <Icon name="notifications_active" className="text-[#785a00] text-[20px]" />
                   <h2 className="text-[16px] font-bold text-[#081534]">Pending Admin Requests</h2>
                   {pendingRequests.length > 0 && (
                     <span className="px-2 py-0.5 bg-[#ba1a1a] text-white rounded-full text-[11px] font-bold">{pendingRequests.length}</span>
@@ -419,7 +420,7 @@ export default function SettingsPage() {
                         <span className={`px-2.5 py-1 text-[11px] font-bold rounded-full ${roleColor(m.role)}`}>{roleLabel(m.role)}</span>
                         {isSuperAdmin && m.user_id !== currentUserId && (
                           <button onClick={() => handleRemove(m)} className="text-[#45464e] hover:text-[#ba1a1a] transition-colors">
-                            <span className="material-symbols-outlined text-[20px]">person_remove</span>
+                            <Icon name="person_remove" className="text-[20px]" />
                           </button>
                         )}
                       </div>
@@ -472,7 +473,7 @@ export default function SettingsPage() {
                           onClick={() => togglePermission(p.key, invitePermissions, setInvitePermissions)}
                           className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-[12px] font-semibold border transition-all
                             ${active ? 'bg-[#081534] text-white border-[#081534]' : 'bg-white text-[#45464e] border-[#c6c6cf] hover:border-[#081534]'}`}>
-                          <span className="material-symbols-outlined text-[16px]">{p.icon}</span>
+                          <Icon name={p.icon} className="text-[16px]" />
                           {p.label}
                         </button>
                       )
@@ -484,7 +485,7 @@ export default function SettingsPage() {
               <div className="mt-6">
                 <button onClick={handleRequestTeamMember} disabled={inviting}
                   className="bg-[#081534] text-white px-6 py-2.5 rounded-lg text-[13px] font-bold hover:opacity-90 transition-opacity disabled:opacity-60 flex items-center gap-2">
-                  <span className="material-symbols-outlined text-[18px]">person_add</span>
+                  <Icon name="person_add" className="text-[18px]" />
                   {inviting ? 'Submitting...' : isSuperAdmin ? 'Submit & Review' : 'Send Request'}
                 </button>
               </div>
@@ -504,7 +505,7 @@ export default function SettingsPage() {
               className="fixed inset-0 z-50 flex items-center justify-center p-4">
               <div className="bg-white rounded-2xl w-full max-w-[440px] p-6 sm:p-8 shadow-2xl">
                 <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <span className="material-symbols-outlined text-green-700 text-[24px]">check_circle</span>
+                  <Icon name="check_circle" className="text-green-700 text-[24px]" />
                 </div>
                 <h3 className="text-[18px] font-bold text-[#081534] text-center mb-2">Admin Approved</h3>
                 <p className="text-[13px] text-[#45464e] text-center mb-6">
@@ -547,7 +548,7 @@ export default function SettingsPage() {
                     <p className="text-[12px] text-[#45464e] mt-0.5">{editingPermsFor.full_name} · {editingPermsFor.email}</p>
                   </div>
                   <button onClick={() => setEditingPermsFor(null)} className="w-8 h-8 flex items-center justify-center rounded-lg text-[#45464e] hover:bg-[#f2f4f6]">
-                    <span className="material-symbols-outlined text-[20px]">close</span>
+                    <Icon name="close" className="text-[20px]" />
                   </button>
                 </div>
                 <div className="px-6 py-6">
@@ -560,7 +561,7 @@ export default function SettingsPage() {
                           onClick={() => togglePermission(p.key, editPermissions, setEditPermissions)}
                           className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-[12px] font-semibold border transition-all
                             ${active ? 'bg-[#081534] text-white border-[#081534]' : 'bg-white text-[#45464e] border-[#c6c6cf] hover:border-[#081534]'}`}>
-                          <span className="material-symbols-outlined text-[16px]">{p.icon}</span>
+                          <Icon name={p.icon} className="text-[16px]" />
                           {p.label}
                         </button>
                       )
@@ -593,7 +594,7 @@ export default function SettingsPage() {
               className="fixed inset-0 z-50 flex items-center justify-center p-4">
               <div className="bg-white rounded-2xl w-full max-w-[400px] p-6 shadow-2xl">
                 <div className="w-12 h-12 bg-[#ffdad6] rounded-full flex items-center justify-center mx-auto mb-4">
-                  <span className="material-symbols-outlined text-[#ba1a1a] text-[24px]">person_remove</span>
+                  <Icon name="person_remove" className="text-[#ba1a1a] text-[24px]" />
                 </div>
                 <h3 className="text-[18px] font-bold text-[#081534] text-center mb-2">Remove Team Access</h3>
                 <p className="text-[13px] text-[#45464e] text-center mb-6">
@@ -620,7 +621,7 @@ export default function SettingsPage() {
         {toast && (
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 20 }}
             className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-[#081534] text-white px-5 py-3 rounded-full text-[13px] font-semibold shadow-lg flex items-center gap-2">
-            <span className="material-symbols-outlined text-[#fdc425] text-[16px]">check_circle</span>
+            <Icon name="check_circle" className="text-[#fdc425] text-[16px]" />
             {toast}
           </motion.div>
         )}

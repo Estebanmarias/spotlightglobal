@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { getSupabaseClient } from '@/lib/supabase'
 import { useAdminAccess } from '@/lib/use-admin-permissions'
 import AdminLoader from '@/components/AdminLoader'
+import Icon from '@/components/Icon'
 
 type GivingRecord = {
   id: string
@@ -117,7 +118,7 @@ export default function GivingPage() {
     return (
       <div className="min-h-screen bg-[#f7f9fb] flex items-center justify-center p-6">
         <div className="text-center max-w-sm">
-          <span className="material-symbols-outlined text-[56px] text-[#c6c6cf] block mb-3">lock</span>
+          <Icon name="lock" className="text-[56px] text-[#c6c6cf] block mb-3" />
           <h2 className="text-[18px] font-bold text-[#081534] mb-2">Restricted Access</h2>
           <p className="text-[13px] text-[#45464e] mb-6">Giving and donation records are only visible to Super Admin accounts.</p>
           <button onClick={() => router.push('/admin/dashboard')}
@@ -138,7 +139,7 @@ export default function GivingPage() {
           <div className="flex items-center gap-3 pl-12 lg:pl-0">
             <button onClick={() => router.push('/admin/dashboard')}
               className="hidden lg:flex items-center gap-1.5 px-3 py-2 border border-[#c6c6cf] text-[#45464e] rounded-lg text-[13px] font-semibold hover:bg-[#f2f4f6] hover:text-[#081534] transition-colors shrink-0">
-              <span className="material-symbols-outlined text-[18px]">arrow_back</span>
+              <Icon name="arrow_back" className="text-[18px]" />
             </button>
             <div>
               <h2 className="text-[20px] sm:text-[24px] font-bold text-[#081534]">Giving</h2>
@@ -148,11 +149,11 @@ export default function GivingPage() {
           <div className="flex items-center gap-2">
             <button onClick={() => router.push('/admin/dashboard')}
               className="lg:hidden flex items-center gap-1.5 px-3 py-2 border border-[#c6c6cf] text-[#45464e] rounded-lg text-[12px] font-semibold hover:bg-[#f2f4f6] hover:text-[#081534] transition-colors">
-              <span className="material-symbols-outlined text-[18px]">arrow_back</span>
+              <Icon name="arrow_back" className="text-[18px]" />
             </button>
             <button onClick={() => setShowModal(true)}
               className="flex items-center gap-2 bg-[#081534] text-white px-5 py-2.5 rounded-xl text-[13px] font-semibold hover:opacity-90 transition-opacity shadow-sm w-fit">
-              <span className="material-symbols-outlined text-[18px]">add</span> Record Giving
+              <Icon name="add" className="text-[18px]" /> Record Giving
             </button>
           </div>
         </div>
@@ -172,7 +173,7 @@ export default function GivingPage() {
               transition={{ delay: i * 0.08 }}
               className="bg-white border border-[#c6c6cf] p-4 sm:p-5 rounded-xl hover:shadow-md transition-all">
               <div className={`p-2 rounded-lg ${s.color} text-white inline-block mb-3`}>
-                <span className="material-symbols-outlined text-[18px]">{s.icon}</span>
+                <Icon name={s.icon} className="text-[18px]" />
               </div>
               <p className="text-[10px] text-[#45464e] uppercase tracking-widest font-bold">{s.label}</p>
               <p className="text-[20px] sm:text-[24px] font-bold text-[#081534] mt-1">{loading ? '—' : s.value}</p>
@@ -198,7 +199,7 @@ export default function GivingPage() {
             </div>
           ) : filtered.length === 0 ? (
             <div className="py-16 text-center">
-              <span className="material-symbols-outlined text-[48px] text-[#c6c6cf] block mb-2">receipt_long</span>
+              <Icon name="receipt_long" className="text-[48px] text-[#c6c6cf] block mb-2" />
               <p className="text-[#45464e] font-semibold text-[14px]">No giving records yet</p>
               <p className="text-[12px] text-[#76777f] mt-1">Record your first donation or tithe above</p>
             </div>
@@ -229,7 +230,7 @@ export default function GivingPage() {
                       </td>
                       <td className="px-5 py-4">
                         <button onClick={() => setDeleteTarget(r)} className="p-1.5 text-[#45464e] hover:text-[#ba1a1a] hover:bg-[#ffdad6] rounded transition-colors">
-                          <span className="material-symbols-outlined text-[16px]">delete</span>
+                          <Icon name="delete" className="text-[16px]" />
                         </button>
                       </td>
                     </tr>
@@ -257,7 +258,7 @@ export default function GivingPage() {
                     <p className="text-[12px] text-[#45464e] mt-0.5">Log a donation, tithe, or partnership contribution</p>
                   </div>
                   <button onClick={() => setShowModal(false)} className="w-8 h-8 flex items-center justify-center rounded-lg text-[#45464e] hover:bg-[#f2f4f6]">
-                    <span className="material-symbols-outlined text-[20px]">close</span>
+                    <Icon name="close" className="text-[20px]" />
                   </button>
                 </div>
                 <div className="px-6 py-6 space-y-5">
@@ -334,7 +335,7 @@ export default function GivingPage() {
               className="fixed inset-0 z-50 flex items-center justify-center p-4">
               <div className="bg-white rounded-2xl w-full max-w-[400px] p-6 shadow-2xl">
                 <div className="w-12 h-12 bg-[#ffdad6] rounded-full flex items-center justify-center mx-auto mb-4">
-                  <span className="material-symbols-outlined text-[#ba1a1a] text-[24px]">delete</span>
+                  <Icon name="delete" className="text-[#ba1a1a] text-[24px]" />
                 </div>
                 <h3 className="text-[18px] font-bold text-[#081534] text-center mb-2">Remove Record</h3>
                 <p className="text-[13px] text-[#45464e] text-center mb-6">This giving record will be permanently deleted.</p>
@@ -359,7 +360,7 @@ export default function GivingPage() {
         {toast && (
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 20 }}
             className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-[#081534] text-white px-5 py-3 rounded-full text-[13px] font-semibold shadow-lg flex items-center gap-2">
-            <span className="material-symbols-outlined text-[#fdc425] text-[16px]">check_circle</span>
+            <Icon name="check_circle" className="text-[#fdc425] text-[16px]" />
             {toast}
           </motion.div>
         )}

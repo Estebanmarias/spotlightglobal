@@ -3,6 +3,7 @@
 import { motion } from 'framer-motion'
 import Link from 'next/link'
 import { useState, useEffect, useRef } from 'react'
+import Icon from '@/components/Icon'
 
 const sections = [
   {
@@ -38,7 +39,7 @@ const sections = [
             'Impersonating any person or entity associated with the church',
           ].map(item => (
             <div key={item} className="flex items-start gap-3 p-3 bg-[#ffdad6]/30 rounded-lg border border-[#ba1a1a]/10">
-              <span className="material-symbols-outlined text-[#ba1a1a] text-[18px] mt-0.5 shrink-0">block</span>
+              <Icon name="block" className="text-[#ba1a1a] text-[18px] mt-0.5 shrink-0" />
               <span className="text-[13px] text-[#45464e] leading-relaxed">{item}</span>
             </div>
           ))}
@@ -132,7 +133,7 @@ export default function TermsPage() {
         <div className="max-w-[1000px] mx-auto relative z-10">
           <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}>
             <span className="inline-flex items-center gap-2 px-4 py-1.5 bg-[#fdc425]/20 text-[#fdc425] border border-[#fdc425]/30 rounded-full text-[11px] font-bold uppercase tracking-widest mb-6">
-              <span className="material-symbols-outlined text-[14px]">gavel</span>
+              <Icon name="gavel" className="text-[14px]" />
               Legal
             </span>
             <h1 className="text-white text-[36px] sm:text-[48px] font-bold leading-tight mb-3">
@@ -168,13 +169,12 @@ export default function TermsPage() {
 
             {/* Contact box */}
             <div className="mt-8 p-5 bg-white rounded-xl border border-[#eceef0] shadow-sm">
-              <span className="material-symbols-outlined text-[#fdc425] text-[24px] block mb-2"
-                style={{ fontVariationSettings: "'FILL' 1" }}>description</span>
+              <Icon name="description" className="text-[#fdc425] text-[24px] block mb-2" />
               <h4 className="text-[13px] font-bold text-[#081534] mb-1">Have questions?</h4>
               <p className="text-[11px] text-[#45464e] mb-4 leading-relaxed">Contact us about any legal concerns.</p>
               <a href="mailto:officialspotlightglobal@gmail.com"
                 className="w-full py-2 bg-[#081534] text-white rounded-lg text-[12px] font-bold hover:opacity-90 transition-opacity flex items-center justify-center gap-1.5">
-                <span className="material-symbols-outlined text-[14px]">mail</span>
+                <Icon name="mail" className="text-[14px]" />
                 Email Us
               </a>
             </div>
@@ -222,7 +222,7 @@ export default function TermsPage() {
               <div className="flex flex-wrap gap-3 justify-center">
                 <a href="mailto:officialspotlightglobal@gmail.com"
                   className="flex items-center gap-2 bg-[#081534] text-white px-6 py-3 rounded-full text-[13px] font-bold hover:opacity-90 transition-all active:scale-95">
-                  <span className="material-symbols-outlined text-[16px]">mail</span>
+                  <Icon name="mail" className="text-[16px]" />
                   Contact Us
                 </a>
                 <Link href="/"

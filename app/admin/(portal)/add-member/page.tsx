@@ -4,6 +4,8 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { useAdminAccess } from '@/lib/use-admin-permissions'
+import { getSupabaseClient } from '@/lib/supabase'
+import Icon from '@/components/Icon'
 
 type FormData = {
   first_name: string
@@ -38,12 +40,13 @@ const inputClass = 'w-full bg-[#f2f4f6] border-b-2 border-transparent focus:bord
 export default function AddMemberPage() {
   const router = useRouter()
   const access = useAdminAccess('members')
+  const supabase = getSupabaseClient()
   const [step, setStep] = useState(1)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [form, setForm] = useState<FormData>({
     first_name: '', last_name: '', email: '', phone: '', address: '',
-    dob: '', guest_status: 'First_Timer', admin_notes: '',
+    dob: '', guest_status: 'Attending', admin_notes: '',
     discovery_source: '', referral_name: '', interests: [],
   })
 
@@ -65,12 +68,16 @@ export default function AddMemberPage() {
     setLoading(true)
     setError('')
 
-    const res = await fetch('/api/register', {
+    const { data: sessionData } = await supabase.auth.getSession()
+    const res = await fetch('/api/admin/members', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${sessionData.session?.access_token ?? ''}`,
+      },
       body: JSON.stringify(form),
     })
-    const data = await res.json()
+    const data = await res.json().catch(() => ({}))
 
     if (!res.ok) {
       setError(data.error || 'Something went wrong.')
@@ -104,7 +111,7 @@ export default function AddMemberPage() {
           <div className="mb-8 flex items-center gap-3">
             <button onClick={() => router.push('/admin/members')}
               className="flex items-center justify-center w-9 h-9 border border-[#c6c6cf] text-[#45464e] rounded-lg hover:bg-[#f2f4f6] hover:text-[#081534] transition-colors shrink-0">
-              <span className="material-symbols-outlined text-[18px]">arrow_back</span>
+              <Icon name="arrow_back" className="text-[18px]" />
             </button>
             <div>
               <h1 className="text-[24px] sm:text-[30px] font-bold text-[#081534] mb-1">Add New Member</h1>
@@ -119,7 +126,7 @@ export default function AddMemberPage() {
               <div key={s.n} className="relative z-10 flex flex-col items-center gap-2">
                 <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold border-4 border-[#f7f9fb] transition-colors ${stepStyle(s.n)}`}>
                   {step > s.n
-                    ? <span className="material-symbols-outlined text-[18px]">check</span>
+                    ? <Icon name="check" className="text-[18px]" />
                     : s.n}
                 </div>
                 <span className={`text-[11px] sm:text-[12px] font-semibold ${stepLabelStyle(s.n)}`}>{s.label}</span>
@@ -166,13 +173,10 @@ export default function AddMemberPage() {
                         onChange={handleChange} className={inputClass} />
                     </div>
                     <div className="flex flex-col gap-2">
-                      <label className="text-[13px] font-semibold text-[#45464e]">Member Status</label>
-                      <select name="guest_status" value={form.guest_status}
-                        onChange={handleChange} className={inputClass}>
-                        <option value="First_Timer">First Timer</option>
-                        <option value="Attending">Attending</option>
-                        <option value="Member">Active Member</option>
-                      </select>
+                      <label className="text-[13px] font-semibold text-[#45464e]">Status</label>
+                      <p className="rounded-t-lg bg-[#f2f4f6] px-4 py-3 text-[16px] text-[#45464e]">
+                        Attending <span className="text-[12px]">· becomes Member after Membership Class</span>
+                      </p>
                     </div>
                   </div>
                   <div className="flex flex-col gap-2">
@@ -184,7 +188,7 @@ export default function AddMemberPage() {
                 <div className="flex justify-end mt-6">
                   <button type="button" onClick={() => setStep(2)}
                     className="bg-[#081534] text-white px-6 sm:px-8 py-3 rounded-lg font-bold hover:opacity-90 transition-opacity flex items-center gap-2">
-                    Next Step <span className="material-symbols-outlined">arrow_forward</span>
+                    Next Step <Icon name="arrow_forward" />
                   </button>
                 </div>
               </motion.div>
@@ -204,7 +208,7 @@ export default function AddMemberPage() {
                           ${form.discovery_source === src.id
                             ? 'bg-[#1e2a4a] text-white border-[#081534]'
                             : 'border-[#c6c6cf] text-[#191c1e] hover:border-[#081534]'}`}>
-                        <span className="material-symbols-outlined text-3xl sm:text-4xl mb-2 block">{src.icon}</span>
+                        <Icon name={src.icon} className="text-3xl sm:text-4xl mb-2 block" />
                         <p className="text-[12px] sm:text-[14px] font-semibold">{src.label}</p>
                       </button>
                     ))}
@@ -218,11 +222,11 @@ export default function AddMemberPage() {
                 <div className="flex justify-between">
                   <button type="button" onClick={() => setStep(1)}
                     className="text-[#081534] px-6 sm:px-8 py-3 rounded-lg font-bold hover:bg-[#eceef0] transition-colors flex items-center gap-2">
-                    <span className="material-symbols-outlined">arrow_back</span> Previous
+                    <Icon name="arrow_back" /> Previous
                   </button>
                   <button type="button" onClick={() => setStep(3)}
                     className="bg-[#081534] text-white px-6 sm:px-8 py-3 rounded-lg font-bold hover:opacity-90 flex items-center gap-2">
-                    Next Step <span className="material-symbols-outlined">arrow_forward</span>
+                    Next Step <Icon name="arrow_forward" />
                   </button>
                 </div>
               </motion.div>
@@ -241,7 +245,7 @@ export default function AddMemberPage() {
                         className="flex items-center justify-between p-4 bg-[#f2f4f6] rounded-lg hover:bg-[#eceef0] transition-colors cursor-pointer">
                         <div className="flex items-center gap-3">
                           <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center border border-[#c6c6cf] shrink-0">
-                            <span className="material-symbols-outlined text-[#081534] text-[20px]">{interest.icon}</span>
+                            <Icon name={interest.icon} className="text-[#081534] text-[20px]" />
                           </div>
                           <div>
                             <p className="font-semibold text-[#081534] text-[14px]">{interest.label}</p>
@@ -261,12 +265,12 @@ export default function AddMemberPage() {
                 <div className="flex justify-between">
                   <button type="button" onClick={() => setStep(2)}
                     className="text-[#081534] px-6 sm:px-8 py-3 rounded-lg font-bold hover:bg-[#eceef0] transition-colors flex items-center gap-2">
-                    <span className="material-symbols-outlined">arrow_back</span> Previous
+                    <Icon name="arrow_back" /> Previous
                   </button>
                   <button type="submit" disabled={loading}
                     className="bg-[#fdc425] text-[#6d5200] px-8 sm:px-12 py-3 rounded-lg font-bold hover:opacity-90 transition-opacity flex items-center gap-2 shadow-lg disabled:opacity-60">
                     {loading ? 'Adding...' : 'Add to Family'}
-                    <span className="material-symbols-outlined">favorite</span>
+                    <Icon name="favorite" />
                   </button>
                 </div>
               </motion.div>
@@ -281,8 +285,7 @@ export default function AddMemberPage() {
                 <p className="text-[14px] sm:text-[16px] opacity-80">Every new member strengthens our collective mission and global impact.</p>
               </div>
               <div className="absolute -right-8 -bottom-8 opacity-10">
-                <span className="material-symbols-outlined text-[160px] sm:text-[200px]"
-                  style={{ fontVariationSettings: "'FILL' 1" }}>church</span>
+                <Icon name="church" className="text-[160px] sm:text-[200px]" />
               </div>
             </div>
             <div className="bg-[#ffdf9a] p-6 sm:p-8 rounded-xl border border-[#fdc425] flex flex-col justify-center">

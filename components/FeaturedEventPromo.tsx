@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { getSupabaseClient } from "@/lib/supabase";
 import type { ChurchEventPreview } from "@/lib/church-events";
+import Icon from '@/components/Icon'
 
 function localDateString() {
   const today = new Date();
@@ -159,7 +160,7 @@ export default function FeaturedEventPromo() {
               className="inline-flex min-h-10 shrink-0 items-center gap-1 rounded-md bg-[#fdc425] px-3 text-[11px] font-bold text-[#081534] transition hover:bg-[#ffe07a] sm:px-4 sm:text-[12px]"
             >
               Details
-              <span className="material-symbols-outlined text-[15px]">arrow_forward</span>
+              <Icon name="arrow_forward" className="text-[15px]" />
             </Link>
           ) : (
             <a
@@ -167,7 +168,7 @@ export default function FeaturedEventPromo() {
               className="inline-flex min-h-10 shrink-0 items-center gap-1 rounded-md bg-[#fdc425] px-3 text-[11px] font-bold text-[#081534] transition hover:bg-[#ffe07a] sm:px-4 sm:text-[12px]"
             >
               Details
-              <span className="material-symbols-outlined text-[15px]">arrow_forward</span>
+              <Icon name="arrow_forward" className="text-[15px]" />
             </a>
           )}
         </div>
@@ -191,7 +192,7 @@ export default function FeaturedEventPromo() {
               onClick={() => setPopupOpen(false)}
               className="absolute right-3 top-3 z-10 flex h-9 w-9 items-center justify-center bg-[#081534]/80 text-white transition hover:bg-[#081534] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#fdc425]"
             >
-              <span className="material-symbols-outlined text-[20px]">close</span>
+              <Icon name="close" className="text-[20px]" />
             </button>
             <img
               src={image}
@@ -219,12 +220,12 @@ export default function FeaturedEventPromo() {
                   className="mt-7 inline-flex min-h-12 items-center justify-center gap-2 bg-[#081534] px-5 text-[13px] font-bold text-white transition hover:bg-[#17305f]"
                 >
                   View event
-                  <span className="material-symbols-outlined text-[17px]">arrow_forward</span>
+                  <Icon name="arrow_forward" className="text-[17px]" />
                 </Link>
               ) : (
                 <a href={href} className="mt-7 inline-flex min-h-12 items-center justify-center gap-2 bg-[#081534] px-5 text-[13px] font-bold text-white transition hover:bg-[#17305f]">
                   View event
-                  <span className="material-symbols-outlined text-[17px]">arrow_forward</span>
+                  <Icon name="arrow_forward" className="text-[17px]" />
                 </a>
               )}
             </div>
