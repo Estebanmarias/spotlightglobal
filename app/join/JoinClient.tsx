@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { motion } from 'framer-motion'
+import Link from 'next/link'
 import Icon from '@/components/Icon'
 import { getSupabaseClient } from '@/lib/supabase'
 
@@ -13,7 +14,7 @@ export default function JoinClient() {
   const [form, setForm] = useState({
     first_name: '', last_name: '', email: '',
     phone: '', address: '', dob: '',
-    guest_status: 'First_Timer',
+    guest_status: 'Attending',
   })
   const [submitting, setSubmitting] = useState(false)
   const [submitted, setSubmitted] = useState(false)
@@ -82,7 +83,7 @@ export default function JoinClient() {
                 Welcome, {form.first_name}! 🎉
               </h2>
               <p className="text-[15px] text-[#45464e] leading-relaxed">
-                You're now part of theSpotlightChurch family. Check your email for a welcome message from us.
+                You're now part of theSpotlightChurch family. Your next step is our <Link href="/classes" className="font-bold text-[#785a00] hover:underline">Membership Class</Link>, where you confirm your place in the family.
               </p>
             </motion.div>
           ) : (
@@ -140,18 +141,6 @@ export default function JoinClient() {
                   </label>
                   <input name="address" value={form.address} onChange={handleChange}
                     placeholder="e.g. 12 Karu Street, Abuja" className={inputCls} />
-                </div>
-
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-[12px] font-bold text-[#45464e] uppercase tracking-wide">
-                    How often do you attend?
-                  </label>
-                  <select name="guest_status" value={form.guest_status} onChange={handleChange}
-                    className={inputCls}>
-                    <option value="First_Timer">First Timer — just visiting</option>
-                    <option value="Attending">Attending — I come regularly</option>
-                    <option value="Member">Member — this is my church home</option>
-                  </select>
                 </div>
 
                 {error && (

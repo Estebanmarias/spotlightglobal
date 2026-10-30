@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getSupabaseAdminClient } from '@/lib/supabase-server'
 import { Ratelimit } from '@upstash/ratelimit'
 import { Redis } from '@upstash/redis'
+import { pushMemberToBrevo } from '@/lib/brevo-contact'
 
 // ── Rate limiter — 5 submissions per IP per hour ──────────────────
 const ratelimit = new Ratelimit({
@@ -11,26 +12,7 @@ const ratelimit = new Ratelimit({
   prefix: 'spotlight:register',
 })
 
-// Normalizes a Nigerian phone number to Brevo's expected SMS format
-// (country code prefix, digits only, no +, spaces, dashes, or parens).
-// Accepts local (0801...) or already-international (234801... / +234801...) input.
-function toBrevoSmsFormat(rawPhone: string): string {
-  const digitsOnly = rawPhone.replace(/[^\d]/g, '')
-  if (digitsOnly.startsWith('234')) return digitsOnly
-  if (digitsOnly.startsWith('0')) return `234${digitsOnly.slice(1)}`
-  return `234${digitsOnly}`
-}
 
-// Maps a guest_status value to its dedicated Brevo list ID, used for
-// broadcast audience targeting (see /api/admin/broadcast).
-function getStatusListId(status: string): number | null {
-  switch (status) {
-    case 'First_Timer': return Number(process.env.BREVO_LIST_ID_FIRST_TIMER) || null
-    case 'Attending':   return Number(process.env.BREVO_LIST_ID_ATTENDING) || null
-    case 'Member':      return Number(process.env.BREVO_LIST_ID_MEMBER) || null
-    default:            return null
-  }
-}
 
 export async function POST(req: NextRequest) {
   // ── 1. Rate limit check ─────────────────────────────────────────
@@ -65,7 +47,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Invalid request body.' }, { status: 400 })
   }
 
-  const { first_name, last_name, email, phone, address, dob, guest_status } = body as Record<string, string>
+  const { first_name, last_name, email, phone, address, dob } = body as Record<string, string>
 
   // ── 3. Input validation ──────────────────────────────────────────
   if (!first_name || !last_name || !email || !phone || !dob) {
@@ -106,11 +88,10 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Invalid date of birth.' }, { status: 400 })
   }
 
-  // ⚠️ CURRENT 3-TIER SCHEMA ONLY — Returning/Regular no longer exist.
-  // Gracefully default to First_Timer instead of hard-rejecting, since
-  // an unexpected value here shouldn't block a real registration.
-  const validStatuses = ['First_Timer', 'Attending', 'Member']
-  const resolvedStatus = validStatuses.includes(guest_status) ? guest_status : 'First_Timer'
+    // Everyone who registers starts as Attending. The status only becomes
+  // Member when they complete Membership Class, so it is never read from
+  // the request body.
+  const resolvedStatus = 'Attending'
 
   // ── 4. Insert into Supabase ───────────────────────────────────────
   const { data: member, error: dbError } = await getSupabaseAdminClient()
@@ -135,43 +116,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Registration failed. Please try again.' }, { status: 500 })
   }
 
-  // ── 5. Push to Brevo ──────────────────────────────────────────────
-  if (process.env.BREVO_API_KEY) {
-    try {
-      // Add to the main list plus the status-specific list (if configured),
-      // so broadcast audience targeting stays accurate from day one.
-      const listIds = [Number(process.env.BREVO_LIST_ID)]
-      const statusListId = getStatusListId(resolvedStatus)
-      if (statusListId) listIds.push(statusListId)
-
-      const brevoRes = await fetch('https://api.brevo.com/v3/contacts', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'api-key': process.env.BREVO_API_KEY,
-        },
-        body: JSON.stringify({
-          email: email.toLowerCase().trim(),
-          listIds,
-          updateEnabled: true,
-          attributes: {
-            FIRSTNAME: first_name.trim(), // was top-level firstName — not a real API field, silently ignored
-            LASTNAME: last_name.trim(),   // was top-level lastName — same issue
-            SMS: toBrevoSmsFormat(phone.trim()),
-            DOB: dob,
-            GUEST_STATUS: resolvedStatus,
-          },
-        }),
-      })
-
-      if (!brevoRes.ok) {
-        const errText = await brevoRes.text()
-        console.error('[BREVO ERROR]', brevoRes.status, errText)
-      }
-    } catch (err) {
-      console.error('[BREVO ERROR]', err)
-    }
-  }
-
+  
   return NextResponse.json({ success: true, first_name: first_name.trim(), memberId: member?.id }, { status: 200 })
 }
