@@ -17,7 +17,14 @@ export type ChurchEventPreview = {
   payment_instructions?: string | null;
   special_session_label?: string | null;
   special_session_date?: string | null;
+  recurrence?: 'none' | 'weekly';
 };
+
+export function recurrenceLabel(event: Pick<ChurchEventPreview, 'event_date' | 'recurrence'>) {
+  if (event.recurrence !== 'weekly') return null;
+  const day = new Date(`${event.event_date}T00:00:00`).toLocaleDateString('en-NG', { weekday: 'long' });
+  return `Every ${day}`;
+}
 
 export function isShiftConferenceTitle(title: string) {
   return /shift|soaring/i.test(title);

@@ -6,6 +6,7 @@ import { getSupabaseClient } from '@/lib/supabase'
 import { formatEventRegistrationReference } from '@/lib/event-registration-reference'
 import { createPortal } from 'react-dom'
 import Icon from '@/components/Icon'
+import { recurrenceLabel } from '@/lib/church-events'
 
 // ════════════════════════════════════════════════════════════════════
 // MediaManagement — Events + Gallery with Supabase Storage uploads
@@ -40,6 +41,7 @@ type ChurchEvent = {
   payment_instructions: string | null
   special_session_label: string | null
   special_session_date: string | null
+  recurrence: 'none' | 'weekly'
 }
 
 type EventRegistration = {
@@ -83,11 +85,12 @@ type CommunityPhoto = {
 
 const blankEventForm = {
   title: '', description: '', event_date: '', event_time: '',
-  flyer_url: '', location: 'Main Auditorium', is_featured: false,
+  flyer_url: '', location: 'Icon Hotel Hall, Angwan Danlami, New Nyanya', is_featured: false,
   event_end_date: '', registration_enabled: false, registration_capacity: '',
   registration_deadline: '', price_type: 'free' as 'free' | 'paid',
   price: '', currency: 'NGN', special_session_label: '', special_session_date: '',
   payment_instructions: '',
+  recurrence: 'none' as 'none' | 'weekly',
 }
 
 const inputCls = 'w-full bg-[#f2f4f6] border-b-2 border-transparent focus:border-[#081534] outline-none px-4 py-3 rounded-t-lg text-[14px] transition-colors'
@@ -270,6 +273,7 @@ export default function MediaManagement({ viewerRole }: MediaManagementProps) {
       payment_instructions: e.payment_instructions ?? '',
       special_session_label: e.special_session_label ?? '',
       special_session_date: e.special_session_date ?? '',
+      recurrence: e.recurrence ?? 'none',
     })
     setEditEvent(e)
     setFlyerFile(null)
@@ -325,7 +329,7 @@ export default function MediaManagement({ viewerRole }: MediaManagementProps) {
       event_date: eventForm.event_date,
       event_time: eventForm.event_time.trim() || null,
       flyer_url: finalFlyerUrl,
-      location: eventForm.location.trim() || 'Main Auditorium',
+      location: eventForm.location.trim() || 'Icon Hotel Hall, Angwan Danlami, New Nyanya',
       is_featured: eventForm.is_featured,
       event_end_date: eventForm.event_end_date || null,
       registration_enabled: eventForm.registration_enabled,
@@ -337,6 +341,7 @@ export default function MediaManagement({ viewerRole }: MediaManagementProps) {
       payment_instructions: eventForm.price_type === 'paid' ? eventForm.payment_instructions.trim() || null : null,
       special_session_label: eventForm.special_session_label.trim() || null,
       special_session_date: eventForm.special_session_date || null,
+      recurrence: eventForm.recurrence,
       added_by: user?.id ?? null,
     }
 
@@ -633,6 +638,7 @@ export default function MediaManagement({ viewerRole }: MediaManagementProps) {
                         </div>
                         <p className="text-[11px] text-[#45464e]">
                           {formatDate(e.event_date)}{e.event_time ? ` · ${e.event_time}` : ''}
+                          {recurrenceLabel(e) ? ` · ${recurrenceLabel(e)}` : ''}
                         </p>
                         {e.registration_enabled && (
                           <p className="mt-1 text-[10px] font-semibold text-[#785a00]">
@@ -642,11 +648,13 @@ export default function MediaManagement({ viewerRole }: MediaManagementProps) {
                       </div>
                     </div>
                     <div className="flex items-center gap-1 shrink-0">
-                      <button onClick={() => openRegistrations(e)}
-                        className="w-8 h-8 flex items-center justify-center rounded-lg text-[#45464e] hover:text-[#081534] hover:bg-white transition-all"
-                        title="Manage registrations" aria-label={`Manage registrations for ${e.title}`}>
-                        <Icon name="how_to_reg" className="text-[18px]" />
-                      </button>
+                      {e.recurrence !== 'weekly' && (
+                        <button onClick={() => openRegistrations(e)}
+                          className="w-8 h-8 flex items-center justify-center rounded-lg text-[#45464e] hover:text-[#081534] hover:bg-white transition-all"
+                          title="Manage registrations" aria-label={`Manage registrations for ${e.title}`}>
+                          <Icon name="how_to_reg" className="text-[18px]" />
+                        </button>
+                      )}
                       <button onClick={() => openEditEvent(e)}
                         className="w-8 h-8 flex items-center justify-center rounded-lg text-[#45464e] hover:text-[#081534] hover:bg-white transition-all">
                         <Icon name="edit" className="text-[18px]" />
@@ -775,6 +783,21 @@ export default function MediaManagement({ viewerRole }: MediaManagementProps) {
                     </div>
                   </div>
 
+                  <label className="flex items-start gap-2.5 p-3 bg-[#f7f9fb] rounded-lg cursor-pointer">
+                    <input type="checkbox" checked={eventForm.recurrence === 'weekly'}
+                      onChange={e => setEventForm(p => e.target.checked
+                        ? { ...p, recurrence: 'weekly', registration_enabled: false, registration_deadline: '', registration_capacity: '',
+                            price_type: 'free', price: '', payment_instructions: '', event_end_date: '',
+                            special_session_label: '', special_session_date: '' }
+                        : { ...p, recurrence: 'none' })}
+                      className="mt-0.5 w-4 h-4 accent-[#081534]" />
+                    <span>
+                      <span className="block text-[13px] font-semibold text-[#191c1e]">Repeats every week</span>
+                      <span className="block text-[11px] text-[#76777f]">For services like Sunday and Wednesday. Pick the next date and it moves forward by itself. No registration or deadline.</span>
+                    </span>
+                  </label>
+
+                  {eventForm.recurrence !== 'weekly' && (<>
                   <div className="grid grid-cols-2 gap-3">
                     <div className="flex flex-col gap-1.5">
                       <label className="text-[11px] font-bold text-[#45464e] uppercase tracking-wide">Last event day</label>
@@ -859,6 +882,8 @@ export default function MediaManagement({ viewerRole }: MediaManagementProps) {
                       onChange={e => setEventForm(p => ({ ...p, special_session_date: e.target.value }))}
                       className={inputCls} />
                   </div>
+
+                  </>)}
 
                   {/* Location */}
                   <div className="flex flex-col gap-1.5">

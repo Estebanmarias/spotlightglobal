@@ -3,7 +3,7 @@ import Icon from '@/components/Icon'
 import Reveal from '@/components/Reveal'
 
 const classes = [
-  { icon: 'groups', title: 'Membership Class', tag: 'Start here', desc: 'Start here. Learn what we believe and take your place in the family.' },
+  { icon: 'groups', title: 'Membership Class', tag: 'Start here', desc: 'Learn what we believe and take your place in the family.' },
   { icon: 'school', title: 'Spotlight Leadership Course', tag: '3-month course', desc: 'A three-month course that prepares you to lead and serve.' },
   { icon: 'bolt', title: 'School of Shift', tag: 'Coaching & growth', desc: 'Coaching and personal development for people ready to go further.' },
 ]

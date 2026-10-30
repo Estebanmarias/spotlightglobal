@@ -42,6 +42,9 @@ export async function GET(request: NextRequest) {
   }
 
   const supabase = getSupabaseAdminClient();
+  const lagosToday = new Date().toLocaleDateString("en-CA", { timeZone: "Africa/Lagos" });
+  const advanced = await supabase.rpc("advance_recurring_events", { p_today: lagosToday });
+  if (advanced.error) console.error("[EVENT REMINDERS] Could not advance recurring events:", advanced.error.message);
   const results = { sent: 0, failed: 0, skipped: 0 };
   const runStartedAt = new Date().toISOString();
 

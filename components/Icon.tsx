@@ -12,8 +12,10 @@ ChevronRight, Church, Smartphone, CircleAlert, CircleCheck, CircleDot, CirclePla
 
 import { Gem, GraduationCap, PartyPopper, Zap } from 'lucide-react'
 import { ChartColumn, Cookie, Lightbulb, Megaphone, RefreshCw, Settings, Table } from 'lucide-react'
+import { Banknote, Eye, EyeOff } from 'lucide-react'
 
 const ICONS: Record<string, LucideIcon> = {
+  payments: Banknote, visibility: Eye, visibility_off: EyeOff,
   refresh: RefreshCw, group_add: UserPlus, chat_bubble_outline: MessageCircle,
   lightbulb: Lightbulb, description: FileText, cookie: Cookie,
   settings: Settings, analytics: ChartColumn, campaign: Megaphone, space_dashboard: LayoutDashboard,

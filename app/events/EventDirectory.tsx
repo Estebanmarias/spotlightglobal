@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { getSupabaseClient } from "@/lib/supabase";
-import type { ChurchEventPreview } from "@/lib/church-events";
+import { recurrenceLabel, type ChurchEventPreview } from "@/lib/church-events";
 import Icon from "@/components/Icon";
 
 function localDateString() {
@@ -13,6 +13,9 @@ function localDateString() {
 }
 
 const parse = (d: string) => new Date(`${d}T00:00:00`);
+
+const directionsHref = (location: string) =>
+  `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(location)}`;
 
 function eventDetailHref(event: ChurchEventPreview) {
   return `/conference?event=${encodeURIComponent(event.id)}`;
@@ -115,6 +118,19 @@ function DateBadge({ event }: { event: ChurchEventPreview }) {
 }
 
 function Cta({ event, open, archived }: { event: ChurchEventPreview; open: boolean; archived: boolean }) {
+  if (event.recurrence === "weekly") {
+    return (
+      <a
+        href={directionsHref(event.location)}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-[#081534] px-6 text-[13px] font-bold text-[#081534] transition hover:bg-[#081534] hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#fdc425] focus-visible:ring-offset-2"
+      >
+        Get directions
+        <Icon name="arrow_outward" className="text-[16px]" />
+      </a>
+    );
+  }
   const label = archived ? "View details" : open ? "Register now" : "Event details";
   const tone =
     open && !archived
@@ -136,6 +152,7 @@ function StatusChips({ event, today, archived }: { event: ChurchEventPreview; to
   const price = priceLabel(event);
   return (
     <div className="flex flex-wrap items-center gap-2">
+      {recurrenceLabel(event) && <Chip tone="gold">{recurrenceLabel(event)}</Chip>}
       {!archived && open && <Chip tone="green">Registration open</Chip>}
       {!archived && !open && event.registration_enabled && <Chip>Registration closed</Chip>}
       {price && <Chip tone="gold">{price}</Chip>}
@@ -235,7 +252,7 @@ export default function EventDirectory() {
     const loadEvents = async () => {
       const { data, error } = await supabase
         .from("church_events")
-        .select("id, title, description, event_date, event_end_date, event_time, flyer_url, location, is_featured, registration_enabled, registration_capacity, registration_deadline, price_type, price, currency, payment_instructions, special_session_label, special_session_date")
+        .select("id, title, description, event_date, event_end_date, event_time, flyer_url, location, is_featured, registration_enabled, registration_capacity, registration_deadline, price_type, price, currency, payment_instructions, special_session_label, special_session_date, recurrence")
         .order("event_date", { ascending: true });
 
       if (!active) return;

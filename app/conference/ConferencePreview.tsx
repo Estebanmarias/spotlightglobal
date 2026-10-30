@@ -443,7 +443,7 @@ export default function ConferencePreview() {
 
             <div className="flex flex-col gap-4 border-t border-[#e2e2e9] pt-5 sm:flex-row sm:items-center sm:justify-between">
               <p className="max-w-md text-[11px] leading-5 text-[#76777f]">
-                Your registration details are stored securely for event administration. Prayer requests are stored separately and visible only to the super admin.
+                Your registration details are stored securely for event administration. 
               </p>
               <button type="submit" disabled={!registrationOpen || submitState === "submitting" || submitState === "success"} className="inline-flex min-h-12 shrink-0 items-center justify-center gap-2 rounded-md bg-[#081534] px-6 text-[13px] font-bold text-white transition hover:bg-[#17305f] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#fdc425] disabled:cursor-not-allowed disabled:opacity-50">
                 {submitState === "submitting" ? "Submitting…" : submitState === "success" ? "Registration received" : registrationOpen ? "Complete registration" : "Registration not open"}
