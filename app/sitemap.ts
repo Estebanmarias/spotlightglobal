@@ -10,6 +10,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { path: '/join',     priority: 0.8, changeFrequency: 'monthly' },
     { path: '/community',priority: 0.7, changeFrequency: 'weekly'  },
     { path: '/partner',  priority: 0.7, changeFrequency: 'monthly' },
+    { path: '/classes',  priority: 0.7, changeFrequency: 'weekly' },
+    { path: '/events',   priority: 0.7, changeFrequency: 'weekly' },
+    { path: '/vision',   priority: 0.6, changeFrequency: 'monthly' },
+    { path: '/devotionals', priority: 0.6, changeFrequency: 'weekly' },
+    { path: '/pastor',   priority: 0.5, changeFrequency: 'monthly' },
+    { path: '/contact',  priority: 0.5, changeFrequency: 'yearly' },
   ]
 
   return routes.map(r => ({

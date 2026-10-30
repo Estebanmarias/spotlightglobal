@@ -37,6 +37,8 @@ export const metadata: Metadata = {
     "worship services Abuja",
     "Christian fellowship Abuja",
     "church in Karu",
+    "church in Nyanya",
+    "church in New Nyanya",
   ],
   openGraph: {
     title: "theSpotlightChurch | Welcome Home",

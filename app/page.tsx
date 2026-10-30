@@ -1,10 +1,12 @@
 import HeroSection from '@/components/HeroSection'
 import MinistriesSection from '@/components/MinistriesSection'
 import ConnectSection from '@/components/ConnectSection'
+import ClassesSection from '@/components/ClassesSection'
 import SplashWrapper from '@/components/SplashWrapper'
 import Link from 'next/link'
 import Reveal from '@/components/Reveal'
 import Image from 'next/image'
+import Icon from '@/components/Icon'
 
 const CHURCH_MAPS_URL =
   'https://www.google.com/maps/search/?api=1&query=' +
@@ -22,6 +24,7 @@ export default function HomePage() {
         <HeroSection />
         <VisionSection />
         <MinistriesSection />
+        <ClassesSection />
         <ConnectSection />
       </main>
     </SplashWrapper>
@@ -48,7 +51,7 @@ function VisionSection() {
             className="group flex items-start gap-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#fdc425] rounded-lg"
           >
             <div className="bg-[#1e2a4a] p-3 rounded-lg text-[#fdc425] shrink-0 transition-transform group-hover:scale-105">
-              <span className="material-symbols-outlined">location_on</span>
+              <Icon name="location_on" />
             </div>
             <div>
               <h4 className="text-[18px] sm:text-[22px] lg:text-[24px] font-semibold text-[#081534]">Join us in person</h4>
@@ -61,7 +64,7 @@ function VisionSection() {
               </p>
               <span className="mt-2 inline-flex items-center gap-1 text-[13px] font-bold text-[#785a00] group-hover:underline">
                 Get directions
-                <span className="material-symbols-outlined text-[16px]">arrow_outward</span>
+                <Icon name="arrow_outward" className="text-[16px]" />
               </span>
             </div>
           </a>
@@ -79,7 +82,7 @@ function VisionSection() {
               </p>
               <span className="mt-3 inline-flex items-center gap-1 text-[12px] font-bold text-[#6d5200]">
                 Explore our vision
-                <span className="material-symbols-outlined text-[16px] transition-transform group-hover:translate-x-1">arrow_forward</span>
+                <Icon name="arrow_forward" className="text-[16px] transition-transform group-hover:translate-x-1" />
               </span>
             </Link>
           </div>

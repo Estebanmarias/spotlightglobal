@@ -8,6 +8,7 @@ import Link from 'next/link'
 const exploreLinks = [
   { label: 'Our Vision',  href: '/vision' },
   { label: 'Community',   href: '/community' },
+   { label: 'Classes',     href: '/classes' },
   // { label: 'Partner',     href: '/partner' },
   // { label: 'Giving',      href: '/giving' },
   { label: 'Devotionals', href: '/devotionals' },
