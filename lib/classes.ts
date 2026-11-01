@@ -123,9 +123,13 @@ export async function sendClassEmail(
 ) {
   const reservation = await reserveClassEmail(supabase, enrollmentId, type);
   const logId = reservation.id;
-  if (!logId) return { sent: false, error: reservation.error };
+       if (!logId) {
+       console.error("[CLASS EMAIL] could not reserve", type, enrollmentId, reservation.error ?? "already sent or in progress");
+       return { sent: false, error: reservation.error };
+     }
 
-  const finish = async (sent: boolean, messageId: string | null, error: string | null) => {
+       const finish = async (sent: boolean, messageId: string | null, error: string | null) => {
+       if (!sent) console.error("[CLASS EMAIL] failed", type, enrollmentId, error);
     await supabase.from("class_email_log").update({
       status: sent ? "sent" : "failed",
       sent_at: sent ? new Date().toISOString() : null,

@@ -61,6 +61,7 @@ export const metadata: Metadata = {
     title: "theSpotlightChurch",
   },
   icons: {
+    icon: [{ url: "/icon.png", type: "image/png", sizes: "512x512" }],
     apple: "/apple-touch-icon-v2.png",
   },
 };

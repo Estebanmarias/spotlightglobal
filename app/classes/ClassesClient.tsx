@@ -493,9 +493,9 @@ export default function ClassesClient({ programs, intakes }: { programs: PublicP
                           placeholder="Include country code" className={inputCls} />
                       </div>
 
-                      <input name="website" tabIndex={-1} autoComplete="off" aria-hidden="true" value={form.website}
+                      <input name="hp_field" tabIndex={-1} autoComplete="off" aria-hidden="true" value={form.website}
                         onChange={e => setForm(f => ({ ...f, website: e.target.value }))}
-                        className="absolute left-[-9999px] h-0 w-0 opacity-0" />
+                        className="hidden" />
 
                       <label htmlFor="cls-privacy" className="flex cursor-pointer items-start gap-3 rounded-xl border border-[#e2e2e9] p-4">
                         <input id="cls-privacy" type="checkbox" required checked={form.privacy}

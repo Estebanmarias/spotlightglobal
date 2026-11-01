@@ -19,7 +19,7 @@ type Session = { id: string; session_date: string; title: string; mode: 'in_pers
 type Enrollment = {
   id: string; full_name: string; email: string; phone: string; status: string
   approval_status: string; prerequisite_met: boolean; payment_status: string
-  amount_due: number; currency: string
+  amount_due: number; currency: string; certificate_issued_at: string | null
 }
 type Attendance = { enrollment_id: string; session_id: string; present: boolean }
 type Detail = { sessions: Session[]; enrollments: Enrollment[]; attendance: Attendance[] }
@@ -669,6 +669,7 @@ export default function ClassesAdminPage() {
                                 {en.payment_status === 'paid' && <Chip tone="green">Paid</Chip>}
                                 {en.payment_status === 'refund_due' && <Chip tone="red">Refund due</Chip>}
                                 {en.payment_status === 'refunded' && <Chip>Refunded</Chip>}
+                                {en.certificate_issued_at && <Chip tone="green">Certificate sent</Chip>}
                               </div>
                             </td>
                             {detail.sessions.map(s => (
@@ -705,6 +706,15 @@ export default function ClassesAdminPage() {
                                 {live && en.approval_status !== 'pending' && en.payment_status !== 'pending' && (
                                   <button className={`${btn} bg-green-700 text-white`} disabled={busyId === en.id}
                                     onClick={() => completeEnrollment(en)}>Mark completed</button>
+                                )}
+                                {en.status === 'completed' && !en.certificate_issued_at && (
+                                  <button className={`${btn} bg-[#081534] text-white`} disabled={busyId === en.id}
+                                    onClick={() => askConfirm({
+                                      title: 'Issue certificate?',
+                                      body: `${en.full_name} will receive their certificate by email as a PDF.`,
+                                      label: 'Issue certificate',
+                                      run: () => run(en.id, { action: 'issue_certificate', enrollment_id: en.id }, 'Certificate issued'),
+                                    })}>Issue certificate</button>
                                 )}
                                 {live && (
                                   <button className={`${btn} border border-[#c6c6cf] text-[#45464e] hover:text-[#ba1a1a]`} disabled={busyId === en.id}

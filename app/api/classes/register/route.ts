@@ -16,7 +16,8 @@ export async function POST(request: NextRequest) {
   }
 
   // Honeypot: real visitors never fill this hidden field
-  if (typeof body.website === "string" && body.website.trim()) {
+     if (typeof body.website === "string" && body.website.trim()) {
+       console.warn("[CLASS REGISTER] spam-trap field was filled, registration ignored");
     return NextResponse.json({ success: true });
   }
 

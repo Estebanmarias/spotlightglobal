@@ -9,7 +9,10 @@ export async function pushMemberToBrevo(m: {
   email: string; firstName: string; lastName: string; phone: string; dob: string; status: "Attending" | "Member";
 }) {
   const key = process.env.BREVO_API_KEY;
-  if (!key) return false;
+  if (!key) {
+    console.error("[BREVO] BREVO_API_KEY is not set");
+    return false;
+  }
 
   const statusList = Number(m.status === "Member" ? process.env.BREVO_LIST_ID_MEMBER : process.env.BREVO_LIST_ID_ATTENDING);
   const listIds = [Number(process.env.BREVO_LIST_ID), statusList].filter((n) => Number.isFinite(n) && n > 0);

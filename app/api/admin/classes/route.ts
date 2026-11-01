@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdminClient } from "@/lib/supabase-server";
 import { authorizeClassesManager, notifyEligibleForIntake, sendClassEmail, syncMemberStatusToBrevo } from "@/lib/classes";
+import { newCertificateCode } from "@/lib/certificate";
+import { sendCertificateEmail } from "@/lib/class-certificates";
 
 export const maxDuration = 60;
 
@@ -472,6 +474,32 @@ export async function POST(request: NextRequest) {
     }
     const sent = await sendClassEmail(supabase, enrollmentId, "completed", { membershipConfirmed });
     return NextResponse.json({ success: true, membershipConfirmed, emailSent: sent.sent });
+  }
+
+    if (p.action === "issue_certificate") {
+    if (e.status !== "completed") return fail("Only completed enrollments can receive a certificate.", 409);
+    if (e.certificate_issued_at) return fail("A certificate was already issued.", 409);
+
+    const code = newCertificateCode();
+    // Claim first, so a double click can’t issue two certificates
+    const { data: claimed } = await supabase
+      .from("class_enrollments")
+      .update({ certificate_issued_at: now, certificate_provider: "spotlight", certificate_id: code })
+      .eq("id", enrollmentId)
+      .is("certificate_issued_at", null)
+      .select("id")
+      .maybeSingle();
+    if (!claimed) return fail("A certificate was already issued.", 409);
+
+    const sent = await sendCertificateEmail(supabase, enrollmentId);
+    if (!sent.ok) {
+      await supabase
+        .from("class_enrollments")
+        .update({ certificate_issued_at: null, certificate_provider: null, certificate_id: null })
+        .eq("id", enrollmentId);
+      return fail(sent.error, 502);
+    }
+    return NextResponse.json({ success: true });
   }
 
   return fail("Unknown action.");

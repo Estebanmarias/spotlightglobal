@@ -170,6 +170,7 @@ export async function sendBrevoEmail(message: {
   to: { email: string; name?: string }[];
   subject: string;
   htmlContent: string;
+  attachment?: { name: string; content: string }[];
 }) {
   const apiKey = process.env.BREVO_API_KEY;
   if (!apiKey) return { sent: false, error: "Brevo is not configured" };
@@ -188,7 +189,9 @@ export async function sendBrevoEmail(message: {
     });
 
     if (!response.ok) {
-      return { sent: false, error: `Brevo returned ${response.status}` };
+      const detail = (await response.text().catch(() => "")).slice(0, 300);
+      console.error("[EVENT EMAIL] Brevo refused the email:", response.status, detail);
+      return { sent: false, error: `Brevo returned ${response.status}: ${detail}` };
     }
 
     return {
