@@ -3,6 +3,7 @@ import { getSupabaseAdminClient } from "@/lib/supabase-server";
 import { authorizeClassesManager, notifyEligibleForIntake, sendClassEmail, syncMemberStatusToBrevo } from "@/lib/classes";
 import { newCertificateCode } from "@/lib/certificate";
 import { sendCertificateEmail } from "@/lib/class-certificates";
+import { recordAuditLog } from "@/lib/audit-log";
 
 export const maxDuration = 60;
 
@@ -176,6 +177,12 @@ export async function POST(request: NextRequest) {
         return fail("Could not save the sessions.", 500);
       }
     }
+    await recordAuditLog(supabase, manager, {
+      action: "create_cohort",
+      entityType: "class_intake",
+      entityId: intake.id,
+      metadata: { title, sessionCount: sessions.length, price },
+    });
     return NextResponse.json({ success: true, id: intake.id });
   }
 
@@ -266,6 +273,11 @@ export async function POST(request: NextRequest) {
     if (!UUID.test(intakeId)) return fail("Invalid intake.");
     const error = await deleteIntake(intakeId);
     if (error) return fail(error, error === "Intake not found." ? 404 : 500);
+    await recordAuditLog(supabase, manager, {
+      action: "delete_cohort",
+      entityType: "class_intake",
+      entityId: intakeId,
+    });
     return NextResponse.json({ success: true });
   }
 
@@ -415,6 +427,12 @@ export async function POST(request: NextRequest) {
       .maybeSingle();
     if (error) return fail("Could not confirm payment.", 500);
     if (!updated) return fail("This payment was already confirmed.", 409);
+    await recordAuditLog(supabase, manager, {
+      action: "confirm_payment",
+      entityType: "class_enrollment",
+      entityId: enrollmentId,
+      metadata: { amount: Number(e.amount_due ?? 0) },
+    });
     const sent = await sendClassEmail(supabase, enrollmentId, "payment_confirmed");
     return NextResponse.json({ success: true, emailSent: sent.sent });
   }
@@ -440,6 +458,11 @@ export async function POST(request: NextRequest) {
       .maybeSingle();
     if (error) return fail("Could not save the decision.", 500);
     if (!updated) return fail("This registration was already decided.", 409);
+    await recordAuditLog(supabase, manager, {
+      action: rejecting ? "reject_enrollment" : "approve_enrollment",
+      entityType: "class_enrollment",
+      entityId: enrollmentId,
+    });
     const sent = await sendClassEmail(supabase, enrollmentId, rejecting ? "rejected" : "approved");
     return NextResponse.json({ success: true, emailSent: sent.sent });
   }
@@ -448,6 +471,11 @@ export async function POST(request: NextRequest) {
     if (e.payment_status !== "refund_due") return fail("No refund is due.", 409);
     const { error } = await supabase.from("class_enrollments").update({ payment_status: "refunded" }).eq("id", enrollmentId).eq("payment_status", "refund_due");
     if (error) return fail("Could not update the refund.", 500);
+    await recordAuditLog(supabase, manager, {
+      action: "mark_refunded",
+      entityType: "class_enrollment",
+      entityId: enrollmentId,
+    });
     return NextResponse.json({ success: true });
   }
 
@@ -459,6 +487,12 @@ export async function POST(request: NextRequest) {
     }
     const { error } = await supabase.from("class_enrollments").update({ status }).eq("id", enrollmentId);
     if (error) return fail("Could not update the status.", 500);
+    await recordAuditLog(supabase, manager, {
+      action: "set_enrollment_status",
+      entityType: "class_enrollment",
+      entityId: enrollmentId,
+      metadata: { status },
+    });
     return NextResponse.json({ success: true });
   }
 

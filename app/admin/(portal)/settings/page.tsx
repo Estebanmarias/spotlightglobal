@@ -34,6 +34,7 @@ export default function SettingsPage() {
   const [isSuperAdmin, setIsSuperAdmin] = useState(false)
   const [team, setTeam] = useState<AdminRole[]>([])
   const [loadingTeam, setLoadingTeam] = useState(true)
+  const [teamError, setTeamError] = useState('')
   const [toast, setToast] = useState<string | null>(null)
 
   // Password
@@ -80,7 +81,13 @@ export default function SettingsPage() {
 
   const fetchTeam = async () => {
     setLoadingTeam(true)
+    setTeamError('')
     const { data, error } = await supabase.from('admin_roles').select('*').order('created_at', { ascending: true })
+    if (error) {
+      setTeamError('Team members could not be loaded. Check your connection and try again.')
+      setLoadingTeam(false)
+      return
+    }
     if (!error && data) setTeam(data)
     setLoadingTeam(false)
   }
@@ -141,6 +148,23 @@ export default function SettingsPage() {
     const { error } = await (supabase.from('admin_roles') as any).update({ permissions: editPermissions }).eq('id', editingPermsFor.id)
     setSavingPerms(false)
     if (error) return showToast('Error updating permissions')
+    const { data: sessionData } = await supabase.auth.getSession()
+    if (sessionData.session) {
+      const auditResponse = await fetch('/api/admin/audit-log', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${sessionData.session.access_token}`,
+        },
+        body: JSON.stringify({
+          action: 'update_admin_permissions',
+          entityType: 'admin_role',
+          entityId: editingPermsFor.id,
+          metadata: { permissions: editPermissions.join(',') },
+        }),
+      })
+      if (!auditResponse.ok) showToast('Access updated, but the audit entry could not be saved')
+    }
     showToast(`${editingPermsFor.full_name}'s access updated`)
     setEditingPermsFor(null)
     fetchTeam()
@@ -388,6 +412,11 @@ export default function SettingsPage() {
               <h2 className="text-[16px] font-bold text-[#081534] mb-6">Current Team</h2>
               {loadingTeam ? (
                 <div className="space-y-3">{[1,2].map(i => <div key={i} className="h-16 bg-[#f2f4f6] rounded-xl animate-pulse" />)}</div>
+              ) : teamError ? (
+                <div className="rounded-xl border border-[#ba1a1a]/20 bg-[#ffdad6] p-4 text-[13px] text-[#5a1a16]" role="alert">
+                  <p className="font-semibold">{teamError}</p>
+                  <button type="button" onClick={fetchTeam} className="mt-3 font-bold underline">Retry</button>
+                </div>
               ) : activeTeam.length === 0 ? (
                 <p className="text-[13px] text-[#45464e]">No approved team members yet.</p>
               ) : (

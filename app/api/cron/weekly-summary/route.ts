@@ -10,6 +10,7 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { getSupabaseAdminClient } from '@/lib/supabase-server'
+import { SITE_CONFIG } from '@/lib/site-config'
 
 export async function GET(req: NextRequest) {
   // Protect endpoint — only Vercel's cron runner should call this
@@ -97,7 +98,7 @@ Keep shining the light. 🌟
     return NextResponse.json({ error: 'Brevo not configured' }, { status: 500 })
   }
 
-  const senderEmail = process.env.BREVO_SENDER_EMAIL || 'officialspotlightglobal@gmail.com'
+  const senderEmail = process.env.BREVO_SENDER_EMAIL || SITE_CONFIG.email
   const senderName = process.env.BREVO_SENDER_NAME || 'TheSpotlightChurch'
 
   const brevoRes = await fetch('https://api.brevo.com/v3/smtp/email', {
@@ -108,7 +109,7 @@ Keep shining the light. 🌟
     },
     body: JSON.stringify({
       sender: { name: senderName, email: senderEmail },
-      to: [{ email: 'officialspotlightglobal@gmail.com', name: 'Apostle Edet Kingsley' }],
+      to: [{ email: SITE_CONFIG.email, name: 'Apostle Edet Kingsley' }],
       subject: `Weekly Spotlight Summary — ${dateLabel}`,
       textContent: emailBody,
     }),

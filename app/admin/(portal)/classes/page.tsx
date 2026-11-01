@@ -23,7 +23,7 @@ type Enrollment = {
 }
 type Attendance = { enrollment_id: string; session_id: string; present: boolean }
 type Detail = { sessions: Session[]; enrollments: Enrollment[]; attendance: Attendance[] }
-type ConfirmState = { title: string; body: string; label: string; danger?: boolean; run: () => Promise<void> }
+type ConfirmState = { title: string; body: string; label: string; danger?: boolean; confirmationText?: string; run: () => Promise<void> }
 type ApiError = Error & { needsForce?: boolean }
 
 type Form = {
@@ -373,6 +373,7 @@ export default function ClassesAdminPage() {
   const [counts, setCounts] = useState<Record<string, number>>({})
   const [programId, setProgramId] = useState('')
   const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState('')
   const [activeId, setActiveId] = useState<string | null>(null)
   const [detail, setDetail] = useState<Detail>({ sessions: [], enrollments: [], attendance: [] })
   const [detailLoading, setDetailLoading] = useState(false)
@@ -381,6 +382,7 @@ export default function ClassesAdminPage() {
   const [payTarget, setPayTarget] = useState<Enrollment | null>(null)
   const [payRef, setPayRef] = useState('')
   const [confirm, setConfirm] = useState<ConfirmState | null>(null)
+  const [confirmText, setConfirmText] = useState('')
   const [confirming, setConfirming] = useState(false)
   const [busyId, setBusyId] = useState<string | null>(null)
   const [toast, setToast] = useState<string | null>(null)
@@ -400,6 +402,7 @@ export default function ClassesAdminPage() {
   }, [supabase])
 
   const load = useCallback(async (intakeId?: string | null) => {
+    setLoadError('')
     try {
       const d = await api('GET', undefined, intakeId ? `?intake=${intakeId}` : '')
       setPrograms(d.programs ?? [])
@@ -407,7 +410,9 @@ export default function ClassesAdminPage() {
       setCounts(d.counts ?? {})
       if (intakeId) setDetail({ sessions: d.sessions ?? [], enrollments: d.enrollments ?? [], attendance: d.attendance ?? [] })
     } catch (e) {
-      showToast((e as Error).message)
+      const message = (e as Error).message
+      if (intakeId) showToast(message)
+      else setLoadError(message)
     }
     setLoading(false)
     setDetailLoading(false)
@@ -496,7 +501,7 @@ export default function ClassesAdminPage() {
     setBusyId(null)
   }
 
-  const askConfirm = (state: ConfirmState) => setConfirm(state)
+  const askConfirm = (state: ConfirmState) => { setConfirmText(''); setConfirm(state) }
   const submitIntake = async (body: Record<string, unknown>) => {
     const r = await api('POST', body)
     setModal(null)
@@ -560,6 +565,12 @@ export default function ClassesAdminPage() {
       </div>
 
       <div className="space-y-6 p-4 sm:p-6 lg:p-8">
+        {loadError && (
+          <div className="flex items-center justify-between gap-4 rounded-xl border border-[#ba1a1a]/20 bg-[#ffdad6] px-4 py-3 text-[13px] text-[#5a1a16]" role="alert">
+            <span className="font-semibold">{loadError}</span>
+            <button type="button" onClick={() => load()} className="shrink-0 font-bold underline">Retry</button>
+          </div>
+        )}
         {!active && (
           <>
             <div className="flex flex-wrap gap-2">
@@ -601,6 +612,7 @@ export default function ClassesAdminPage() {
                           body: 'This permanently deletes the cohort, its sessions, attendance, and enrolments.',
                           label: 'Delete cohort',
                           danger: true,
+                          confirmationText: 'DELETE',
                           run: () => run(i.id, { action: 'delete_intake', intake_id: i.id }, 'Cohort deleted'),
                         })}
                         aria-label={`Delete ${i.title}`}
@@ -798,11 +810,18 @@ export default function ClassesAdminPage() {
             <div className="p-6">
               <h3 className="text-[17px] font-bold text-[#081534]">{confirm.title}</h3>
               <p className="mt-2 text-[13px] text-[#45464e]">{confirm.body}</p>
+              {confirm.confirmationText && (
+                <div className="mt-4">
+                  <label htmlFor="cohort-delete-confirm" className="text-[11px] font-bold uppercase tracking-wide text-[#5a1a16]">Type {confirm.confirmationText} to continue</label>
+                  <input id="cohort-delete-confirm" value={confirmText} onChange={(e) => setConfirmText(e.target.value)}
+                    className="mt-1 w-full rounded-lg border border-[#ba1a1a]/30 px-3 py-2 text-[13px] outline-none focus:border-[#ba1a1a]" autoComplete="off" />
+                </div>
+              )}
               <div className="mt-6 flex gap-3">
-                <button onClick={() => setConfirm(null)} className="flex-1 rounded-xl border border-[#c6c6cf] py-3 text-[13px] font-semibold text-[#45464e] hover:bg-[#f2f4f6]">Cancel</button>
-                <button disabled={confirming} onClick={async () => {
+                <button onClick={() => { setConfirm(null); setConfirmText('') }} className="flex-1 rounded-xl border border-[#c6c6cf] py-3 text-[13px] font-semibold text-[#45464e] hover:bg-[#f2f4f6]">Cancel</button>
+                <button disabled={confirming || Boolean(confirm.confirmationText && confirmText.trim() !== confirm.confirmationText)} onClick={async () => {
                   setConfirming(true)
-                  const c = confirm; setConfirm(null)
+                  const c = confirm; setConfirm(null); setConfirmText('')
                   await c.run()
                   setConfirming(false)
                 }} className={`flex-1 rounded-xl py-3 text-[13px] font-bold text-white hover:opacity-90 disabled:opacity-50 ${confirm.danger ? 'bg-[#ba1a1a]' : 'bg-[#081534]'}`}>{confirm.label}</button>

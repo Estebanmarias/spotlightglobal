@@ -1,6 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { checkPublicRateLimit } from '@/lib/public-rate-limit'
+import { SITE_CONFIG } from '@/lib/site-config'
 
 export async function POST(req: NextRequest) {
+  const rate = await checkPublicRateLimit(req, 'contact')
+  if (!rate.allowed) {
+    return NextResponse.json(
+      { error: rate.unavailable ? 'Contact is temporarily unavailable. Please try again later.' : 'Too many messages. Please try again later.' },
+      { status: rate.unavailable ? 503 : 429 },
+    )
+  }
+
   let body: Record<string, unknown>
   try {
     body = await req.json()
@@ -23,7 +33,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Email service not configured.' }, { status: 500 })
   }
 
-  const senderEmail = process.env.BREVO_SENDER_EMAIL || 'officialspotlightglobal@gmail.com'
+  const senderEmail = process.env.BREVO_SENDER_EMAIL || SITE_CONFIG.email
   const senderName = process.env.BREVO_SENDER_NAME || 'theSpotlightChurch Website'
 
   try {
@@ -35,7 +45,7 @@ export async function POST(req: NextRequest) {
       },
       body: JSON.stringify({
         sender: { name: senderName, email: senderEmail },
-        to: [{ email: 'officialspotlightglobal@gmail.com', name: 'theSpotlightChurch' }],
+        to: [{ email: SITE_CONFIG.email, name: SITE_CONFIG.churchName }],
         replyTo: { email, name: `${first_name} ${last_name || ''}`.trim() },
         subject: `Contact Form: ${interest || 'General Inquiry'} — ${first_name} ${last_name || ''}`.trim(),
         htmlContent: `

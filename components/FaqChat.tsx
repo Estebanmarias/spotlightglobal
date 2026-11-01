@@ -11,13 +11,12 @@ import {
   Car, CalendarDays, Clock, GraduationCap, HandHeart, Handshake, Headphones,
   HeartHandshake, MapPin, Navigation, Phone, UserPlus, X,
 } from 'lucide-react'
+import { SITE_CONFIG } from '@/lib/site-config'
 
 // ── Edit contacts, links and logo here ───────────────────────────────
 const LOGO_SRC = '/apple-touch-icon-v2.png'
 
-const MAPS_URL =
-  'https://www.google.com/maps/search/?api=1&query=' +
-  encodeURIComponent('Icon Hotel Hall, Angwan Danlami, New Nyanya, Abuja-Keffi Expressway, Nigeria')
+const MAPS_URL = SITE_CONFIG.mapsUrl
 
 const SETMAN = { name: 'The Setman', number: '2348115316745' }
 const COUNSELOR_2 = { name: 'Yahaya Amos', number: '2348102766407' }
@@ -51,7 +50,7 @@ const TOPICS: Topic[] = [
     label: 'Location',
     icon: <MapPin className={ICON} />,
     reply:
-      'Icon Hotel Hall, opposite Mai Angwan House by the transformer, Angwan Danlami, New Nyanya, Abuja-Keffi Express Way.',
+      `${SITE_CONFIG.address}.`,
     actions: [{ label: 'Get directions', href: MAPS_URL, icon: <Navigation className={ICON} /> }],
   },
   {

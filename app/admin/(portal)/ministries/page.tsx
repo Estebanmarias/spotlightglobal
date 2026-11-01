@@ -7,6 +7,7 @@ import { getSupabaseClient } from '@/lib/supabase'
 import { useAdminAccess } from '@/lib/use-admin-permissions'
 import AdminLoader from '@/components/AdminLoader'
 import Icon from '@/components/Icon'
+import DestructiveConfirm from '@/components/DestructiveConfirm'
 import { MINISTRY_ICON_OPTIONS } from '@/lib/ministry-icons'
 
 // ── Types ─────────────────────────────────────────────────────────────
@@ -58,6 +59,7 @@ export default function MinistriesPage() {
   const [hovered, setHovered] = useState<string | null>(null)
   const [detailMinistry, setDetail] = useState<Ministry | null>(null)
   const [deleteTarget, setDeleteTarget] = useState<Ministry | null>(null)
+  const [deleteConfirmation, setDeleteConfirmation] = useState('')
   const [showModal, setShowModal] = useState(false)
   const [editMinistry, setEdit] = useState<Ministry | null>(null)
   const [saving, setSaving] = useState(false)
@@ -169,6 +171,7 @@ export default function MinistriesPage() {
     const { error } = await supabase.from('ministries').delete().eq('id', deleteTarget.id)
     if (error) { showToast('Error deleting ministry'); return }
     setDeleteTarget(null)
+    setDeleteConfirmation('')
     if (detailMinistry?.id === deleteTarget.id) setDetail(null)
     showToast('Ministry removed')
     fetchMinistries()
@@ -777,24 +780,16 @@ export default function MinistriesPage() {
               className="fixed inset-0 bg-black/50 z-40 backdrop-blur-sm" onClick={() => setDeleteTarget(null)} />
             <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }}
               className="fixed inset-0 z-50 flex items-center justify-center p-4">
-              <div className="bg-white rounded-2xl w-full max-w-[400px] p-6 shadow-2xl">
-                <div className="w-12 h-12 bg-[#ffdad6] rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Icon name="delete" className="text-[#ba1a1a] text-[24px]" />
-                </div>
-                <h3 className="text-[18px] font-bold text-[#081534] text-center mb-2">Remove Ministry</h3>
-                <p className="text-[13px] text-[#45464e] text-center mb-6">
-                  Are you sure you want to remove <span className="font-bold text-[#081534]">{deleteTarget.name}</span>? This cannot be undone.
-                </p>
-                <div className="flex gap-3">
-                  <button onClick={() => setDeleteTarget(null)}
-                    className="flex-1 py-3 border border-[#c6c6cf] rounded-xl text-[13px] font-semibold text-[#45464e] hover:bg-[#f2f4f6]">
-                    Cancel
-                  </button>
-                  <button onClick={handleDelete}
-                    className="flex-1 py-3 bg-[#ba1a1a] text-white rounded-xl text-[13px] font-bold hover:opacity-90">
-                    Yes, Remove
-                  </button>
-                </div>
+              <div className="w-full max-w-[400px] rounded-2xl bg-white p-6 shadow-2xl">
+                <DestructiveConfirm
+                  title="Remove Ministry"
+                  description={<>Are you sure you want to remove <strong>{deleteTarget.name}</strong>? This cannot be undone.</>}
+                  confirmationText="DELETE"
+                  value={deleteConfirmation}
+                  onChange={setDeleteConfirmation}
+                  onCancel={() => { setDeleteTarget(null); setDeleteConfirmation('') }}
+                  onConfirm={handleDelete}
+                />
               </div>
             </motion.div>
           </>

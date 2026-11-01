@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import Link from 'next/link'
 import Icon from '@/components/Icon'
 import BrandIcon from '@/components/BrandIcon'
+import { SITE_CONFIG } from '@/lib/site-config'
 
 const interests = ['General Inquiry', 'Prayer Request', 'Volunteer', 'Partnership', 'Media & Press']
 
@@ -45,7 +46,7 @@ export default function ContactPage() {
       setFormState('success')
     } catch {
       setFormState('error')
-      setErrorMsg('Failed to send message. Please email us directly at officialspotlightglobal@gmail.com')
+      setErrorMsg(`Failed to send message. Please email us directly at ${SITE_CONFIG.email}`)
     }
   }
 
@@ -91,7 +92,7 @@ export default function ContactPage() {
 
             <div className="space-y-5">
               {[
-                { icon: 'mail',     brand: false, text: 'officialspotlightglobal@gmail.com',     href: 'mailto:officialspotlightglobal@gmail.com' },
+                { icon: 'mail',     brand: false, text: SITE_CONFIG.email,     href: `mailto:${SITE_CONFIG.email}` },
                 { icon: 'telegram', brand: true,  text: 't.me/thespotlightchurchLive',            href: 'https://t.me/thespotlightchurchLive' },
                 { icon: 'youtube',  brand: true,  text: 'YouTube · @thespotlightchurch',          href: 'https://www.youtube.com/@thespotlightchurch' },
               ].map(item => {

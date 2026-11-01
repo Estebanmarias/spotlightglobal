@@ -35,22 +35,26 @@ export default function JoinClient() {
 
     setSubmitting(true)
 
-    const res = await fetch('/api/register', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(form),
-    })
-    const data = await res.json()
+    try {
+      const res = await fetch('/api/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(form),
+      })
+      const data = await res.json().catch(() => null)
 
-    setSubmitting(false)
+      if (!res.ok) {
+        setError(data?.error || 'Something went wrong. Please try again.')
+        return
+      }
 
-    if (!res.ok) {
-      setError(data.error || 'Something went wrong. Please try again.')
-      return
+      setSubmitted(true)
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+    } catch {
+      setError('We could not connect right now. Please check your connection and try again.')
+    } finally {
+      setSubmitting(false)
     }
-
-    setSubmitted(true)
-    window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
   return (
@@ -146,7 +150,7 @@ export default function JoinClient() {
                 {error && (
                   <div className="flex items-start gap-2 p-3 bg-[#ffdad6] rounded-lg">
                     <Icon name="error" className="mt-0.5 text-[16px] text-[#ba1a1a]" />
-                    <p className="text-[#ba1a1a] text-[13px] font-semibold">{error}</p>
+                    <p role="alert" className="text-[#ba1a1a] text-[13px] font-semibold">{error}</p>
                   </div>
                 )}
 

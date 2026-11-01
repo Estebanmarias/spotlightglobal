@@ -7,6 +7,7 @@ import { formatEventRegistrationReference } from '@/lib/event-registration-refer
 import { createPortal } from 'react-dom'
 import Icon from '@/components/Icon'
 import { recurrenceLabel } from '@/lib/church-events'
+import { SITE_CONFIG } from '@/lib/site-config'
 
 // ════════════════════════════════════════════════════════════════════
 // MediaManagement — Events + Gallery with Supabase Storage uploads
@@ -85,7 +86,7 @@ type CommunityPhoto = {
 
 const blankEventForm = {
   title: '', description: '', event_date: '', event_time: '',
-  flyer_url: '', location: 'Icon Hotel Hall, Angwan Danlami, New Nyanya', is_featured: false,
+  flyer_url: '', location: SITE_CONFIG.address, is_featured: false,
   event_end_date: '', registration_enabled: false, registration_capacity: '',
   registration_deadline: '', price_type: 'free' as 'free' | 'paid',
   price: '', currency: 'NGN', special_session_label: '', special_session_date: '',
@@ -329,7 +330,7 @@ export default function MediaManagement({ viewerRole }: MediaManagementProps) {
       event_date: eventForm.event_date,
       event_time: eventForm.event_time.trim() || null,
       flyer_url: finalFlyerUrl,
-      location: eventForm.location.trim() || 'Icon Hotel Hall, Angwan Danlami, New Nyanya',
+      location: eventForm.location.trim() || SITE_CONFIG.address,
       is_featured: eventForm.is_featured,
       event_end_date: eventForm.event_end_date || null,
       registration_enabled: eventForm.registration_enabled,

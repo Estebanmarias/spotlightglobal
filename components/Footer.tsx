@@ -4,6 +4,7 @@ import CookieSettingsButton from '@/components/CookieSettingsButton'
 import Icon from '@/components/Icon'
 import BrandIcon from '@/components/BrandIcon'
 import Link from 'next/link'
+import { SITE_CONFIG } from '@/lib/site-config'
 
 const exploreLinks = [
   { label: 'Our Vision',  href: '/vision' },
@@ -24,7 +25,7 @@ type Social = { name: string; href: string; brand?: string; icon?: string }
 
 const socials: Social[] = [
   { name: 'WhatsApp',  href: 'https://wa.me/2348115316745', brand: 'whatsapp' },
-  { name: 'Email',     href: 'mailto:officialspotlightglobal@gmail.com', icon: 'mail' },
+  { name: 'Email',     href: `mailto:${SITE_CONFIG.email}`, icon: 'mail' },
   { name: 'YouTube',   href: 'https://www.youtube.com/@thespotlightchurch', brand: 'youtube' },
   { name: 'Instagram', href: 'https://instagram.com/thespotlightchurch', brand: 'instagram' },
   { name: 'Spotify',   href: 'https://open.spotify.com/show/75PSP2x3mArsPABn4KReUY?si=Jc1MU9kaTPu_b0roC20Rig', brand: 'spotify' },

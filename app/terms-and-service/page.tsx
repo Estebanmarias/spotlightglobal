@@ -172,7 +172,7 @@ export default function TermsPage() {
               <Icon name="description" className="text-[#fdc425] text-[24px] block mb-2" />
               <h4 className="text-[13px] font-bold text-[#081534] mb-1">Have questions?</h4>
               <p className="text-[11px] text-[#45464e] mb-4 leading-relaxed">Contact us about any legal concerns.</p>
-              <a href="mailto:officialspotlightglobal@gmail.com"
+              <a href={`mailto:${SITE_CONFIG.email}`}
                 className="w-full py-2 bg-[#081534] text-white rounded-lg text-[12px] font-bold hover:opacity-90 transition-opacity flex items-center justify-center gap-1.5">
                 <Icon name="mail" className="text-[14px]" />
                 Email Us
@@ -220,7 +220,7 @@ export default function TermsPage() {
                 If you have any questions or concerns about these Terms of Service, our team is happy to provide clarity.
               </p>
               <div className="flex flex-wrap gap-3 justify-center">
-                <a href="mailto:officialspotlightglobal@gmail.com"
+                <a href={`mailto:${SITE_CONFIG.email}`}
                   className="flex items-center gap-2 bg-[#081534] text-white px-6 py-3 rounded-full text-[13px] font-bold hover:opacity-90 transition-all active:scale-95">
                   <Icon name="mail" className="text-[16px]" />
                   Contact Us
@@ -247,3 +247,4 @@ export default function TermsPage() {
     </main>
   )
 }
+import { SITE_CONFIG } from '@/lib/site-config'

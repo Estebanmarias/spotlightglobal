@@ -3,15 +3,14 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { getSupabaseClient } from "@/lib/supabase";
-import { useRouter } from "next/navigation";
 import { useAdminAccess } from "@/lib/use-admin-permissions";
 import AdminLoader from "@/components/AdminLoader";
 import {
   ResponsiveContainer,
+  AreaChart,
+  Area,
   LineChart,
   Line,
-  BarChart,
-  Bar,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -19,9 +18,10 @@ import {
   PieChart,
   Pie,
   Cell,
-  Legend,
 } from "recharts";
 import Icon from '@/components/Icon'
+import { attendanceChange, percentageChange } from "@/lib/analytics-metrics";
+import { buildCsv } from "@/lib/csv";
 
 type StatusCounts = {
   First_Timer: number;
@@ -62,10 +62,11 @@ const GIVING_COLORS = [
 ];
 
 export default function AnalyticsPage() {
-  const router = useRouter();
   const supabase = getSupabaseClient();
 
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
+  const [activeRange, setActiveRange] = useState<"8" | "12">("8");
   const [total, setTotal] = useState(0);
   const [thisWeek, setThisWeek] = useState(0);
   const [thisMonth, setThisMonth] = useState(0);
@@ -90,19 +91,18 @@ export default function AnalyticsPage() {
   const canViewGiving =
     access.isSuperAdmin || access.permissions.includes("giving");
 
-  useEffect(() => {
-    if (!access.loading) {
-      loadData();
-      if (canViewGiving) loadGivingData();
-    }
-  }, [access.loading]);
-
   const loadData = async () => {
     setLoading(true);
+    setLoadError("");
 
-    const { count: totalCount } = await supabase
+    const { count: totalCount, error: totalError } = await supabase
       .from("members")
       .select("id", { count: "exact", head: true });
+    if (totalError) {
+      setLoadError("Analytics data could not be loaded. Check your connection and try again.");
+      setLoading(false);
+      return;
+    }
     setTotal(totalCount || 0);
 
     const weekAgo = new Date();
@@ -140,9 +140,10 @@ export default function AnalyticsPage() {
     });
     setStatusCounts(counts);
 
-    // Weekly member registrations — last 8 weeks
+    // Weekly member registrations — last 8 or 12 weeks
     const weeks: WeeklyData[] = [];
-    for (let i = 7; i >= 0; i--) {
+    const range = Number(activeRange);
+    for (let i = range - 1; i >= 0; i--) {
       const start = new Date();
       start.setDate(start.getDate() - (i + 1) * 7);
       const end = new Date();
@@ -152,7 +153,7 @@ export default function AnalyticsPage() {
         .select("id", { count: "exact", head: true })
         .gte("created_at", start.toISOString())
         .lt("created_at", end.toISOString());
-      weeks.push({ week: `Wk ${8 - i}`, count: count || 0 });
+      weeks.push({ week: `Wk ${range - i}`, count: count || 0 });
     }
     setWeeklyData(weeks);
 
@@ -249,6 +250,13 @@ export default function AnalyticsPage() {
     setGivingLoading(false);
   };
 
+  useEffect(() => {
+    if (!access.loading) {
+      loadData();
+      if (canViewGiving) loadGivingData();
+    }
+  }, [access.loading, activeRange]);
+
   const handleExport = async () => {
     const { data } = (await supabase
       .from("members")
@@ -273,7 +281,7 @@ export default function AnalyticsPage() {
       m.guest_status,
       new Date(m.created_at).toLocaleDateString("en-NG"),
     ]);
-    const csv = [headers, ...rows].map((r) => r.join(",")).join("\n");
+    const csv = buildCsv([headers, ...rows]);
     const blob = new Blob([csv], { type: "text/csv" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -283,11 +291,12 @@ export default function AnalyticsPage() {
     URL.revokeObjectURL(url);
   };
 
-  const maxWeekly = Math.max(...weeklyData.map((w) => w.count), 1);
-  const maxAttendance = Math.max(...attendanceWeeks.map((w) => w.total), 1);
-  const monthGrowth =
-    lastMonth > 0 ? Math.round(((thisMonth - lastMonth) / lastMonth) * 100) : 0;
+  const monthGrowth = percentageChange(thisMonth, lastMonth);
   const totalForBar = total || 1;
+  const latestAttendanceChange = attendanceChange(
+    lastAttendance?.total ?? 0,
+    attendanceWeeks.length > 1 ? attendanceWeeks[attendanceWeeks.length - 2].total : null,
+  );
 
   const statusConfig = [
     {
@@ -317,12 +326,12 @@ export default function AnalyticsPage() {
       {/* Header */}
       <div className="sticky top-0 bg-white border-b border-[#c6c6cf] px-4 sm:px-8 lg:px-10 py-4 z-40">
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
-          <div className="">
+          <div>
             <h2 className="text-[22px] sm:text-[26px] font-bold text-[#081534]">
               Analytics
             </h2>
             <p className="text-[13px] text-[#45464e]">
-              Live data from members, attendance, and giving records.
+              A clear view of congregation growth, attendance, and giving.
             </p>
           </div>
           <div className="flex gap-2">
@@ -345,6 +354,15 @@ export default function AnalyticsPage() {
       </div>
 
       <div className="p-4 sm:p-6 lg:p-8 space-y-6">
+        {loadError && (
+          <div className="flex items-start justify-between gap-4 rounded-xl border border-[#ba1a1a]/20 bg-[#ffdad6] px-4 py-3 text-[13px] text-[#5a1a16]" role="alert">
+            <div className="flex items-start gap-2">
+              <Icon name="warning" className="mt-0.5 text-[18px]" />
+              <span>{loadError}</span>
+            </div>
+            <button type="button" onClick={loadData} className="shrink-0 font-bold underline">Retry</button>
+          </div>
+        )}
         {/* Top metrics */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           {[
@@ -402,53 +420,47 @@ export default function AnalyticsPage() {
 
         {/* Member growth + status */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          <div className="lg:col-span-8 bg-white border border-[#c6c6cf] rounded-xl p-5 sm:p-8">
-            <h4 className="text-[18px] font-bold text-[#081534] mb-1">
-              Weekly Registrations
-            </h4>
-            <p className="text-[12px] text-[#45464e] mb-6">
-              New members registered per week over the last 8 weeks.
-            </p>
-            {loading ? (
-              <div className="h-40 flex items-center justify-center">
-                <AdminLoader label="Loading registrations..." />
-              </div>
-            ) : (
-              <>
-                <div className="relative h-40 sm:h-48 flex items-end gap-1.5 sm:gap-2 px-1">
-                  {weeklyData.map((w, i) => (
-                    <div
-                      key={i}
-                      className="flex-1 flex flex-col items-center gap-1 group"
-                    >
-                      <span className="text-[9px] sm:text-[10px] text-[#45464e] font-bold opacity-60 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
-                        {w.count}
-                      </span>
-                      <div
-                        className="w-full bg-[#f2f4f6] rounded-t overflow-hidden"
-                        style={{ height: "160px" }}
-                      >
-                        <div
-                          className="w-full bg-[#fdc425] rounded-t transition-all group-hover:brightness-110"
-                          style={{
-                            height: `${(w.count / maxWeekly) * 100}%`,
-                            marginTop: `${100 - (w.count / maxWeekly) * 100}%`,
-                          }}
-                        />
-                      </div>
-                    </div>
-                  ))}
-                </div>
-                <div className="flex justify-between mt-3 px-1 text-[9px] sm:text-[11px] text-[#45464e] font-semibold">
-                  {weeklyData.map((w) => (
-                    <span key={w.week}>{w.week}</span>
-                  ))}
-                </div>
-              </>
-            )}
+          <section aria-labelledby="registration-chart-title" className="lg:col-span-8 bg-white border border-[#c6c6cf] rounded-2xl p-5 sm:p-8 shadow-[0_8px_30px_rgba(8,21,52,0.04)]">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+            <div>
+              <h4 id="registration-chart-title" className="text-[18px] font-bold text-[#081534] mb-1">Weekly Registrations</h4>
+              <p className="text-[12px] text-[#45464e]">New members joining your congregation.</p>
+            </div>
+            <div className="flex rounded-lg bg-[#f2f4f6] p-1" role="group" aria-label="Registration chart range">
+              {(["8", "12"] as const).map((range) => (
+                <button key={range} type="button" onClick={() => setActiveRange(range)}
+                  className={`rounded-md px-3 py-1.5 text-[11px] font-bold transition-colors ${activeRange === range ? "bg-white text-[#081534] shadow-sm" : "text-[#76777f]"}`}>
+                  {range} weeks
+                </button>
+              ))}
+            </div>
           </div>
+          {loading ? (
+            <div className="h-56 flex items-center justify-center">
+              <AdminLoader label="Loading registrations..." />
+            </div>
+          ) : (
+            <div className="mt-5 h-56" role="img" aria-label={`New member registrations over the last ${activeRange} weeks`}>
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={weeklyData} margin={{ top: 8, right: 8, left: -20, bottom: 0 }}>
+                  <defs>
+                    <linearGradient id="memberGrowthFill" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#fdc425" stopOpacity={0.45} />
+                      <stop offset="100%" stopColor="#fdc425" stopOpacity={0.03} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid stroke="#eef0f3" vertical={false} />
+                  <XAxis dataKey="week" tick={{ fontSize: 10, fill: "#76777f" }} axisLine={false} tickLine={false} />
+                  <YAxis allowDecimals={false} tick={{ fontSize: 10, fill: "#76777f" }} axisLine={false} tickLine={false} />
+                  <Tooltip contentStyle={{ borderRadius: 12, border: "1px solid #e2e4e8", fontSize: 12 }} cursor={{ stroke: "#fdc425", strokeDasharray: "4 4" }} />
+                  <Area type="monotone" dataKey="count" name="New members" stroke="#fdc425" strokeWidth={3} fill="url(#memberGrowthFill)" activeDot={{ r: 6, fill: "#081534", stroke: "#fdc425", strokeWidth: 3 }} />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
+          )}
+          </section>
 
-          <div className="lg:col-span-4 bg-[#081534] text-white rounded-xl p-5 sm:p-8">
+          <div className="lg:col-span-4 bg-[#081534] text-white rounded-2xl p-5 sm:p-8 shadow-[0_8px_30px_rgba(8,21,52,0.12)]">
             <h4 className="text-[18px] font-bold mb-1">Guest Status</h4>
             <p className="text-[12px] opacity-70 mb-6">
               Congregation breakdown by type.
@@ -456,26 +468,16 @@ export default function AnalyticsPage() {
             {loading ? (
               <AdminLoader label="Loading status..." />
             ) : (
-              <div className="space-y-5">
+              <div className="grid grid-cols-2 gap-3">
                 {statusConfig.map((s) => {
                   const count = statusCounts[s.key as keyof StatusCounts];
                   const pct = Math.round((count / totalForBar) * 100);
                   return (
-                    <div key={s.key}>
-                      <div className="flex justify-between items-center mb-1.5">
-                        <span className="text-[13px] font-semibold text-white/90">
-                          {s.label}
-                        </span>
-                        <span className="text-[12px] font-bold text-[#ffdf9a]">
-                          {count}
-                        </span>
-                      </div>
-                      <div className="w-full bg-white/10 h-2 rounded-full overflow-hidden">
-                        <div
-                          className={`${s.color} h-full rounded-full transition-all`}
-                          style={{ width: `${pct}%` }}
-                        />
-                      </div>
+                    <div key={s.key} className="rounded-xl border border-white/10 bg-white/5 p-3">
+                      <div className={`mb-2 h-2 w-2 rounded-full ${s.color}`} />
+                      <p className="text-[11px] text-white/65">{s.label}</p>
+                      <p className="mt-1 text-[22px] font-bold text-white">{count.toLocaleString()}</p>
+                      <p className="text-[10px] font-semibold text-[#ffdf9a]">{pct}% of total</p>
                     </div>
                   );
                 })}
@@ -493,29 +495,61 @@ export default function AnalyticsPage() {
         </div>
 
         {/* Attendance trends */}
-        <div className="bg-white border border-[#c6c6cf] rounded-xl p-5 sm:p-8">
-          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 mb-6">
-            <div>
-              <h4 className="text-[18px] font-bold text-[#081534]">
-                Sunday Attendance Trends
-              </h4>
-              <p className="text-[12px] text-[#45464e]">
-                Last {attendanceWeeks.length} recorded services — male, female,
-                children.
-              </p>
+        <section aria-labelledby="attendance-trends-title" className="overflow-hidden rounded-2xl border border-[#c6c6cf] bg-white shadow-[0_8px_30px_rgba(8,21,52,0.04)]">
+          <div className="border-b border-[#e2e4e8] bg-[#f7f9fb] px-5 py-5 sm:px-8">
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+              <div>
+                <div className="flex items-center gap-2">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#081534] text-[#fdc425]">
+                    <Icon name="groups" className="text-[19px]" />
+                  </div>
+                  <div>
+                    <h4 id="attendance-trends-title" className="text-[18px] font-bold text-[#081534]">
+                      Sunday Attendance
+                    </h4>
+                    <p className="text-[12px] text-[#45464e]">
+                      Headcount recorded for your most recent services.
+                    </p>
+                  </div>
+                </div>
+                <p className="mt-4 max-w-2xl text-[12px] leading-5 text-[#76777f]">
+                  This shows how many men, women, and children attended each service. Use it to spot changes in weekly attendance and plan seating, children&apos;s ministry, and volunteers.
+                </p>
+              </div>
+              {lastAttendance && (
+                <div className="min-w-[190px] rounded-xl bg-[#081534] px-4 py-3 text-white">
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-white/55">Latest service</p>
+                  <p className="mt-1 text-[26px] font-bold">{lastAttendance.total.toLocaleString()}</p>
+                  <p className="text-[11px] text-white/65">
+                    total attendees
+                    {latestAttendanceChange !== null && (
+                      <span className={latestAttendanceChange >= 0 ? "ml-2 text-[#fdc425]" : "ml-2 text-[#ffb4ab]"}>
+                        {latestAttendanceChange >= 0 ? "+" : ""}{latestAttendanceChange} vs previous
+                      </span>
+                    )}
+                  </p>
+                </div>
+              )}
             </div>
-            <div className="flex gap-4">
+          </div>
+          <div className="p-5 sm:p-8">
+          <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <h5 className="text-[14px] font-bold text-[#081534]">Attendance by service</h5>
+              <p className="text-[12px] text-[#76777f]">Stacked bars show the total headcount and its breakdown.</p>
+            </div>
+            <div className="flex flex-wrap gap-3">
               <div className="flex items-center gap-2">
-                <span className="w-3 h-3 rounded-full bg-[#081534]" />
-                <span className="text-[12px] font-semibold">Male</span>
+                <span className="h-2.5 w-2.5 rounded-full bg-[#081534]" />
+                <span className="text-[11px] font-semibold text-[#45464e]">Men</span>
               </div>
               <div className="flex items-center gap-2">
-                <span className="w-3 h-3 rounded-full bg-[#fdc425]" />
-                <span className="text-[12px] font-semibold">Female</span>
+                <span className="h-2.5 w-2.5 rounded-full bg-[#fdc425]" />
+                <span className="text-[11px] font-semibold text-[#45464e]">Women</span>
               </div>
               <div className="flex items-center gap-2">
-                <span className="w-3 h-3 rounded-full bg-[#adc6ff]" />
-                <span className="text-[12px] font-semibold">Children</span>
+                <span className="h-2.5 w-2.5 rounded-full bg-[#adc6ff]" />
+                <span className="text-[11px] font-semibold text-[#45464e]">Children</span>
               </div>
             </div>
           </div>
@@ -528,96 +562,73 @@ export default function AnalyticsPage() {
             <div className="text-center py-12">
               <Icon name="fact_check" className="text-[48px] text-[#c6c6cf] block mb-2" />
               <p className="text-[#45464e] font-semibold text-[14px]">
-                No attendance recorded yet
+                No service attendance has been recorded yet
               </p>
               <p className="text-[12px] text-[#76777f] mt-1">
-                Log your first Sunday headcount in the Attendance page
+                Add a service headcount in the Attendance page to see trends here.
               </p>
             </div>
           ) : (
-            <div className="h-64">
+            <div className="h-72 rounded-2xl bg-[#f7f9fb] p-3 sm:p-5" role="img" aria-label="Attendance trend showing total attendance and demographic lines">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart
+                <AreaChart
                   data={attendanceWeeks}
-                  margin={{ top: 8, right: 8, left: 8, bottom: 0 }}
+                  margin={{ top: 12, right: 12, left: -18, bottom: 0 }}
                 >
-                  <CartesianGrid
-                    strokeDasharray="3 3"
-                    stroke="#f2f4f6"
-                    vertical={false}
-                  />
-                  <XAxis
-                    dataKey="label"
-                    tick={{ fontSize: 11, fill: "#45464e" }}
-                    axisLine={{ stroke: "#c6c6cf" }}
-                    tickLine={false}
-                  />
-                  <YAxis
-                    tick={{ fontSize: 11, fill: "#45464e" }}
-                    axisLine={false}
-                    tickLine={false}
-                  />
+                  <defs>
+                    <linearGradient id="attendanceTotalFill" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#081534" stopOpacity={0.2} />
+                      <stop offset="100%" stopColor="#081534" stopOpacity={0.02} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid stroke="#e8ebef" vertical={false} />
+                  <XAxis dataKey="label" tick={{ fontSize: 10, fill: "#76777f" }} axisLine={false} tickLine={false} />
+                  <YAxis allowDecimals={false} tick={{ fontSize: 10, fill: "#76777f" }} axisLine={false} tickLine={false} />
                   <Tooltip
-                    contentStyle={{
-                      borderRadius: 8,
-                      border: "1px solid #c6c6cf",
-                      fontSize: 12,
-                    }}
-                    formatter={(
-                      value:
-                        | string
-                        | number
-                        | readonly (string | number)[]
-                        | undefined,
-                      name: string | number | undefined,
-                    ) => {
-                      const label =
-                        typeof name === "string"
-                          ? name.charAt(0).toUpperCase() + name.slice(1)
-                          : String(name ?? "");
-                      return [value ?? 0, label];
-                    }}
+                    contentStyle={{ borderRadius: 14, border: "1px solid #dfe3e8", boxShadow: "0 10px 24px rgba(8,21,52,0.12)", fontSize: 12 }}
+                    labelStyle={{ color: "#081534", fontWeight: 700, marginBottom: 6 }}
+                    formatter={(value: string | number | readonly (string | number)[] | undefined, name: string | number | undefined) => [
+                      value ?? 0,
+                      typeof name === "string" ? name : String(name ?? ""),
+                    ]}
                   />
-                  <Bar dataKey="male" stackId="attendance" fill="#081534" />
-                  <Bar dataKey="female" stackId="attendance" fill="#fdc425" />
-                  <Bar
-                    dataKey="children"
-                    stackId="attendance"
-                    fill="#adc6ff"
-                    radius={[4, 4, 0, 0]}
-                  />
-                </BarChart>
+                  <Area type="monotone" dataKey="total" name="Total attendance" stroke="#081534" strokeWidth={2.5} fill="url(#attendanceTotalFill)" activeDot={{ r: 6, fill: "#fdc425", stroke: "#081534", strokeWidth: 2 }} />
+                  <Line type="monotone" dataKey="male" name="Men" stroke="#002960" strokeWidth={2} dot={{ r: 2.5, fill: "#002960", strokeWidth: 0 }} activeDot={{ r: 5 }} />
+                  <Line type="monotone" dataKey="female" name="Women" stroke="#c28e00" strokeWidth={2} dot={{ r: 2.5, fill: "#c28e00", strokeWidth: 0 }} activeDot={{ r: 5 }} />
+                  <Line type="monotone" dataKey="children" name="Children" stroke="#7296d4" strokeWidth={2} dot={{ r: 2.5, fill: "#7296d4", strokeWidth: 0 }} activeDot={{ r: 5 }} />
+                </AreaChart>
               </ResponsiveContainer>
             </div>
           )}
 
           {lastAttendance && (
-            <div className="mt-6 pt-6 border-t border-[#c6c6cf] grid grid-cols-3 gap-4 text-center">
+            <div className="mt-6 grid grid-cols-3 gap-3 border-t border-[#e2e4e8] pt-6 text-center">
               <div>
                 <p className="text-[20px] font-bold text-[#081534]">
                   {lastAttendance.male}
                 </p>
-                <p className="text-[11px] text-[#45464e] font-semibold">Male</p>
+                <p className="text-[11px] text-[#76777f] font-semibold">Men</p>
               </div>
               <div>
                 <p className="text-[20px] font-bold text-[#081534]">
                   {lastAttendance.female}
                 </p>
-                <p className="text-[11px] text-[#45464e] font-semibold">
-                  Female
+                <p className="text-[11px] text-[#76777f] font-semibold">
+                  Women
                 </p>
               </div>
               <div>
                 <p className="text-[20px] font-bold text-[#081534]">
                   {lastAttendance.children}
                 </p>
-                <p className="text-[11px] text-[#45464e] font-semibold">
+                <p className="text-[11px] text-[#76777f] font-semibold">
                   Children
                 </p>
               </div>
             </div>
           )}
-        </div>
+          </div>
+        </section>
 
         {/* Giving — only visible to Setman or admins with the 'giving' permission,
             since giving_records RLS only allows reads for that permission anyway */}

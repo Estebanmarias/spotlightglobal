@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { authorizeAdminPage } from "@/lib/admin-auth";
+import { SITE_CONFIG } from "@/lib/site-config";
 
 type Probe = { ok: boolean; status: number; data: unknown };
 
@@ -56,7 +57,7 @@ export async function POST(request: NextRequest) {
   }
 
   const senders = await brevo("/senders");
-  const sender = (process.env.BREVO_SENDER_EMAIL || "officialspotlightglobal@gmail.com").toLowerCase();
+  const sender = (process.env.BREVO_SENDER_EMAIL || SITE_CONFIG.email).toLowerCase();
   const senderList = (senders.data as { senders?: { email: string; active: boolean }[] })?.senders ?? [];
   const senderMatch = senderList.find((s) => s.email.toLowerCase() === sender);
   if (!senders.ok) findings.push(`Could not read your senders (HTTP ${senders.status}).`);

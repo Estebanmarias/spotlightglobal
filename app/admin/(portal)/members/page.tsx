@@ -7,6 +7,8 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { useAdminAccess } from '@/lib/use-admin-permissions'
 import AdminLoader from '@/components/AdminLoader'
 import Icon from '@/components/Icon'
+import DestructiveConfirm from '@/components/DestructiveConfirm'
+import { buildCsv } from '@/lib/csv'
 
 type Member = {
   id: string
@@ -59,6 +61,7 @@ function MemberDrawer({
   const supabase = getSupabaseClient()
   const [deleting, setDeleting] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
+  const [deleteConfirmation, setDeleteConfirmation] = useState('')
 
   const cfg = statusConfig[member.guest_status]
   const joinDate = new Date(member.created_at).toLocaleDateString('en-NG', {
@@ -77,6 +80,7 @@ function MemberDrawer({
     const { error } = await supabase.from('members').delete().eq('id', member.id)
     setDeleting(false)
     if (error) { alert('Error deleting member: ' + error.message); return }
+    setDeleteConfirmation('')
     onDeleted()
   }
 
@@ -202,20 +206,16 @@ function MemberDrawer({
           </div>
 
           {confirmDelete && (
-            <div className="p-4 bg-[#ffdad6] rounded-xl border border-[#ba1a1a]/20">
-              <p className="text-[13px] font-bold text-[#ba1a1a] mb-1">Delete this member?</p>
-              <p className="text-[12px] text-[#5a4300] mb-3">This permanently removes {member.first_name} {member.last_name} from the congregation list. This cannot be undone.</p>
-              <div className="flex gap-2">
-                <button onClick={() => setConfirmDelete(false)}
-                  className="flex-1 py-2 border border-[#c6c6cf] rounded-lg text-[12px] font-semibold text-[#45464e] hover:bg-white transition-colors">
-                  Cancel
-                </button>
-                <button onClick={handleDelete} disabled={deleting}
-                  className="flex-1 py-2 bg-[#ba1a1a] text-white rounded-lg text-[12px] font-bold hover:opacity-90 transition-opacity disabled:opacity-60">
-                  {deleting ? 'Deleting...' : 'Confirm Delete'}
-                </button>
-              </div>
-            </div>
+            <DestructiveConfirm
+              title="Delete this member?"
+              description={<>This permanently removes <strong>{member.first_name} {member.last_name}</strong> from the congregation list. This cannot be undone.</>}
+              confirmationText="DELETE"
+              value={deleteConfirmation}
+              onChange={setDeleteConfirmation}
+              onCancel={() => { setConfirmDelete(false); setDeleteConfirmation('') }}
+              onConfirm={handleDelete}
+              confirming={deleting}
+            />
           )}
         </div>
 
@@ -225,7 +225,7 @@ function MemberDrawer({
             <Icon name="edit" className="text-[16px]" />
             Edit Member
           </button>
-          <button onClick={() => setConfirmDelete(true)}
+          <button onClick={() => { setConfirmDelete(true); setDeleteConfirmation('') }}
             className="flex items-center justify-center gap-2 bg-[#ffdad6] text-[#ba1a1a] px-4 py-2.5 rounded-xl text-[13px] font-bold hover:opacity-90 transition-opacity">
             <Icon name="delete" className="text-[16px]" />
           </button>
@@ -384,6 +384,7 @@ export default function MembersPage() {
   const [search, setSearch]           = useState('')
   const [statusFilter, setFilter]     = useState('All')
   const [loading, setLoading]         = useState(true)
+  const [loadError, setLoadError]     = useState('')
   const [selected, setSelected]       = useState<Set<string>>(new Set())
   const [view, setView]               = useState<'table' | 'grid'>('table')
   const [activeMember, setActive]     = useState<Member | null>(null)
@@ -396,6 +397,7 @@ export default function MembersPage() {
 
   const fetchMembers = useCallback(async () => {
     setLoading(true)
+    setLoadError('')
     let query = supabase
       .from('members')
       .select('*', { count: 'exact' })
@@ -409,7 +411,12 @@ export default function MembersPage() {
     if (statusFilter !== 'All')
       query = query.eq('guest_status', statusFilter)
 
-    const { data, count } = await query
+    const { data, count, error } = await query
+    if (error) {
+      setLoadError('Members could not be loaded. Check your connection and try again.')
+      setLoading(false)
+      return
+    }
     setMembers(data || [])
     setTotal(count || 0)
     setLoading(false)
@@ -426,13 +433,13 @@ export default function MembersPage() {
   const exportCSV = () => {
     const rows = selected.size > 0 ? members.filter(m => selected.has(m.id)) : members
     if (!rows.length) return
-    const csv = [
+    const csv = buildCsv([
       ['Date Joined', 'First Name', 'Last Name', 'Email', 'Phone', 'DOB', 'Status'],
       ...rows.map(m => [
         new Date(m.created_at).toLocaleDateString(),
         m.first_name, m.last_name, m.email, m.phone, m.dob, m.guest_status,
       ]),
-    ].map(r => r.join(',')).join('\n')
+    ])
     const a = document.createElement('a')
     a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }))
     a.download = `members-${new Date().toISOString().split('T')[0]}.csv`
@@ -528,6 +535,12 @@ export default function MembersPage() {
       </div>
 
       <div className="p-4 sm:p-6 lg:p-8">
+        {loadError && (
+          <div className="mb-5 flex items-center justify-between gap-4 rounded-xl border border-[#ba1a1a]/20 bg-[#ffdad6] px-4 py-3 text-[13px] text-[#5a1a16]" role="alert">
+            <span className="font-semibold">{loadError}</span>
+            <button type="button" onClick={fetchMembers} className="shrink-0 font-bold underline">Retry</button>
+          </div>
+        )}
 
         {/* Bulk action bar */}
         <AnimatePresence>

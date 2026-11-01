@@ -7,10 +7,9 @@ import Link from 'next/link'
 import Reveal from '@/components/Reveal'
 import Image from 'next/image'
 import Icon from '@/components/Icon'
+import { SITE_CONFIG } from '@/lib/site-config'
 
-const CHURCH_MAPS_URL =
-  'https://www.google.com/maps/search/?api=1&query=' +
-  encodeURIComponent('Icon Hotel Hall, opposite Mai Angwan House by the transformer, Angwan Danlami, New Nyanya, Abuja-Keffi Express Way')
+const CHURCH_MAPS_URL = SITE_CONFIG.mapsUrl
 
 export const metadata = {
   title: 'theSpotlightChurch | Welcome Home',
@@ -56,7 +55,7 @@ function VisionSection() {
             <div>
               <h4 className="text-[18px] sm:text-[22px] lg:text-[24px] font-semibold text-[#081534]">Join us in person</h4>
               <p className="text-[14px] sm:text-[15px] lg:text-[16px] text-[#45464e]">
-                Icon Hotel Hall, opposite Mai Angwan House by the transformer, Angwan Danlami, New Nyanya, Abuja-Keffi Express Way
+                {SITE_CONFIG.address}
                 <br />
                 Sunday 8:30 AM - 10:30 AM
                 <br />

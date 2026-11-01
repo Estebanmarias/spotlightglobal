@@ -11,19 +11,19 @@ export default function ChurchStructuredData() {
   const data = {
     '@context': 'https://schema.org',
     '@type': 'Church',
-    name: 'theSpotlightChurch',
+    name: SITE_CONFIG.churchName,
     url: baseUrl,
     logo: `${baseUrl}/images/logo.png`,
     image: `${baseUrl}/og-image.jpg`,
     address: {
       '@type': 'PostalAddress',
-      streetAddress: 'Icon Hotel Hall, Angwan Danlami, New Nyanya, Abuja-Keffi Expressway',
+      streetAddress: SITE_CONFIG.address,
       addressLocality: 'Karu',
       addressRegion: 'FCT',
       addressCountry: 'NG',
     },
-    hasMap: 'https://www.google.com/maps/search/?api=1&query=Icon%20Hotel%20Hall%2C%20Angwan%20Danlami%2C%20New%20Nyanya%2C%20Abuja-Keffi%20Expressway%2C%20Nigeria',
-    telephone: '+2348115316745',
+    hasMap: SITE_CONFIG.mapsUrl,
+    telephone: SITE_CONFIG.phone,
     sameAs: [
       'https://instagram.com/thespotlightchurch',
       'https://www.youtube.com/@thespotlightchurch',
@@ -38,3 +38,4 @@ export default function ChurchStructuredData() {
     />
   )
 }
+import { SITE_CONFIG } from "@/lib/site-config";

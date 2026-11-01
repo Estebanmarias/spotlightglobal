@@ -58,6 +58,8 @@ function CopyRow({ label, value, copied, onCopy }: { label: string; value: strin
         <span className="font-mono text-[#081534] tracking-wider text-[14px] font-semibold mt-0.5">{value}</span>
       </div>
       <button onClick={onCopy}
+        type="button"
+        aria-label={`Copy ${label.toLowerCase()} ${value}`}
         className="p-2 rounded-lg text-[#76777f] hover:text-[#081534] hover:bg-[#eceef0] transition-all"
         title="Copy">
         <AnimatePresence mode="wait">
@@ -77,6 +79,7 @@ function CopyRow({ label, value, copied, onCopy }: { label: string; value: strin
 export default function GivingClient() {
   const [accountTab, setAccountTab] = useState<'local'>('local')
   const [copiedKey, setCopiedKey] = useState<string | null>(null)
+  const [copyError, setCopyError] = useState('')
 
   useEffect(() => {
     const observer = new IntersectionObserver((entries) => {
@@ -91,18 +94,35 @@ export default function GivingClient() {
     return () => observer.disconnect()
   }, [])
 
-  const handleCopy = (text: string, key: string, account: typeof localAccounts[number]) => {
-    navigator.clipboard.writeText(text)
-    setCopiedKey(key)
-    setTimeout(() => setCopiedKey(null), 2000)
+  const handleCopy = async (text: string, key: string, account: typeof localAccounts[number]) => {
+    setCopyError('')
 
-    // GA4 conversion event — tells us which giving channel actually gets used,
-    // not just who visits the page.
-    trackEvent('copy_account_number', {
-      bank: account.bank,
-      purpose: account.purpose,
-      account_id: String(account.id),
-    })
+    try {
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(text)
+      } else {
+        const textarea = document.createElement('textarea')
+        textarea.value = text
+        textarea.setAttribute('readonly', '')
+        textarea.style.position = 'fixed'
+        textarea.style.opacity = '0'
+        document.body.appendChild(textarea)
+        textarea.select()
+        const copied = document.execCommand('copy')
+        textarea.remove()
+        if (!copied) throw new Error('Clipboard copy was not available')
+      }
+
+      setCopiedKey(key)
+      window.setTimeout(() => setCopiedKey(current => current === key ? null : current), 2000)
+      trackEvent('copy_account_number', {
+        bank: account.bank,
+        purpose: account.purpose,
+        account_id: String(account.id),
+      })
+    } catch {
+      setCopyError('We could not copy that account number. Please select and copy it manually.')
+    }
   }
 
   return (
@@ -248,6 +268,11 @@ export default function GivingClient() {
               Please confirm the account name in your banking app before you send.
             </span>
           </div>
+          {copyError && (
+            <p role="alert" className="mt-3 text-center text-[12px] font-semibold text-[#ba1a1a]">
+              {copyError}
+            </p>
+          )}
         </div>
       </section>
 

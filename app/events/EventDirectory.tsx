@@ -6,6 +6,7 @@ import { motion } from "framer-motion";
 import { getSupabaseClient } from "@/lib/supabase";
 import { recurrenceLabel, type ChurchEventPreview } from "@/lib/church-events";
 import Icon from "@/components/Icon";
+import { eventPriceLabel } from "@/lib/event-display";
 
 function localDateString() {
   const date = new Date();
@@ -51,15 +52,6 @@ function registrationOpen(event: ChurchEventPreview, today: string) {
       (event.event_end_date || event.event_date) >= today &&
       (!event.registration_deadline || event.registration_deadline >= today),
   );
-}
-
-function priceLabel(event: ChurchEventPreview) {
-  const type = String(event.price_type ?? "");
-  if (type === "paid" && event.price != null) {
-    return `${event.currency || "NGN"} ${Number(event.price).toLocaleString("en-NG")}`;
-  }
-  if (type === "free" && event.registration_enabled) return "Free";
-  return null;
 }
 
 const CHIP_TONES = {
@@ -149,7 +141,7 @@ function Cta({ event, open, archived }: { event: ChurchEventPreview; open: boole
 
 function StatusChips({ event, today, archived }: { event: ChurchEventPreview; today: string; archived: boolean }) {
   const open = registrationOpen(event, today);
-  const price = priceLabel(event);
+  const price = eventPriceLabel(event.price_type, Boolean(event.registration_enabled), event.price, event.currency);
   return (
     <div className="flex flex-wrap items-center gap-2">
       {recurrenceLabel(event) && <Chip tone="gold">{recurrenceLabel(event)}</Chip>}

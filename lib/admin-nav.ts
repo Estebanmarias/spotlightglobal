@@ -23,7 +23,11 @@ export const ADMIN_NAV_GROUPS: AdminNavItem[][] = [
     { icon: "handshake", label: "Partners", href: "/admin/partner", page: "partners" },
     { icon: "campaign", label: "Messaging", href: "/admin/messaging", page: "messaging" },
   ],
-  [{ icon: "settings", label: "Settings", href: "/admin/settings" }],
+  [
+    { icon: "settings", label: "Settings", href: "/admin/settings" },
+    { icon: "database", label: "Backups", href: "/admin/backups", page: "settings" },
+    { icon: "fact_check", label: "Audit log", href: "/admin/audit-log", page: "settings" },
+  ],
 ];
 
 export const ADMIN_PAGE_TITLES: Record<string, string> = {

@@ -183,7 +183,7 @@ export default function PrivacyPolicyPage() {
                 <p className="text-white/60 text-[14px] mb-6 max-w-md mx-auto">
                   Our team is happy to clarify any concerns you have about how we handle your personal information.
                 </p>
-                <a href="mailto:officialspotlightglobal@gmail.com"
+                <a href={`mailto:${SITE_CONFIG.email}`}
                   className="inline-flex items-center gap-2 bg-[#fdc425] text-[#6d5200] px-8 py-3 rounded-full text-[13px] font-bold hover:brightness-110 transition-all active:scale-95">
                   <Icon name="mail" className="text-[16px]" />
                   Contact Us
@@ -206,3 +206,4 @@ export default function PrivacyPolicyPage() {
     </main>
   )
 }
+import { SITE_CONFIG } from '@/lib/site-config'
