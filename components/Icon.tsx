@@ -31,7 +31,7 @@ const ICONS: Record<string, LucideIcon> = {
   edit: Pencil, edit_note: PenLine, energy_savings_leaf: Sprout, error: CircleAlert,
   event: CalendarDays, event_busy: CalendarX, expand_more: ChevronDown,
   fact_check: ClipboardCheck, favorite: Heart, gavel: Gavel,
-  group: Users, group_off: UserX, groups: Users, handshake: Handshake, home: House,
+  group: Users, group_off: UserX, groups: Users, groups_3: Users, brush: Pencil, local_hospital: Church, sports_basketball: CircleDot, handshake: Handshake, home: House,
   how_to_reg: UserCheck, info: Info, language: Globe, link: Link2, location_on: MapPin,
   lock: Lock, lock_reset: KeyRound, login: LogIn, logout: LogOut, loyalty: Tag,
   mail: Mail, man: User, manage_search: Search, mark_email_read: MailCheck,
@@ -52,7 +52,7 @@ export default function Icon({ name, className = '' }: { name: string; className
   const Glyph = ICONS[name]
   if (!Glyph) {
     if (process.env.NODE_ENV !== 'production') console.warn(`[Icon] no icon mapped for "${name}"`)
-    return <span aria-hidden="true" className={`material-symbols-outlined ${className}`}>{name}</span>
+    return null
   }
   return (
     <Glyph

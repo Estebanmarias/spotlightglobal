@@ -65,7 +65,7 @@ const HOW_IT_WORKS = [
 
 const FAQS = [
   { q: 'Which email should I use?', a: 'Use the same email you joined theSpotlightChurch with. We match it to your record to confirm eligibility for classes that follow an earlier one.' },
-  { q: 'Do I have to pay?', a: 'Each intake shows its fee, or “Free”. If there’s a fee, payment instructions appear as soon as you register.' },
+  { q: 'Do I have to pay?', a: 'Each cohort shows its fee, or “Free”. If there’s a fee, payment instructions appear as soon as you register.' },
   { q: 'What if my place isn’t approved?', a: 'Some classes review applications before confirming. If your place isn’t approved, you will be refunded.' },
   { q: 'Who do I contact with questions?', a: 'Reach the church team through the contact page and we’ll be glad to help.' },
 ]
@@ -191,7 +191,7 @@ export default function ClassesClient({ programs, intakes }: { programs: PublicP
               )}
               {nextIntake && (
                 <li className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-4 py-2 backdrop-blur">
-                  <Icon name="event" className="text-[16px] text-[#fdc425]" />Next intake · {fmt(nextIntake.start_date)}
+                  <Icon name="event" className="text-[16px] text-[#fdc425]" />Next cohort · {fmt(nextIntake.start_date)}
                 </li>
               )}
               <li className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-4 py-2 backdrop-blur">
@@ -271,10 +271,10 @@ export default function ClassesClient({ programs, intakes }: { programs: PublicP
                       </ul>
 
                       <div className="mt-auto pt-8">
-                        <p className="mb-3 text-[11px] font-bold uppercase tracking-[0.15em] text-[#76777f]">Upcoming intakes</p>
+                        <p className="mb-3 text-[11px] font-bold uppercase tracking-[0.15em] text-[#76777f]">Upcoming cohorts</p>
                         {list.length === 0 ? (
                           <p className="rounded-xl border border-dashed border-[#c6c6cf] px-4 py-4 text-center text-[13px] text-[#76777f]">
-                            Next intake to be announced.
+                            Next cohort to be announced.
                           </p>
                         ) : (
                           <div className="space-y-3">

@@ -17,11 +17,12 @@ export default function ChurchStructuredData() {
     image: `${baseUrl}/og-image.jpg`,
     address: {
       '@type': 'PostalAddress',
-      streetAddress: 'Icon Hotel Hall, opposite Mai Angwan House by the transformer, Angwan Danlami, New Nyanya, Abuja-Keffi Express Way',
+      streetAddress: 'Icon Hotel Hall, Angwan Danlami, New Nyanya, Abuja-Keffi Expressway',
       addressLocality: 'Karu',
       addressRegion: 'FCT',
       addressCountry: 'NG',
     },
+    hasMap: 'https://www.google.com/maps/search/?api=1&query=Icon%20Hotel%20Hall%2C%20Angwan%20Danlami%2C%20New%20Nyanya%2C%20Abuja-Keffi%20Expressway%2C%20Nigeria',
     telephone: '+2348115316745',
     sameAs: [
       'https://instagram.com/thespotlightchurch',

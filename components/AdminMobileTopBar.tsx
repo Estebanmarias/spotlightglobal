@@ -1,132 +1,55 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useRouter, usePathname } from "next/navigation";
-import { getSupabaseClient } from "@/lib/supabase";
-import { PageKey } from "@/lib/use-admin-permissions";
+import Image from "next/image";
+import { usePathname, useRouter } from "next/navigation";
+import { useState } from "react";
+import AdminNav from "@/components/AdminNav";
 import BirthdayNotifications from "@/components/BirthdayNotifications";
-import Icon from '@/components/Icon'
+import Icon from "@/components/Icon";
+import { ADMIN_NAV_GROUPS, ADMIN_PAGE_TITLES } from "@/lib/admin-nav";
+import { useAdminNav } from "@/lib/use-admin-nav";
+import { getSupabaseClient } from "@/lib/supabase";
 
-type NavItem = {
-  icon: string;
-  label: string;
-  href: string;
-  page?: PageKey;
-};
+function Brand() {
+  const [src, setSrc] = useState("/images/logo.png");
+  return (
+    <div className="flex h-16 shrink-0 items-center gap-3 border-b border-white/10 px-4">
+      <Image src={src} onError={() => setSrc("/apple-touch-icon-v2.png")} alt="theSpotlightChurch logo" width={32} height={32} className="h-8 w-8 rounded-full object-cover" />
+      <div>
+        <div className="text-[13px] font-bold text-white">theSpotlightChurch</div>
+        <div className="text-[11px] text-white/50">Admin portal</div>
+      </div>
+    </div>
+  );
+}
 
-const navItems: NavItem[] = [
-  {
-    icon: "dashboard",
-    label: "Dashboard",
-    href: "/admin/dashboard",
-    page: "dashboard",
-  },
-  { icon: "group", label: "Members", href: "/admin/members", page: "members" },
-  {
-    icon: "fact_check",
-    label: "Attendance",
-    href: "/admin/attendance",
-    page: "attendance",
-  },
-  {
-    icon: "church",
-    label: "Ministries",
-    href: "/admin/ministries",
-    page: "ministries",
-  },
-  {
-    icon: "school",
-    label: "Classes",
-    href: "/admin/classes",
-    page: "classes",
-  },
-  {
-    icon: "analytics",
-    label: "Analytics",
-    href: "/admin/analytics",
-    page: "analytics",
-  },
-  {
-    icon: "volunteer_activism",
-    label: "Giving",
-    href: "/admin/giving",
-    page: "giving",
-  },
-  {
-    icon: "handshake",
-    label: "Partners",
-    href: "/admin/partner",
-    page: "partners",
-  },
-  {
-    icon: "campaign",
-    label: "Messaging",
-    href: "/admin/messaging",
-    page: "messaging",
-  },
-  // { icon: 'auto_stories', label: 'Blog', href: '/admin/blog', page: 'blog' as any },
-  // { icon: 'campaign', label: 'Broadcast', href: '/admin//admin/messaging', page: 'broadcast' as any },
-  { icon: "settings", label: "Settings", href: "/admin/settings" },
-  {
-    icon: "person_add",
-    label: "Add Member",
-    href: "/admin/add-member",
-    page: "members",
-  },
-];
-
-const pageTitle = (pathname: string): string => {
-  const match = navItems.find((item) => pathname === item.href);
-  if (match) return match.label;
-  if (pathname.startsWith("/admin/ministry-dashboard"))
-    return "Ministry Dashboard";
-  return "Admin Portal";
-};
+function UserFooter({ fullName, isSuperAdmin, onLogout }: { fullName: string; isSuperAdmin: boolean; onLogout: () => void }) {
+  const firstName = fullName.trim().split(/\s+/)[0] || "Admin";
+  const initials = fullName.trim().split(/\s+/).filter(Boolean).slice(0, 2).map((name) => name[0]).join("").toUpperCase() || "A";
+  return (
+    <div className="shrink-0 border-t border-white/10 p-3">
+      <div className="flex items-center gap-2">
+        <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#fdc425] text-[11px] font-bold text-[#081534]">{initials}</div>
+        <div className="min-w-0 flex-1 leading-tight">
+          <div className="truncate text-[12px] font-semibold text-white">{firstName}</div>
+          <div className="text-[10px] text-white/50">{isSuperAdmin ? "Setman" : "Admin"}</div>
+        </div>
+        <button onClick={onLogout} aria-label="Log out" className="text-white/60 hover:text-white">
+          <Icon name="logout" className="text-[18px]" />
+        </button>
+      </div>
+    </div>
+  );
+}
 
 export default function AdminMobileTopBar() {
   const router = useRouter();
   const pathname = usePathname();
   const supabase = getSupabaseClient();
+  const nav = useAdminNav();
   const [open, setOpen] = useState(false);
-
-  const [isSuperAdmin, setIsSuperAdmin] = useState(false);
-  const [permissions, setPermissions] = useState<PageKey[]>([]);
-  const [isMinistryLeader, setIsMinistryLeader] = useState(false);
-  const [loaded, setLoaded] = useState(false);
-
-  useEffect(() => {
-    const load = async () => {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-      if (!session) return;
-      const { data } = (await supabase
-        .from("admin_roles")
-        .select("role, permissions, is_ministry_leader")
-        .eq("user_id", session.user.id)
-        .single()) as {
-        data: {
-          role: string;
-          permissions: PageKey[];
-          is_ministry_leader: boolean;
-        } | null;
-      };
-      if (data) {
-        setIsSuperAdmin(data.role === "super_admin");
-        setIsMinistryLeader(data.is_ministry_leader ?? false);
-        setPermissions(data.permissions || []);
-      }
-      setLoaded(true);
-    };
-    load();
-  }, []);
-
-  const canAccess = (page?: PageKey) => {
-    if (!page) return true;
-    if (isSuperAdmin) return true;
-    if (page === "ministries" && isMinistryLeader) return true;
-    return permissions.includes(page);
-  };
+  const matchingItem = ADMIN_NAV_GROUPS.flat().find((item) => pathname === item.href || pathname.startsWith(item.href + "/"));
+  const title = ADMIN_PAGE_TITLES[pathname] || matchingItem?.label || "Admin Portal";
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -134,118 +57,25 @@ export default function AdminMobileTopBar() {
     setOpen(false);
   };
 
-  const navigate = (href: string, allowed: boolean) => {
-    if (!allowed) return;
-    router.push(href);
-    setOpen(false);
-  };
-
   return (
     <div className="lg:hidden">
-      {/* Sticky top bar */}
       <div className="sticky top-0 z-40 flex items-center gap-3 border-b border-[#c6c6cf] bg-white py-3 pl-4 pr-4">
-        <button
-          onClick={() => setOpen(true)}
-          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#081534] text-white"
-          aria-label="Open menu"
-        >
+        <button onClick={() => setOpen(true)} className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#081534] text-white" aria-label="Open menu">
           <Icon name="menu" className="text-[20px]" />
         </button>
-        <span className="min-w-0 flex-1 truncate text-[15px] font-bold text-[#081534]">
-          {pageTitle(pathname)}
-        </span>
-        <BirthdayNotifications
-          access={{ loading: !loaded, isSuperAdmin, canAccess }}
-          activeOn="mobile"
-        />
+        <span className="min-w-0 flex-1 truncate text-[15px] font-bold text-[#081534]">{title}</span>
+        <BirthdayNotifications access={{ loading: !nav.loaded, isSuperAdmin: nav.isSuperAdmin, canAccess: nav.canAccess }} activeOn="mobile" />
       </div>
 
-      {/* Backdrop */}
-      {open && (
-        <div
-          className="fixed inset-0 z-42 bg-black/50 backdrop-blur-sm"
-          onClick={() => setOpen(false)}
-        />
-      )}
+      {open && <div className="fixed inset-0 z-42 bg-black/50 backdrop-blur-sm" onClick={() => setOpen(false)} />}
 
-      {/* Drawer */}
-      <div
-        className={`fixed top-0 left-0 z-50 flex h-full w-64 flex-col bg-[#081534] transition-transform duration-300 ease-in-out
-        ${open ? "translate-x-0" : "-translate-x-full"}`}
-      >
-        {/* Close */}
-        <button
-          onClick={() => setOpen(false)}
-          className="absolute top-4 right-4 text-white/50 hover:text-white"
-          aria-label="Close menu"
-        >
+      <div className={`fixed left-0 top-0 z-50 flex h-full w-64 flex-col bg-[#081534] transition-transform duration-300 ease-in-out ${open ? "translate-x-0" : "-translate-x-full"}`}>
+        <button onClick={() => setOpen(false)} className="absolute right-4 top-4 text-white/50 hover:text-white" aria-label="Close menu">
           <Icon name="close" />
         </button>
-
-        {/* Brand */}
-        <div className="px-6 py-7 flex flex-col items-center border-b border-white/10">
-          <img
-            src="https://lh3.googleusercontent.com/aida-public/AB6AXuCSu9ztjFXXL57HPmU2Tzxi3_L64jT6N2N-it5rvbfUfWfdXYJHE01o-8vaDbMMklLymKGFy1h8bgWMuq6cFCbsAWGpAlzRdnIlqlCNZGURQg-bl42EaVtpB0oh1Ad-gK8evCtIRS5ux11Sgpvn686W0Zv9ySUxOUssIE11jsJlK62yZPqSHl64xThPfeKXmVOT7T--wIzDqUmNxAViuDnvS5k1CKHkBHX3FGjpWOScub8kqDfinr_Tsn0ifKgyAVbp8f2XdxntkwI"
-            alt="Logo"
-            className="w-14 h-14 object-contain mb-3"
-          />
-          <h1 className="text-[17px] font-black text-[#fdc425] tracking-tight">
-            Admin Portal
-          </h1>
-        </div>
-
-        {/* Nav */}
-        <nav className="grow py-4 px-3 space-y-0.5 overflow-y-auto">
-          {navItems.map((item) => {
-            const active = pathname === item.href;
-            const allowed = !loaded || canAccess(item.page);
-
-            return (
-              <button
-                key={item.label}
-                onClick={() => navigate(item.href, allowed)}
-                disabled={!allowed}
-                title={
-                  !allowed ? "You don't have access to this page" : undefined
-                }
-                className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all text-left
-                  ${
-                    active && allowed
-                      ? "bg-[#fdc425] text-[#6d5200] font-bold"
-                      : allowed
-                        ? "text-white/60 hover:bg-white/10 hover:text-white font-semibold cursor-pointer"
-                        : "text-white/20 cursor-not-allowed font-semibold"
-                  }`}
-              >
-                <span
-                  className="material-symbols-outlined text-[20px]"
-                  style={
-                    active && allowed
-                      ? { fontVariationSettings: "'FILL' 1" }
-                      : {}
-                  }
-                >
-                  {item.icon}
-                </span>
-                <span className="text-[13px] flex-1">{item.label}</span>
-                {loaded && !allowed && (
-                  <Icon name="lock" className="text-[14px] text-white/20" />
-                )}
-              </button>
-            );
-          })}
-        </nav>
-
-        {/* Logout */}
-        <div className="border-t border-white/10 px-3 py-3">
-          <button
-            onClick={handleLogout}
-            className="w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-white/60 hover:bg-white/10 hover:text-white transition-all text-left font-semibold"
-          >
-            <Icon name="logout" className="text-[20px]" />
-            <span className="text-[13px]">Logout</span>
-          </button>
-        </div>
+        <Brand />
+        <AdminNav pathname={pathname} {...nav} onNavigate={() => setOpen(false)} />
+        <UserFooter fullName={nav.fullName} isSuperAdmin={nav.isSuperAdmin} onLogout={handleLogout} />
       </div>
     </div>
   );

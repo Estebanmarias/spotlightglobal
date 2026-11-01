@@ -58,7 +58,7 @@ function priceLabel(event: ChurchEventPreview) {
   if (type === "paid" && event.price != null) {
     return `${event.currency || "NGN"} ${Number(event.price).toLocaleString("en-NG")}`;
   }
-  if (type === "free") return "Free";
+  if (type === "free" && event.registration_enabled) return "Free";
   return null;
 }
 

@@ -7,6 +7,7 @@ import { getSupabaseClient } from '@/lib/supabase'
 import { useAdminAccess } from '@/lib/use-admin-permissions'
 import MediaManagement from '@/components/MediaManagement'
 import Icon from '@/components/Icon'
+import { normalizeMinistryIcon } from '@/lib/ministry-icons'
 
 type Ministry = {
   id: string
@@ -353,7 +354,7 @@ function MinistryDashboardContent() {
           <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
             className="bg-[#081534] rounded-2xl p-6 sm:p-8 text-white relative overflow-hidden">
             <div className="absolute -right-10 -bottom-10 opacity-10">
-              <Icon name={activeMinistry.icon} className="text-[160px]" />
+              <Icon name={normalizeMinistryIcon(activeMinistry.icon)} className="text-[160px]" />
             </div>
             <div className="relative z-10">
               <h3 className="text-[24px] sm:text-[28px] font-bold mb-2">{activeMinistry.name}</h3>

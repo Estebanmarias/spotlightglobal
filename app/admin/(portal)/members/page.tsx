@@ -18,6 +18,9 @@ type Member = {
   address: string | null
   dob: string
   guest_status: string
+  admin_notes: string | null
+  discovery_source: string | null
+  interests: string[] | null
 }
 
 const PAGE_SIZE = 12
@@ -37,6 +40,12 @@ const avatarColors = [
 const avatarColor = (name: string) => avatarColors[name.charCodeAt(0) % avatarColors.length]
 
 const inputCls = 'w-full bg-[#f2f4f6] border-b-2 border-transparent focus:border-[#081534] outline-none px-4 py-3 rounded-t-lg text-[14px] transition-colors'
+const sourceLabels: Record<string, string> = {
+  social: 'Social Media', friend: 'Friend/Family', website: 'Website', walkin: 'Walk-in',
+}
+const interestLabels: Record<string, string> = {
+  worship: 'Worship Arts', youth: 'Youth Ministry', outreach: 'Community Outreach', smallgroups: 'Small Groups',
+}
 
 // ── Member Detail Drawer ──────────────────────────────────────────────
 function MemberDrawer({
@@ -166,6 +175,26 @@ function MemberDrawer({
                   <div className="pl-3">
                     <p className="text-[12px] font-bold text-[#191c1e]">{t.label}</p>
                     <p className="text-[11px] text-[#45464e]">{t.detail}</p>
+                  </div>
+
+                  <div>
+                    <h3 className="text-[11px] font-bold text-[#45464e] uppercase tracking-widest mb-3">Additional Information</h3>
+                    <div className="space-y-3">
+                      <div className="rounded-xl bg-[#f7f9fb] p-3">
+                        <p className="text-[11px] font-semibold text-[#45464e]">Notes</p>
+                        <p className="mt-1 whitespace-pre-wrap text-[13px] font-semibold text-[#191c1e]">{member.admin_notes || '—'}</p>
+                      </div>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="rounded-xl bg-[#f7f9fb] p-3">
+                          <p className="text-[11px] font-semibold text-[#45464e]">Source</p>
+                          <p className="mt-1 text-[13px] font-bold text-[#191c1e]">{sourceLabels[member.discovery_source ?? ''] || member.discovery_source || '—'}</p>
+                        </div>
+                        <div className="rounded-xl bg-[#f7f9fb] p-3">
+                          <p className="text-[11px] font-semibold text-[#45464e]">Interests</p>
+                          <p className="mt-1 text-[13px] font-bold text-[#191c1e]">{member.interests?.map(interest => interestLabels[interest] || interest).join(', ') || '—'}</p>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
               ))}

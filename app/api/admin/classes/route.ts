@@ -76,6 +76,42 @@ export async function POST(request: NextRequest) {
 
   const supabase = getSupabaseAdminClient();
   const now = new Date().toISOString();
+  const deleteIntake = async (intakeId: string) => {
+    const { data: intake } = await supabase
+      .from("class_intakes")
+      .select("id")
+      .eq("id", intakeId)
+      .maybeSingle();
+    if (!intake) return "Intake not found.";
+
+    const { data: sessions } = await supabase
+      .from("class_sessions")
+      .select("id")
+      .eq("intake_id", intakeId);
+    const sessionIds = (sessions ?? []).map((session) => session.id);
+    if (sessionIds.length) {
+      const { error } = await supabase.from("class_attendance").delete().in("session_id", sessionIds);
+      if (error) return "Could not delete intake attendance.";
+    }
+
+    const { data: enrollments } = await supabase
+      .from("class_enrollments")
+      .select("id")
+      .eq("intake_id", intakeId);
+    const enrollmentIds = (enrollments ?? []).map((enrollment) => enrollment.id);
+    if (enrollmentIds.length) {
+      const { error } = await supabase.from("class_email_log").delete().in("enrollment_id", enrollmentIds);
+      if (error) return "Could not delete intake email records.";
+    }
+
+    for (const table of ["class_notify_log", "class_enrollments", "class_sessions"]) {
+      const { error } = await supabase.from(table).delete().eq("intake_id", intakeId);
+      if (error) return "Could not delete the intake.";
+    }
+
+    const { error } = await supabase.from("class_intakes").delete().eq("id", intakeId);
+    return error ? "Could not delete the intake." : null;
+  };
 
   // ── Intake actions ─────────────────────────────────────────────
   if (p.action === "create_intake") {
@@ -222,6 +258,14 @@ export async function POST(request: NextRequest) {
     if (p.present && enrollment.status === "registered" && enrollment.approval_status !== "pending" && enrollment.payment_status !== "pending") {
       await supabase.from("class_enrollments").update({ status: "in_progress" }).eq("id", enrollmentId).eq("status", "registered");
     }
+    return NextResponse.json({ success: true });
+  }
+
+  if (p.action === "delete_intake") {
+    const intakeId = text(p.intake_id, 36);
+    if (!UUID.test(intakeId)) return fail("Invalid intake.");
+    const error = await deleteIntake(intakeId);
+    if (error) return fail(error, error === "Intake not found." ? 404 : 500);
     return NextResponse.json({ success: true });
   }
 

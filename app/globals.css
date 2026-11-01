@@ -32,7 +32,3 @@ html::-webkit-scrollbar {
   pointer-events: none;
   height: 0;
 }
-
-.material-symbols-outlined {
-  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
-}

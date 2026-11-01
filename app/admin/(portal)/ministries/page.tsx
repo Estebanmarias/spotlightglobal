@@ -7,6 +7,7 @@ import { getSupabaseClient } from '@/lib/supabase'
 import { useAdminAccess } from '@/lib/use-admin-permissions'
 import AdminLoader from '@/components/AdminLoader'
 import Icon from '@/components/Icon'
+import { MINISTRY_ICON_OPTIONS } from '@/lib/ministry-icons'
 
 // ── Types ─────────────────────────────────────────────────────────────
 type Ministry = {
@@ -24,12 +25,6 @@ type Ministry = {
   image?: string
   ministry_leaders?: { user_id: string }[]
 }
-
-const ICON_OPTIONS = [
-  'church','group','music_note','child_care','volunteer_activism','groups_3',
-  'menu_book','brush','handshake','public','campaign','favorite',
-  'local_hospital','school','home','sports_basketball',
-]
 
 const BG_OPTIONS = [
   { bg: 'bg-[#081534]', color: 'text-white',      label: 'Navy' },
@@ -611,7 +606,7 @@ export default function MinistriesPage() {
                   <div className="flex flex-col gap-2">
                     <label className="text-[12px] font-bold text-[#45464e] uppercase tracking-wide">Icon</label>
                     <div className="flex flex-wrap gap-2">
-                      {ICON_OPTIONS.map(ic => (
+                      {MINISTRY_ICON_OPTIONS.map(ic => (
                         <button key={ic} type="button" onClick={() => setForm(p => ({...p, icon: ic}))}
                           className={`w-10 h-10 rounded-lg flex items-center justify-center transition-all ${form.icon === ic ? 'bg-[#081534] text-white' : 'bg-[#f2f4f6] text-[#45464e] hover:bg-[#eceef0]'}`}>
                           <Icon name={ic} className="text-[18px]" />

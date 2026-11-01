@@ -423,7 +423,7 @@ export default function MediaManagement({ viewerRole }: MediaManagementProps) {
       return `"${safeText.replace(/"/g, '""')}"`
     }
     const rows = [
-      ['Registration ref', 'Name', 'Email', 'Phone', 'Party size', 'Additional guests', 'Attendance days', 'Payment status'],
+      ['Registration ref', 'Name', 'Email', 'Phone', 'Party size', 'Additional guests', 'Needs accommodation', 'Accommodation notes', 'Attendance days', 'Payment status'],
       ...activeRegistrations.map(registration => [
         formatEventRegistrationReference(registration.id),
         registration.full_name,
@@ -431,6 +431,8 @@ export default function MediaManagement({ viewerRole }: MediaManagementProps) {
         registration.phone,
         String(registration.attendee_count),
         String(Math.max(registration.attendee_count - 1, 0)),
+        registration.accommodation_needed ? 'Yes' : 'No',
+        registration.accommodation_notes ?? '',
         registration.attendance_dates.map(formatDate).join('; '),
         paymentStatusLabel(registration.payment_status),
       ]),
@@ -1077,7 +1079,7 @@ export default function MediaManagement({ viewerRole }: MediaManagementProps) {
                             <p className="mt-1 text-[11px] leading-5 text-[#76777f]">
                               {registration.location} · {registration.attendee_count} attendee{registration.attendee_count === 1 ? '' : 's'} · {registration.attendance_dates.map(date => new Date(`${date}T00:00:00`).toLocaleDateString('en-NG', { day: 'numeric', month: 'short' })).join(', ')}
                               {registration.special_session_attending ? ' · Friday special session' : ''}
-                              {registration.accommodation_needed ? ' · Accommodation requested' : ''}
+                              {registration.accommodation_needed && <span className="ml-1 inline-flex rounded-full bg-[#fff2c7] px-1.5 py-0.5 font-bold text-[#6d5200]">Accommodation requested</span>}
                             </p>
                             {registration.special_request && <p className="mt-2 text-[11px] leading-5 text-[#45464e]">Request: {registration.special_request}</p>}
                             {registration.payment_reference && <p className="mt-1 text-[10px] text-[#76777f]">Reference: {registration.payment_reference}</p>}
@@ -1107,13 +1109,14 @@ export default function MediaManagement({ viewerRole }: MediaManagementProps) {
                   <h1>{registrationsForEvent.title}</h1>
                   <p>Attendee check-in roster · {formatDate(registrationsForEvent.event_date)}</p>
                   <p>{registrations.filter(registration => registration.registration_status === 'registered').length} registrations · {registrations.filter(registration => registration.registration_status === 'registered').reduce((total, registration) => total + registration.attendee_count, 0)} attendees</p>
+                  <p>{registrations.filter(registration => registration.registration_status === 'registered' && registration.accommodation_needed).length} need accommodation</p>
                   <table>
                     <thead>
-                      <tr><th>#</th><th>Registration ref</th><th>Name</th><th>Phone</th><th>Party</th><th>Attendance days</th><th>Payment</th><th>Checked in</th></tr>
+                      <tr><th>#</th><th>Registration ref</th><th>Name</th><th>Phone</th><th>Party</th><th>Attendance days</th><th>Accommodation</th><th>Payment</th><th>Checked in</th></tr>
                     </thead>
                     <tbody>
                       {registrations.filter(registration => registration.registration_status === 'registered').map((registration, index) => (
-                        <tr key={registration.id} className={registration.attendee_count > 1 ? 'has-party' : undefined}>
+                        <tr key={registration.id} className={[registration.attendee_count > 1 ? 'has-party' : '', registration.accommodation_needed ? 'needs-stay' : ''].filter(Boolean).join(' ') || undefined}>
                           <td>{index + 1}</td>
                           <td>{formatEventRegistrationReference(registration.id)}</td>
                           <td>
@@ -1125,6 +1128,7 @@ export default function MediaManagement({ viewerRole }: MediaManagementProps) {
                           <td>{registration.phone}</td>
                           <td>{registration.attendee_count}</td>
                           <td>{registration.attendance_dates.map(formatDate).join(', ')}</td>
+                          <td>{registration.accommodation_needed ? <strong>Needs accommodation</strong> : '—'}</td>
                           <td>{paymentStatusLabel(registration.payment_status)}</td>
                           <td>{Array.from({ length: registration.attendee_count }).map((_, i) => <span key={i} className="check-in-box" />)}</td>
                         </tr>
@@ -1162,6 +1166,7 @@ export default function MediaManagement({ viewerRole }: MediaManagementProps) {
           .event-attendee-print .check-in-box { display: inline-block; width: 5mm; height: 5mm; border: 1px solid #333; margin-right: 1.5mm; }
           .event-attendee-print .party-tag { display: block; margin-top: 0.5mm; font-size: 8pt; font-weight: bold; color: #6d5200; }
           .event-attendee-print tr.has-party td { background: #fff3c4 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+          .event-attendee-print tr.needs-stay td:first-child { border-left: 2.5mm solid #1e3a8a; }
         }
       `}</style>
 
