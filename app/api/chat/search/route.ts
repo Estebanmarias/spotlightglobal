@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { getSupabaseAdminClient } from "@/lib/supabase-server";
 import { checkPublicRateLimit } from "@/lib/public-rate-limit";
 import { LOCAL_GIVING_ACCOUNTS } from "@/lib/giving-accounts";
-import { isEventActive, resolveEventOccurrence } from "@/lib/church-events";
+import { eventRegistrationStatus, isEventActive, resolveEventOccurrence } from "@/lib/church-events";
 
 type SearchResult = {
   kind: "event" | "class" | "sermon" | "giving";
@@ -83,11 +83,12 @@ export async function GET(request: Request) {
       const eventScore = score(query, [event.title, event.description ?? "", event.location, event.event_time ?? "", "event", "events", "upcoming"]);
       if (eventScore === 0) continue;
       const date = dateLabel(event.event_date);
-      const registration = event.registration_enabled
-        ? event.registration_deadline && event.registration_deadline < today
+      const registrationStatus = eventRegistrationStatus(event, today);
+      const registration = registrationStatus === "open"
+        ? "Registration is available on the event page."
+        : registrationStatus === "closed"
           ? "Registration has closed."
-          : "Registration is available on the event page."
-        : "Registration is not currently enabled.";
+          : "Registration is not available for this event.";
       results.push({
         kind: "event",
         id: event.id,

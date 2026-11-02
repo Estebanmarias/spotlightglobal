@@ -6,7 +6,7 @@ import { getSupabaseClient } from '@/lib/supabase'
 import { formatEventRegistrationReference } from '@/lib/event-registration-reference'
 import { createPortal } from 'react-dom'
 import Icon from '@/components/Icon'
-import { recurrenceLabel } from '@/lib/church-events'
+import { eventRegistrationStatus, isEventActive, recurrenceLabel } from '@/lib/church-events'
 import { SITE_CONFIG } from '@/lib/site-config'
 
 // ════════════════════════════════════════════════════════════════════
@@ -119,9 +119,36 @@ function paymentStatusLabel(status: string) {
   return status === 'free' ? 'Confirmed' : status
 }
 
+function InsightList({ title, values, showBars = false }: { title: string; values: Record<string, number>; showBars?: boolean }) {
+  const entries = Object.entries(values).sort(([, a], [, b]) => b - a)
+  const max = entries[0]?.[1] ?? 1
+  return (
+    <section>
+      <h4 className="text-[13px] font-bold text-[#081534]">{title}</h4>
+      {entries.length === 0 ? (
+        <p className="mt-3 text-[12px] text-[#76777f]">No data recorded.</p>
+      ) : (
+        <div className="mt-3 space-y-2">
+          {entries.map(([label, value]) => (
+            <div key={label} className="border-b border-[#e2e2e9] pb-2 text-[12px]">
+              <div className="flex items-center justify-between gap-3">
+                <span className="min-w-0 truncate text-[#45464e]" title={label}>{label}</span>
+                <span className="shrink-0 font-bold text-[#081534]">{value}</span>
+              </div>
+              {showBars && <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-[#e2e2e9]"><div className="h-full rounded-full bg-[#fdc425]" style={{ width: `${(value / max) * 100}%` }} /></div>}
+            </div>
+          ))}
+        </div>
+      )}
+    </section>
+  )
+}
+
 export default function MediaManagement({ viewerRole }: MediaManagementProps) {
   const supabase = getSupabaseClient()
   const [tab, setTab] = useState<'events' | 'gallery'>('events')
+  const [eventFilter, setEventFilter] = useState('')
+  const [eventStatusFilter, setEventStatusFilter] = useState<'all' | 'active' | 'closed'>('all')
 
   // ── Events state ──────────────────────────────────────────────────
   const [events, setEvents] = useState<ChurchEvent[]>([])
@@ -139,6 +166,7 @@ export default function MediaManagement({ viewerRole }: MediaManagementProps) {
   const [prayerRequests, setPrayerRequests] = useState<EventPrayerRequest[]>([])
   const [prayerRequestsLoading, setPrayerRequestsLoading] = useState(false)
   const [showPrayerRequests, setShowPrayerRequests] = useState(false)
+  const [showEventInsights, setShowEventInsights] = useState(false)
   const [updatingPaymentId, setUpdatingPaymentId] = useState<string | null>(null)
 
   // flyer upload
@@ -364,6 +392,23 @@ export default function MediaManagement({ viewerRole }: MediaManagementProps) {
     setFlyerPreview('')
   }
 
+  const closeEventRegistration = async (event: ChurchEvent) => {
+    if (!window.confirm(`Close registrations for "${event.title}"?`)) return
+    const today = new Date()
+    const todayString = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`
+    const { error } = await (supabase.from('church_events') as any)
+      .update({ registration_enabled: false, registration_deadline: todayString })
+      .eq('id', event.id)
+    if (error) {
+      showToast('Could not close registrations', 'error')
+      return
+    }
+    setEvents(current => current.map(item => item.id === event.id
+      ? { ...item, registration_enabled: false, registration_deadline: todayString }
+      : item))
+    showToast('Registrations closed')
+  }
+
   const handleDeleteEvent = async () => {
     if (!deleteEventTarget) return
     const { count, error: registrationCountError } = await supabase
@@ -400,6 +445,7 @@ export default function MediaManagement({ viewerRole }: MediaManagementProps) {
   const openRegistrations = async (event: ChurchEvent) => {
     setRegistrationsForEvent(event)
     setShowPrayerRequests(false)
+    setShowEventInsights(false)
     setRegistrationsLoading(true)
     try {
       const headers = await getEventAdminHeaders()
@@ -424,12 +470,13 @@ export default function MediaManagement({ viewerRole }: MediaManagementProps) {
       return `"${safeText.replace(/"/g, '""')}"`
     }
     const rows = [
-      ['Registration ref', 'Name', 'Email', 'Phone', 'Party size', 'Additional guests', 'Needs accommodation', 'Accommodation notes', 'Attendance days', 'Payment status'],
+      ['Registration ref', 'Name', 'Email', 'Phone', 'Referral source', 'Party size', 'Additional guests', 'Needs accommodation', 'Accommodation notes', 'Attendance days', 'Payment status'],
       ...activeRegistrations.map(registration => [
         formatEventRegistrationReference(registration.id),
         registration.full_name,
         registration.email,
         registration.phone,
+        registration.referral_source || 'Not specified',
         String(registration.attendee_count),
         String(Math.max(registration.attendee_count - 1, 0)),
         registration.accommodation_needed ? 'Yes' : 'No',
@@ -560,6 +607,25 @@ export default function MediaManagement({ viewerRole }: MediaManagementProps) {
     return date.toLocaleDateString('en-NG', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })
   }
 
+  const registeredAttendees = registrations.filter(registration => registration.registration_status === 'registered')
+  const referralCounts = registeredAttendees.reduce<Record<string, number>>((counts, registration) => {
+    const source = registration.referral_source?.trim() || 'Not specified'
+    counts[source] = (counts[source] ?? 0) + 1
+    return counts
+  }, {})
+  const attendanceCounts = registeredAttendees.reduce<Record<string, number>>((counts, registration) => {
+    for (const date of registration.attendance_dates ?? []) counts[date] = (counts[date] ?? 0) + registration.attendee_count
+    return counts
+  }, {})
+  const locationCounts = registeredAttendees.reduce<Record<string, number>>((counts, registration) => {
+    const location = registration.location?.trim() || 'Not specified'
+    counts[location] = (counts[location] ?? 0) + registration.attendee_count
+    return counts
+  }, {})
+  const totalAttendees = registeredAttendees.reduce((total, registration) => total + registration.attendee_count, 0)
+  const accommodationCount = registeredAttendees.filter(registration => registration.accommodation_needed).length
+  const specialSessionCount = registeredAttendees.filter(registration => registration.special_session_attending).length
+
   const isBusy = savingEvent || flyerUploading || savingPhoto || photoUploading
 
   return (
@@ -620,8 +686,25 @@ export default function MediaManagement({ viewerRole }: MediaManagementProps) {
                 <p className="text-[11px] text-[#76777f] mt-1">Add one to show it on the public Community page</p>
               </div>
             ) : (
-              <div className="space-y-2">
-                {events.map(e => (
+              <div className="space-y-3">
+                <div className="flex flex-col gap-2 sm:flex-row">
+                  <input value={eventFilter} onChange={event => setEventFilter(event.target.value)}
+                    placeholder="Search events…" aria-label="Search events"
+                    className="min-h-10 flex-1 rounded-lg border border-[#c6c6cf] bg-white px-3 text-[12px] outline-none focus:border-[#081534]" />
+                  <select value={eventStatusFilter} onChange={event => setEventStatusFilter(event.target.value as typeof eventStatusFilter)}
+                    aria-label="Filter events by registration status"
+                    className="min-h-10 rounded-lg border border-[#c6c6cf] bg-white px-3 text-[12px] text-[#45464e]">
+                    <option value="all">All statuses</option>
+                    <option value="active">Registration open</option>
+                    <option value="closed">Registration closed</option>
+                  </select>
+                </div>
+                {events.filter(event => {
+                  const query = eventFilter.trim().toLowerCase()
+                  const matchesText = !query || [event.title, event.location].some(value => value.toLowerCase().includes(query))
+                  const status = eventRegistrationStatus(event, new Date().toISOString().slice(0, 10))
+                  return matchesText && (eventStatusFilter === 'all' || (eventStatusFilter === 'active' ? status === 'open' : status === 'closed'))
+                }).map(e => (
                   <div key={e.id}
                     className="flex items-center justify-between p-3.5 bg-[#f7f9fb] rounded-lg border border-[#eceef0] hover:border-[#c6c6cf] transition-all">
                     <div className="flex items-center gap-3 min-w-0">
@@ -635,7 +718,7 @@ export default function MediaManagement({ viewerRole }: MediaManagementProps) {
                       <div className="min-w-0">
                         <div className="flex items-center gap-2">
                           <p className="text-[13px] font-bold text-[#081534] truncate">{e.title}</p>
-                          {e.is_featured && (
+                          {e.is_featured && isEventActive(e, new Date().toISOString().slice(0, 10)) && (
                             <span className="px-1.5 py-0.5 bg-[#fdc425] text-[#6d5200] text-[9px] font-bold rounded uppercase shrink-0">Featured</span>
                           )}
                         </div>
@@ -643,11 +726,17 @@ export default function MediaManagement({ viewerRole }: MediaManagementProps) {
                           {formatDate(e.event_date)}{e.event_time ? ` · ${e.event_time}` : ''}
                           {recurrenceLabel(e) ? ` · ${recurrenceLabel(e)}` : ''}
                         </p>
-                        {e.registration_enabled && (
-                          <p className="mt-1 text-[10px] font-semibold text-[#785a00]">
-                            Registration open{e.price_type === 'paid' ? ` · ${e.currency} ${Number(e.price || 0).toLocaleString('en-NG')}` : ''}
+                        {(() => {
+                          const registrationStatus = eventRegistrationStatus(e, new Date().toISOString().slice(0, 10))
+                          if (registrationStatus === 'unavailable') return null
+                          return (
+                          <p className={`mt-1 text-[10px] font-semibold ${registrationStatus === 'open' ? 'text-[#18794e]' : 'text-[#ba1a1a]'}`}>
+                            {registrationStatus === 'open'
+                              ? `Registration open${e.price_type === 'paid' ? ` · ${e.currency} ${Number(e.price || 0).toLocaleString('en-NG')}` : ''}`
+                              : 'Registration closed'}
                           </p>
-                        )}
+                          )
+                        })()}
                       </div>
                     </div>
                     <div className="flex items-center gap-1 shrink-0">
@@ -656,6 +745,13 @@ export default function MediaManagement({ viewerRole }: MediaManagementProps) {
                           className="w-8 h-8 flex items-center justify-center rounded-lg text-[#45464e] hover:text-[#081534] hover:bg-white transition-all"
                           title="Manage registrations" aria-label={`Manage registrations for ${e.title}`}>
                           <Icon name="how_to_reg" className="text-[18px]" />
+                        </button>
+                      )}
+                      {eventRegistrationStatus(e, new Date().toISOString().slice(0, 10)) === 'open' && (
+                        <button onClick={() => closeEventRegistration(e)}
+                          className="w-8 h-8 flex items-center justify-center rounded-lg text-[#ba1a1a] hover:bg-[#ffefed] transition-all"
+                          title="Close registrations" aria-label={`Close registrations for ${e.title}`}>
+                          <Icon name="lock" className="text-[18px]" />
                         </button>
                       )}
                       <button onClick={() => openEditEvent(e)}
@@ -997,7 +1093,7 @@ export default function MediaManagement({ viewerRole }: MediaManagementProps) {
                     </p>
                   </div>
                   <div className="flex shrink-0 items-center gap-1">
-                    {!showPrayerRequests && (
+                    {!showPrayerRequests && !showEventInsights && (
                       <>
                         <button type="button" onClick={printRegistrationRoster}
                           disabled={registrationsLoading || registrations.length === 0}
@@ -1024,8 +1120,12 @@ export default function MediaManagement({ viewerRole }: MediaManagementProps) {
 
                 <div className="flex items-center gap-2 border-b border-[#e2e2e9] px-5 py-3 sm:px-7">
                   <button type="button" onClick={() => setShowPrayerRequests(false)}
-                    className={`min-h-9 rounded-md px-3 text-[12px] font-semibold ${!showPrayerRequests ? 'bg-[#081534] text-white' : 'text-[#45464e] hover:bg-[#f2f4f6]'}`}>
+                    className={`min-h-9 rounded-md px-3 text-[12px] font-semibold ${!showPrayerRequests && !showEventInsights ? 'bg-[#081534] text-white' : 'text-[#45464e] hover:bg-[#f2f4f6]'}`}>
                     Attendees
+                  </button>
+                  <button type="button" onClick={() => { setShowEventInsights(true); setShowPrayerRequests(false) }}
+                    className={`min-h-9 rounded-md px-3 text-[12px] font-semibold ${showEventInsights ? 'bg-[#081534] text-white' : 'text-[#45464e] hover:bg-[#f2f4f6]'}`}>
+                    Insights
                   </button>
                   {viewerRole === 'super_admin' && (
                     <button type="button" onClick={loadPrayerRequests}
@@ -1036,7 +1136,35 @@ export default function MediaManagement({ viewerRole }: MediaManagementProps) {
                 </div>
 
                 <div className="min-h-0 flex-1 overflow-y-auto p-4 sm:p-7">
-                  {showPrayerRequests ? (
+                  {showEventInsights ? (
+                    <div className="space-y-7">
+                      <div>
+                        <p className="text-[10px] font-bold uppercase tracking-widest text-[#785a00]">Event insights</p>
+                        <p className="mt-1 text-[13px] text-[#76777f]">Use these results to plan promotion, staffing, transport, and accommodation for the next event.</p>
+                      </div>
+                      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                        {[
+                          ['Registrations', registeredAttendees.length],
+                          ['Total attendees', totalAttendees],
+                          ['Accommodation', accommodationCount],
+                          ['Special session', specialSessionCount],
+                        ].map(([label, value]) => (
+                          <div key={label} className="rounded-lg border border-[#e2e2e9] bg-[#f7f9fb] p-4">
+                            <p className="text-[11px] font-semibold text-[#76777f]">{label}</p>
+                            <p className="mt-1 text-[25px] font-bold text-[#081534]">{value}</p>
+                          </div>
+                        ))}
+                      </div>
+                      <div className="grid gap-7 lg:grid-cols-3">
+                        <InsightList title="How people heard about it" values={referralCounts} showBars />
+                        <InsightList title="Attendees by location" values={locationCounts} showBars />
+                        <InsightList
+                          title="Attendance by day"
+                          values={Object.fromEntries(Object.entries(attendanceCounts).map(([date, count]) => [formatDate(date), count]))}
+                        />
+                      </div>
+                    </div>
+                  ) : showPrayerRequests ? (
                     prayerRequestsLoading ? (
                       <p className="py-10 text-center text-[13px] text-[#76777f]">Loading pastoral requests…</p>
                     ) : prayerRequests.length === 0 ? (

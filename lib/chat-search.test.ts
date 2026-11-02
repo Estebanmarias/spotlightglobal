@@ -39,4 +39,10 @@ describe('matchQuestion', () => {
     expect(label('where una dey')).toBe('location')
     expect(label('how i fit join')).toBe('new')
   })
+
+  it('smoke-tests key visitor intents', () => {
+    expect(label('what is the latest sermon')).toBe('watch')
+    expect(label('where can I register for the upcoming event')).toBe('events')
+    expect(label('what account number can I use to give')).toBe('giving')
+  })
 })

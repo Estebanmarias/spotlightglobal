@@ -133,6 +133,38 @@ export default function ConferencePreview() {
     (!event.registration_deadline || new Date(`${event.registration_deadline}T23:59:59`) >= new Date()) &&
     attendanceDays.length > 0,
   );
+  const registrationStatus = registrationOpen
+    ? "open"
+    : event.registration_enabled || event.registration_deadline
+      ? "closed"
+      : "not-open";
+
+  const eventPageUrl = typeof window === "undefined" ? `/conference?event=${encodeURIComponent(event.id)}` : window.location.href;
+  const shareEvent = async () => {
+    if (navigator.share) {
+      await navigator.share({ title: event.title, text: event.description || event.title, url: eventPageUrl });
+    } else {
+      await navigator.clipboard?.writeText(eventPageUrl);
+    }
+  };
+  const downloadCalendar = () => {
+    const formatCalendarDate = (value: string) => value.replace(/-/g, "");
+    const end = event.event_end_date || event.event_date;
+    const calendar = [
+      "BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//theSpotlightChurch//Events//EN", "BEGIN:VEVENT",
+      `UID:${event.id}@thespotlightchurch.com`,
+      `DTSTART;VALUE=DATE:${formatCalendarDate(event.event_date)}`,
+      `DTEND;VALUE=DATE:${formatCalendarDate(end)}`,
+      `SUMMARY:${event.title.replace(/[,;]/g, "")}`,
+      `LOCATION:${event.location.replace(/[,;]/g, "")}`,
+      "END:VEVENT", "END:VCALENDAR",
+    ].join("\r\n");
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(new Blob([calendar], { type: "text/calendar" }));
+    link.download = `${event.title.toLowerCase().replace(/[^a-z0-9]+/g, "-") || "event"}.ics`;
+    link.click();
+    URL.revokeObjectURL(link.href);
+  };
 
   const handleSubmit = async (submitEvent: React.FormEvent<HTMLFormElement>) => {
     submitEvent.preventDefault();
@@ -189,6 +221,9 @@ export default function ConferencePreview() {
   return (
     <main className="bg-[#f7f9fb] text-[#191c1e]">
       <section className="overflow-hidden bg-[#081534] text-white">
+        <div className="mx-auto max-w-7xl px-5 pt-5 text-[12px] text-white/60 sm:px-8 lg:px-12">
+          <a href="/events" className="hover:text-white">Events</a><span className="mx-2">/</span><span className="text-white/85">{event.title}</span>
+        </div>
         <div className="mx-auto grid w-full max-w-7xl items-center gap-9 px-5 pb-12 pt-24 sm:px-8 sm:pb-16 md:grid-cols-[minmax(0,1fr)_15rem] md:gap-8 md:px-8 md:py-12 lg:grid-cols-[1fr_26rem] lg:gap-16 lg:px-12 lg:py-16">
           <div className="order-2 max-w-2xl md:order-1">
             <p className="mb-5 inline-flex items-center gap-2 text-[12px] font-bold uppercase tracking-[0.18em] text-[#fdc425]">
@@ -220,9 +255,17 @@ export default function ConferencePreview() {
               href="#registration"
               className="mt-9 inline-flex min-h-12 items-center gap-2 rounded-md bg-[#fdc425] px-6 text-[14px] font-bold text-[#081534] transition hover:bg-[#ffe07a] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
             >
-              {registrationOpen ? "Register now" : "Registration details"}
+              {registrationStatus === "open" ? "Register now" : "Event details"}
               <Icon name="arrow_downward" className="text-[18px]" />
             </a>
+            <div className="mt-3 flex flex-wrap gap-2">
+              <button type="button" onClick={downloadCalendar} className="inline-flex min-h-10 items-center gap-2 rounded-md border border-white/25 px-4 text-[12px] font-semibold text-white hover:bg-white/10">
+                <Icon name="calendar_month" className="text-[16px]" /> Add to calendar
+              </button>
+              <button type="button" onClick={() => void shareEvent()} className="inline-flex min-h-10 items-center gap-2 rounded-md border border-white/25 px-4 text-[12px] font-semibold text-white hover:bg-white/10">
+                <Icon name="share" className="text-[16px]" /> Share event
+              </button>
+            </div>
           </div>
           {event.flyer_url ? (
             <img src={event.flyer_url} alt={`${event.title} event flyer`} className="order-1 mx-auto h-auto w-full max-w-[24rem] object-contain md:order-2 md:max-w-[15rem] lg:max-w-104" />
@@ -314,8 +357,8 @@ export default function ConferencePreview() {
               <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-[#785a00]">Attendee details</p>
               <h2 className="mt-1 text-[24px] font-bold text-[#081534]">Register for this event</h2>
             </div>
-            <span className={`rounded-sm px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide ${registrationOpen ? "bg-green-100 text-green-800" : "bg-[#fff2c7] text-[#6d5200]"}`}>
-                            {registrationOpen ? "Registration open" : "Registration not open"}
+            <span className={`rounded-sm px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide ${registrationStatus === "open" ? "bg-green-100 text-green-800" : registrationStatus === "closed" ? "bg-[#ffefed] text-[#8f1717]" : "bg-[#fff2c7] text-[#6d5200]"}`}>
+              {registrationStatus === "open" ? "Registration open" : registrationStatus === "closed" ? "Registration closed" : "Registration not open yet"}
             </span>
           </div>
 
@@ -325,13 +368,15 @@ export default function ConferencePreview() {
             </p>
           )}
 
-                    {!registrationOpen && (
+                    {registrationStatus !== "open" && (
             <p className="mb-5 border-l-2 border-[#fdc425] bg-white px-4 py-3 text-[12px] leading-5 text-[#5b5d66]">
-              Registration is currently closed. Please contact the church team for updates.
+              {registrationStatus === "closed"
+                ? "Registration for this event has closed. Thank you for your interest. Please check our events page for upcoming programmes."
+                : "Registration is not open yet. Please check back for updates."}
             </p>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-7">
+          {registrationStatus === "open" ? <form onSubmit={handleSubmit} className="space-y-7">
             <div className="grid gap-5 sm:grid-cols-2">
               <label className="block text-[12px] font-semibold text-[#45464e]">
                 Full name <span className="text-[#ba1a1a]">*</span>
@@ -450,7 +495,7 @@ export default function ConferencePreview() {
                 <Icon name="arrow_forward" className="text-[17px]" />
               </button>
             </div>
-          </form>
+          </form> : null}
         </div>
       </section>
     </main>

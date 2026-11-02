@@ -229,6 +229,8 @@ export default function FaqChat() {
   const [lastTopic, setLastTopic] = useState<string>()
   const [clarifyOptions, setClarifyOptions] = useState<string[]>([])
   const closeButtonRef = useRef<HTMLButtonElement>(null)
+  const triggerRef = useRef<HTMLButtonElement>(null)
+  const wasOpen = useRef(false)
   const [messages, setMessages] = useState<Message[]>([{ id: 0, from: 'bot', text: GREETING }])
   const nextId = useRef(1)
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
@@ -248,10 +250,15 @@ export default function FaqChat() {
 
   useEffect(() => {
     if (!open) return
+    wasOpen.current = true
     closeButtonRef.current?.focus()
     const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setOpen(false) }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
+  }, [open])
+
+  useEffect(() => {
+    if (!open && wasOpen.current) triggerRef.current?.focus()
   }, [open])
 
   useEffect(() => () => clearTimeout(timer.current), [])
@@ -290,11 +297,18 @@ export default function FaqChat() {
   }
 
   const searchSite = async (text: string) => {
+    setTyping(true)
     try {
       const response = await fetch(`/api/chat/search?q=${encodeURIComponent(text)}`)
-      if (!response.ok) return false
+      if (!response.ok) {
+        setTyping(false)
+        return false
+      }
       const data = await response.json() as { results?: SearchResult[] }
-      if (!data.results?.length) return false
+      if (!data.results?.length) {
+        setTyping(false)
+        return false
+      }
 
       setLastTopic(
         data.results[0].kind === 'sermon' ? 'watch'
@@ -304,12 +318,12 @@ export default function FaqChat() {
       )
       setMessages(prev => [...prev, { id: nextId.current++, from: 'user', text }])
       setTyping(true)
-      const reply = data.results.map(result => `${result.title}\n${result.text}`).join('\n\n')
-      const actions = data.results.map(result => ({
+      const reply = data.results.map(result => `${result.title}\n${result.text}\nSource: ${result.kind === 'sermon' ? 'YouTube' : result.kind === 'giving' ? 'Giving page' : result.kind === 'class' ? 'Classes page' : 'Events page'} (see the link below)`).join('\n\n')
+      const actions = Array.from(new Map(data.results.map(result => [result.href, {
         label: result.kind === 'sermon' ? 'Watch now' : result.kind === 'class' ? 'View classes' : result.kind === 'giving' ? 'View giving details' : 'View event',
         href: result.href,
         icon: result.kind === 'sermon' ? <Headphones className={ICON} /> : result.kind === 'class' ? <GraduationCap className={ICON} /> : result.kind === 'giving' ? <HandHeart className={ICON} /> : <CalendarDays className={ICON} />,
-      }))
+      }]))).map(([, action]) => action)
       timer.current = setTimeout(() => {
         setMessages(prev => [...prev, { id: nextId.current++, from: 'bot', text: reply, actions }])
         setTyping(false)
@@ -317,6 +331,7 @@ export default function FaqChat() {
       return true
     } catch (error) {
       console.warn('[FAQ CHAT] Search unavailable', error)
+      setTyping(false)
       return false
     }
   }
@@ -493,6 +508,7 @@ export default function FaqChat() {
 
         <button
           type="button"
+          ref={triggerRef}
           onClick={() => setOpen(o => !o)}
           aria-expanded={open}
           aria-label={open ? 'Close chat' : 'Open chat'}

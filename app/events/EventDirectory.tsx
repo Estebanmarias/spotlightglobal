@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { getSupabaseClient } from "@/lib/supabase";
-import { isEventActive, recurrenceLabel, resolveEventOccurrence, type ChurchEventPreview } from "@/lib/church-events";
+import { eventRegistrationStatus, isEventActive, recurrenceLabel, resolveEventOccurrence, type ChurchEventPreview } from "@/lib/church-events";
 import Icon from "@/components/Icon";
 import { eventPriceLabel } from "@/lib/event-display";
 
@@ -47,11 +47,7 @@ function whenLabel(event: ChurchEventPreview, today: string) {
 }
 
 function registrationOpen(event: ChurchEventPreview, today: string) {
-  return Boolean(
-    event.registration_enabled &&
-      (event.event_end_date || event.event_date) >= today &&
-      (!event.registration_deadline || event.registration_deadline >= today),
-  );
+  return eventRegistrationStatus(event, today) === "open";
 }
 
 const CHIP_TONES = {
@@ -123,7 +119,8 @@ function Cta({ event, open, archived }: { event: ChurchEventPreview; open: boole
       </a>
     );
   }
-  const label = archived ? "View details" : open ? "Register now" : "Event details";
+  const registrationStatus = eventRegistrationStatus(event, new Date().toISOString().slice(0, 10));
+  const label = archived ? "View details" : open ? "Register now" : registrationStatus === "closed" ? "Registration closed" : "Event details";
   const tone =
     open && !archived
       ? "bg-[#081534] text-white hover:bg-[#17305f]"
@@ -146,7 +143,7 @@ function StatusChips({ event, today, archived }: { event: ChurchEventPreview; to
     <div className="flex flex-wrap items-center gap-2">
       {recurrenceLabel(event) && <Chip tone="gold">{recurrenceLabel(event)}</Chip>}
       {!archived && open && <Chip tone="green">Registration open</Chip>}
-      {!archived && !open && event.registration_enabled && <Chip>Registration closed</Chip>}
+      {!archived && !open && eventRegistrationStatus(event, today) === "closed" && <Chip>Registration closed</Chip>}
       {price && <Chip tone="gold">{price}</Chip>}
     </div>
   );

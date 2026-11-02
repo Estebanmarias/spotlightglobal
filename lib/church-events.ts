@@ -69,3 +69,16 @@ export function isEventActive<T extends Pick<ChurchEventPreview, "event_date" | 
   }
   return (event.event_end_date || event.event_date) >= today;
 }
+
+export function eventRegistrationStatus(
+  event: Pick<ChurchEventPreview, "registration_enabled" | "registration_deadline" | "event_date" | "event_end_date">,
+  today: string,
+) {
+  if (event.registration_enabled &&
+    (event.event_end_date || event.event_date) >= today &&
+    (!event.registration_deadline || event.registration_deadline >= today)) {
+    return "open" as const;
+  }
+  if (event.registration_deadline) return "closed" as const;
+  return "unavailable" as const;
+}
