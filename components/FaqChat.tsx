@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
@@ -8,10 +8,11 @@ import { AnimatePresence, motion } from 'framer-motion'
 import { CONSENT_EVENT, readConsent } from '@/lib/consent'
 import SharedBrandIcon from '@/components/BrandIcon'
 import {
-  Car, CalendarDays, Clock, GraduationCap, HandHeart, Handshake, Headphones,
-  HeartHandshake, MapPin, Navigation, Phone, UserPlus, X,
+  BookOpen, Car, CalendarDays, Clock, GraduationCap, HandHeart, Handshake, Headphones,
+  HeartHandshake, Mail, MapPin, Navigation, Phone, Send, User, UserPlus, X,
 } from 'lucide-react'
 import { SITE_CONFIG } from '@/lib/site-config'
+import { CRISIS_REPLY, matchQuestion, NOT_SURE_REPLY } from '@/lib/chat-search'
 
 // ── Edit contacts, links and logo here ───────────────────────────────
 const LOGO_SRC = '/apple-touch-icon-v2.png'
@@ -31,8 +32,9 @@ const BrandIcon = ({ name }: { name: string }) => <SharedBrandIcon name={name} c
 
 type Verse = { text: string; ref: string }
 type Action = { label: string; href: string; icon: ReactNode }
-type Topic = { id: string; label: string; icon: ReactNode; reply: string; verse?: Verse; actions?: Action[] }
+type Topic = { id: string; label: string; icon: ReactNode; reply: string; verse?: Verse; actions?: Action[]; hidden?: boolean }
 type Message = { id: number; from: 'bot' | 'user'; text: string; verse?: Verse; actions?: Action[] }
+type SearchResult = { kind: 'event' | 'class' | 'sermon' | 'giving'; title: string; text: string; href: string }
 
 const GREETING = 'Hi, welcome to the company of the Blessed 👋 What would you like to know?'
 
@@ -145,6 +147,33 @@ const TOPICS: Topic[] = [
       { label: 'Spotify', href: 'https://open.spotify.com/show/75PSP2x3mArsPABn4KReUY', icon: <BrandIcon name="spotify" /> },
     ],
   },
+  {
+    id: 'pastor',
+    label: 'Our pastor',
+    hidden: true,
+    icon: <User className={ICON} />,
+    reply: 'Apostle Edet Kingsley is the Lead Pastor of theSpotlightChurch, known to many as the Setman.',
+    actions: [{ label: 'About the pastor', href: '/pastor', icon: <User className={ICON} /> }],
+  },
+  {
+    id: 'contact',
+    label: 'Contact the church',
+    hidden: true,
+    icon: <Mail className={ICON} />,
+    reply: 'You can reach the church team through our contact page or by email.',
+    actions: [
+      { label: 'Contact page', href: '/contact', icon: <Mail className={ICON} /> },
+      { label: 'Send an email', href: `mailto:${SITE_CONFIG.email}`, icon: <Mail className={ICON} /> },
+    ],
+  },
+  {
+    id: 'vision',
+    label: 'Our vision',
+    hidden: true,
+    icon: <BookOpen className={ICON} />,
+    reply: 'We help people know Christ, grow in faith and use their gifts in service.',
+    actions: [{ label: 'Our vision', href: '/vision', icon: <BookOpen className={ICON} /> }],
+  },
 ]
 
 function Avatar({ size }: { size: number }) {
@@ -196,6 +225,10 @@ export default function FaqChat() {
   const [typing, setTyping] = useState(false)
   const [teaser, setTeaser] = useState(false)
   const [consentPending, setConsentPending] = useState(true)
+  const [draft, setDraft] = useState('')
+  const [lastTopic, setLastTopic] = useState<string>()
+  const [clarifyOptions, setClarifyOptions] = useState<string[]>([])
+  const closeButtonRef = useRef<HTMLButtonElement>(null)
   const [messages, setMessages] = useState<Message[]>([{ id: 0, from: 'bot', text: GREETING }])
   const nextId = useRef(1)
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
@@ -215,6 +248,7 @@ export default function FaqChat() {
 
   useEffect(() => {
     if (!open) return
+    closeButtonRef.current?.focus()
     const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setOpen(false) }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
@@ -238,9 +272,11 @@ export default function FaqChat() {
     return () => window.removeEventListener(CONSENT_EVENT, onChoice)
   }, [])
 
-  const ask = (topic: Topic) => {
+  const ask = (topic: Topic, userText?: string) => {
     if (typing) return
-    setMessages(prev => [...prev, { id: nextId.current++, from: 'user', text: topic.label }])
+    setLastTopic(topic.id)
+    setClarifyOptions([])
+    setMessages(prev => [...prev, { id: nextId.current++, from: 'user', text: userText ?? topic.label }])
     setTyping(true)
     // Longer answers "take longer to type": 0.9s base + 8ms per character, capped at 2.4s
     const delay = Math.min(2400, 900 + topic.reply.length * 8)
@@ -253,6 +289,66 @@ export default function FaqChat() {
     }, delay)
   }
 
+  const searchSite = async (text: string) => {
+    try {
+      const response = await fetch(`/api/chat/search?q=${encodeURIComponent(text)}`)
+      if (!response.ok) return false
+      const data = await response.json() as { results?: SearchResult[] }
+      if (!data.results?.length) return false
+
+      setLastTopic(
+        data.results[0].kind === 'sermon' ? 'watch'
+          : data.results[0].kind === 'class' ? 'classes'
+            : data.results[0].kind === 'giving' ? 'giving'
+              : 'events',
+      )
+      setMessages(prev => [...prev, { id: nextId.current++, from: 'user', text }])
+      setTyping(true)
+      const reply = data.results.map(result => `${result.title}\n${result.text}`).join('\n\n')
+      const actions = data.results.map(result => ({
+        label: result.kind === 'sermon' ? 'Watch now' : result.kind === 'class' ? 'View classes' : result.kind === 'giving' ? 'View giving details' : 'View event',
+        href: result.href,
+        icon: result.kind === 'sermon' ? <Headphones className={ICON} /> : result.kind === 'class' ? <GraduationCap className={ICON} /> : result.kind === 'giving' ? <HandHeart className={ICON} /> : <CalendarDays className={ICON} />,
+      }))
+      timer.current = setTimeout(() => {
+        setMessages(prev => [...prev, { id: nextId.current++, from: 'bot', text: reply, actions }])
+        setTyping(false)
+      }, Math.min(2400, 900 + reply.length * 8))
+      return true
+    } catch (error) {
+      console.warn('[FAQ CHAT] Search unavailable', error)
+      return false
+    }
+  }
+
+  const submitDraft = async (e: FormEvent) => {
+    e.preventDefault()
+    const text = draft.trim()
+    if (!text || typing) return
+    setDraft('')
+    if (/\b(event|events|conference|upcoming|class|classes|course|cohort|sermon|sermons|video|videos|latest|preaching|preached|give|giving|tithe|tithes|offering|offerings|donate|donation|seed|seeds|account|bank|transfer)\b/i.test(text)) {
+      if (await searchSite(text)) return
+    }
+    const counselor = TOPICS.find(t => t.id === 'counselor')
+    const m = matchQuestion(text, lastTopic)
+
+    if (m.kind === 'crisis' && counselor) return ask({ ...counselor, reply: CRISIS_REPLY }, text)
+    if (m.kind === 'smalltalk') return ask({ id: 'reply', label: text, icon: null, reply: m.reply }, text)
+    if (m.kind === 'topic') {
+      const topic = TOPICS.find(t => t.id === m.id)
+      if (topic) {
+        return ask(m.confident ? topic : { ...topic, reply: `This might help:\n${topic.reply}` }, text)
+      }
+    }
+    if (m.kind === 'clarify') {
+      setClarifyOptions(m.options)
+      setMessages(prev => [...prev, { id: nextId.current++, from: 'user', text }])
+      setMessages(prev => [...prev, { id: nextId.current++, from: 'bot', text: 'I can help with either of these:' }])
+      return
+    }
+    ask({ id: 'fallback', label: text, icon: null, reply: NOT_SURE_REPLY, actions: counselor?.actions }, text)
+  }
+
   return (
     <>
       <AnimatePresence>
@@ -260,6 +356,7 @@ export default function FaqChat() {
           <motion.div
             role="dialog"
             aria-label="Chat with theSpotlightChurch"
+            aria-modal="true"
             initial={{ opacity: 0, y: 16, scale: 0.98 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 16, scale: 0.98 }}
@@ -276,13 +373,19 @@ export default function FaqChat() {
                 type="button"
                 onClick={() => setOpen(false)}
                 aria-label="Close chat"
+                ref={closeButtonRef}
                 className="rounded-lg p-2 text-white/70 transition hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#fdc425]"
               >
                 <X className="h-5 w-5" />
               </button>
             </div>
 
-            <div className="flex-1 space-y-3 overflow-y-auto overscroll-contain bg-[#f7f9fb] p-4">
+            <div
+              id="faq-chat-messages"
+              aria-live="polite"
+              aria-busy={typing}
+              className="flex-1 space-y-3 overflow-y-auto overscroll-contain bg-[#f7f9fb] p-4"
+            >
               {messages.map((m, i) => (
                 <div key={m.id} ref={i === anchorIndex ? anchorRef : undefined}>
                   {m.from === 'user' ? (
@@ -313,12 +416,13 @@ export default function FaqChat() {
                 </div>
               ))}
 
-              {typing && <TypingBubble />}
+              {typing && <div role="status" aria-label="The church assistant is typing"><TypingBubble /></div>}
 
-              <div className="pt-1">
-                <p className="mb-2 text-[12px] font-semibold text-[#45464e]">How can we help you today?</p>
+              {messages.length === 1 && (
+                <div className="pt-1">
+                <p className="mb-2 text-[12px] font-semibold text-[#45464e]">Choose a topic, or type your question below.</p>
                 <div className="flex flex-wrap gap-2">
-                  {TOPICS.map(t => (
+                  {TOPICS.filter(t => !t.hidden).map(t => (
                     <button
                       key={t.id}
                       type="button"
@@ -331,8 +435,41 @@ export default function FaqChat() {
                     </button>
                   ))}
                 </div>
+                </div>
+              )}
+                {clarifyOptions.length > 0 && !typing && (
+                  <div className="mt-3" role="group" aria-label="Choose what you meant">
+                    <p className="mb-2 text-[12px] font-semibold text-[#45464e]">Which one did you mean?</p>
+                    <div className="flex flex-wrap gap-2">
+                      {clarifyOptions.map(id => {
+                        const topic = TOPICS.find(item => item.id === id)
+                        if (!topic) return null
+                        return <button key={id} type="button" onClick={() => { setClarifyOptions([]); ask(topic) }} className="rounded-full border border-[#081534]/20 bg-white px-3 py-2 text-[12px] font-semibold text-[#081534] hover:bg-[#081534] hover:text-white">{topic.label}</button>
+                      })}
+                    </div>
+                  </div>
+                )}
               </div>
-            </div>
+            <form onSubmit={submitDraft} className="flex items-center gap-2 border-t border-[#e2e2e9] bg-white p-3">
+              <input
+                value={draft}
+                onChange={e => setDraft(e.target.value)}
+                maxLength={200}
+                disabled={typing}
+                placeholder="Type your question…"
+                aria-label="Type your question"
+                enterKeyHint="send"
+                className="min-w-0 flex-1 rounded-full bg-[#f2f4f6] px-4 py-2.5 text-[16px] outline-none focus:ring-2 focus:ring-[#081534]/20 sm:text-[14px]"
+              />
+              <button
+                type="submit"
+                disabled={typing || !draft.trim()}
+                aria-label="Send"
+                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#081534] text-white transition hover:bg-[#17305f] disabled:opacity-40"
+              >
+                <Send className="h-4 w-4" />
+              </button>
+            </form>
           </motion.div>
         )}
       </AnimatePresence>

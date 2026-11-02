@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { getSupabaseClient } from "@/lib/supabase";
-import { recurrenceLabel, type ChurchEventPreview } from "@/lib/church-events";
+import { isEventActive, recurrenceLabel, resolveEventOccurrence, type ChurchEventPreview } from "@/lib/church-events";
 import Icon from "@/components/Icon";
 import { eventPriceLabel } from "@/lib/event-display";
 
@@ -267,10 +267,11 @@ export default function EventDirectory() {
 
   const { upcoming, archive } = useMemo(() => {
     const upcomingEvents = events
-      .filter((event) => (event.event_end_date || event.event_date) >= today)
+      .filter((event) => isEventActive(event, today))
+      .map((event) => resolveEventOccurrence(event, today) as ChurchEventPreview)
       .sort((a, b) => a.event_date.localeCompare(b.event_date));
     const archivedEvents = events
-      .filter((event) => (event.event_end_date || event.event_date) < today)
+      .filter((event) => !isEventActive(event, today))
       .sort((a, b) => b.event_date.localeCompare(a.event_date));
     return { upcoming: upcomingEvents, archive: archivedEvents };
   }, [events, today]);

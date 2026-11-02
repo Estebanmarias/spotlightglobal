@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { getSupabaseClient } from "@/lib/supabase";
-import type { ChurchEventPreview } from "@/lib/church-events";
+import { isEventActive, resolveEventOccurrence, type ChurchEventPreview } from "@/lib/church-events";
 import Icon from '@/components/Icon'
 
 function localDateString() {
@@ -44,15 +44,16 @@ export default function FeaturedEventPromo() {
     const loadFeaturedEvent = async () => {
       const { data } = (await supabase
         .from("church_events")
-        .select("id, title, description, event_date, event_end_date, event_time, flyer_url, location, is_featured")
+        .select("id, title, description, event_date, event_end_date, event_time, flyer_url, location, is_featured, recurrence")
         .order("event_date", { ascending: true })
         .limit(50)) as { data: ChurchEventPreview[] | null };
 
       if (!active) return;
 
-      const upcomingEvents = (data ?? []).filter(
-        (candidate) => (candidate.event_end_date || candidate.event_date) >= localDateString(),
-      );
+      const today = localDateString();
+      const upcomingEvents = (data ?? [])
+        .filter(candidate => isEventActive(candidate, today))
+        .map(candidate => resolveEventOccurrence(candidate, today));
       const upcomingFeatured = upcomingEvents.find((candidate) => candidate.is_featured);
       setEvent(upcomingFeatured ?? null);
     };

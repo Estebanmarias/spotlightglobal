@@ -5,7 +5,7 @@ import { motion, Variants, AnimatePresence } from 'framer-motion'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import { getSupabaseClient } from '@/lib/supabase'
-import { isShiftConferenceTitle } from '@/lib/church-events'
+import { isEventActive, isShiftConferenceTitle, resolveEventOccurrence } from '@/lib/church-events'
 import Icon from '@/components/Icon'
 
 // ── CONFIG ──────────────────────────────────────────────────────
@@ -14,6 +14,7 @@ import Icon from '@/components/Icon'
 type ChurchEvent = {
   id: string; title: string; description: string | null
   event_date: string; event_end_date?: string | null; event_time: string | null
+  recurrence?: 'none' | 'weekly'
   flyer_url: string | null; location: string; is_featured: boolean
   registration_enabled?: boolean
 }
@@ -344,7 +345,9 @@ function CommunityPageContent() {
         .select('*').order('event_date', { ascending: true }).limit(100)
       const today = new Date()
       const todayString = [today.getFullYear(), String(today.getMonth() + 1).padStart(2, '0'), String(today.getDate()).padStart(2, '0')].join('-')
-      const liveEvents = ((ev || []) as ChurchEvent[]).filter(event => (event.event_end_date || event.event_date) >= todayString)
+      const liveEvents = ((ev || []) as ChurchEvent[])
+        .filter(event => isEventActive(event, todayString))
+        .map(event => resolveEventOccurrence(event, todayString) as ChurchEvent)
       setEvents(liveEvents.sort((a, b) => a.event_date.localeCompare(b.event_date)).slice(0, 8))
       setEventsLoading(false)
 

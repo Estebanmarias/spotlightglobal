@@ -1,4 +1,5 @@
 import type { NextRequest } from "next/server";
+import { createClient } from "@supabase/supabase-js";
 import { getSupabaseAdminClient } from "@/lib/supabase-server";
 
 export type AdminIdentity = { userId: string; email: string; fullName: string; isSuperAdmin: boolean };
@@ -11,6 +12,17 @@ export async function authorizeAdminPage(request: NextRequest, page: string): Pr
   const supabase = getSupabaseAdminClient();
   const { data: auth, error } = await supabase.auth.getUser(token);
   if (error || !auth.user) return null;
+
+  if (process.env.REQUIRE_ADMIN_MFA === "true") {
+    const authLevelClient = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      { auth: { autoRefreshToken: false, persistSession: false } },
+    );
+    const { data: assurance, error: assuranceError } =
+      await authLevelClient.auth.mfa.getAuthenticatorAssuranceLevel(token);
+    if (assuranceError || assurance?.currentLevel !== "aal2") return null;
+  }
 
   const { data: role } = (await supabase
     .from("admin_roles")

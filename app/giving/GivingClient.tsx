@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { motion, AnimatePresence, Variants } from 'framer-motion'
 import Icon from '@/components/Icon'
+import { LOCAL_GIVING_ACCOUNTS } from '@/lib/giving-accounts'
 
 const fadeUp: Variants = {
   hidden: { opacity: 0, y: 24 },
@@ -31,10 +32,7 @@ const pillars = [
 ]
 
 // ── Account data ─────────────────────────────────────────────────────
-const localAccounts = [
-  { id: 1, purpose: 'Prophetic Seeds', bank: 'Moniepoint', accountName: 'Kingsley Edet', accountNo: '8115316745' },
-  { id: 2, purpose: 'Offerings, Tithes, Welfare & Projects', bank: 'Palmpay', accountName: 'Unwana Ema', accountNo: '8108287193' },
-]
+const localAccounts = LOCAL_GIVING_ACCOUNTS
 
 const intlAccounts = [
   { id: 4, purpose: 'Global Missions (USD)', bank: 'Chase Bank', accountName: 'Spotlight Global LLC', accountNo: '123456789', routing: '987654321', swift: 'CHASUS33' },

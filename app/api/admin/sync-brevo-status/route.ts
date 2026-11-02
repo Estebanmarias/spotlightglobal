@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getSupabaseAdminClient } from '@/lib/supabase-server'
+import { authorizeAdminPage } from '@/lib/admin-auth'
 
 const STATUSES = ['First_Timer', 'Attending', 'Member']
 
@@ -12,24 +12,8 @@ function getStatusListId(status: string): number | null {
   }
 }
 
-async function isMembersAdmin(req: NextRequest) {
-  const header = req.headers.get('authorization')
-  const token = header?.startsWith('Bearer ') ? header.slice(7) : ''
-  if (!token) return false
-  const supabase = getSupabaseAdminClient()
-  const { data: auth, error } = await supabase.auth.getUser(token)
-  if (error || !auth.user) return false
-  const { data: role } = await supabase
-    .from('admin_roles')
-    .select('role, status, permissions')
-    .eq('user_id', auth.user.id)
-    .single()
-  if (!role || role.status !== 'approved') return false
-  return role.role === 'super_admin' || (role.permissions ?? []).includes('members')
-}
-
 export async function POST(req: NextRequest) {
-  if (!(await isMembersAdmin(req))) {
+  if (!(await authorizeAdminPage(req, 'members'))) {
     return NextResponse.json({ error: 'Not authorized.' }, { status: 403 })
   }
 
