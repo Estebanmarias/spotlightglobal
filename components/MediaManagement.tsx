@@ -158,6 +158,7 @@ export default function MediaManagement({ viewerRole }: MediaManagementProps) {
   const [editEvent, setEditEvent] = useState<ChurchEvent | null>(null)
   const [eventForm, setEventForm] = useState(blankEventForm)
   const [deleteEventTarget, setDeleteEventTarget] = useState<ChurchEvent | null>(null)
+  const [deleteConfirmation, setDeleteConfirmation] = useState('')
   const [savingEvent, setSavingEvent] = useState(false)
   const [registrationsForEvent, setRegistrationsForEvent] = useState<ChurchEvent | null>(null)
   const [registrations, setRegistrations] = useState<EventRegistration[]>([])
@@ -411,17 +412,8 @@ export default function MediaManagement({ viewerRole }: MediaManagementProps) {
 
   const handleDeleteEvent = async () => {
     if (!deleteEventTarget) return
-    const { count, error: registrationCountError } = await supabase
-      .from('event_registrations')
-      .select('id', { count: 'exact', head: true })
-      .eq('event_id', deleteEventTarget.id)
-    if (registrationCountError) {
-      showToast('Cannot verify registrations. Apply the event-registration migration before deleting events.', 'error')
-      return
-    }
-    if ((count ?? 0) > 0) {
-      showToast('This event has attendee records and cannot be deleted. Close registration and keep it in the archive instead.', 'error')
-      setDeleteEventTarget(null)
+    if (deleteConfirmation.trim() !== deleteEventTarget.title.trim()) {
+      showToast('Type the event title exactly to confirm deletion', 'error')
       return
     }
     // Delete flyer from storage first
@@ -431,6 +423,8 @@ export default function MediaManagement({ viewerRole }: MediaManagementProps) {
     if (error) { showToast('Failed to delete event', 'error'); setDeleteEventTarget(null); return }
     showToast('Event removed')
     setDeleteEventTarget(null)
+    setDeleteConfirmation('')
+    setEvents(current => current.filter(item => item.id !== deleteEventTarget.id))
   }
 
   const getEventAdminHeaders = async () => {
@@ -758,7 +752,7 @@ export default function MediaManagement({ viewerRole }: MediaManagementProps) {
                         className="w-8 h-8 flex items-center justify-center rounded-lg text-[#45464e] hover:text-[#081534] hover:bg-white transition-all">
                         <Icon name="edit" className="text-[18px]" />
                       </button>
-                      <button onClick={() => setDeleteEventTarget(e)}
+                      <button onClick={() => { setDeleteEventTarget(e); setDeleteConfirmation('') }}
                         className="w-8 h-8 flex items-center justify-center rounded-lg text-[#45464e] hover:text-[#ba1a1a] hover:bg-[#ffdad6] transition-all">
                         <Icon name="delete" className="text-[18px]" />
                       </button>
@@ -1395,12 +1389,16 @@ export default function MediaManagement({ viewerRole }: MediaManagementProps) {
                     The event flyer image will also be permanently deleted from storage.
                   </p>
                 )}
+                <label className="mt-4 block text-[11px] font-semibold text-[#45464e]">
+                  Type <span className="font-bold text-[#081534]">{deleteEventTarget.title}</span> to confirm. Attendee records and related event data will also be deleted.
+                  <input value={deleteConfirmation} onChange={(event) => setDeleteConfirmation(event.target.value)} className="mt-2 w-full rounded-lg border border-[#c6c6cf] px-3 py-2 text-[13px] outline-none focus:border-[#081534]" />
+                </label>
                 <div className="flex gap-3 mt-4">
                   <button onClick={() => setDeleteEventTarget(null)}
                     className="flex-1 py-3 border border-[#c6c6cf] rounded-xl text-[13px] font-semibold text-[#45464e] hover:bg-[#f2f4f6]">
                     Cancel
                   </button>
-                  <button onClick={handleDeleteEvent}
+                  <button onClick={handleDeleteEvent} disabled={deleteConfirmation.trim() !== deleteEventTarget.title.trim()}
                     className="flex-1 py-3 bg-[#ba1a1a] text-white rounded-xl text-[13px] font-bold hover:opacity-90">
                     Remove
                   </button>

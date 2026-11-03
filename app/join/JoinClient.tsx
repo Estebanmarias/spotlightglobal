@@ -5,6 +5,7 @@ import { motion } from 'framer-motion'
 import Link from 'next/link'
 import Icon from '@/components/Icon'
 import { getSupabaseClient } from '@/lib/supabase'
+import { maximumDateOfBirth, minimumDateOfBirth, validateMemberDateOfBirth } from '@/lib/age-validation'
 
 const inputCls = 'w-full bg-[#f2f4f6] border-b-2 border-transparent focus:border-[#081534] outline-none px-4 py-3.5 rounded-t-lg text-[16px] transition-colors'
 
@@ -19,9 +20,11 @@ export default function JoinClient() {
   const [submitting, setSubmitting] = useState(false)
   const [submitted, setSubmitted] = useState(false)
   const [error, setError] = useState('')
+  const [dobError, setDobError] = useState('')
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setForm(p => ({ ...p, [e.target.name]: e.target.value }))
+    if (e.target.name === 'dob') setDobError(validateMemberDateOfBirth(e.target.value) ?? '')
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -30,6 +33,12 @@ export default function JoinClient() {
 
     if (!form.first_name || !form.last_name || !form.email || !form.phone || !form.dob) {
       setError('Please fill in all required fields.')
+      return
+    }
+    const dobError = validateMemberDateOfBirth(form.dob)
+    if (dobError) {
+      setDobError(dobError)
+      setError(dobError)
       return
     }
 
@@ -135,7 +144,8 @@ export default function JoinClient() {
                       Date of Birth *
                     </label>
                     <input type="date" name="dob" value={form.dob} onChange={handleChange}
-                      className={inputCls} required />
+                      min={minimumDateOfBirth()} max={maximumDateOfBirth()} className={inputCls} required />
+                    {dobError && <p className="mt-1 text-[12px] font-semibold leading-5 text-[#ba1a1a]" role="alert">{dobError}</p>}
                   </div>
                 </div>
 

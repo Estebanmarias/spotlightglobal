@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { useAdminAccess } from '@/lib/use-admin-permissions'
 import AdminLoader from '@/components/AdminLoader'
 import Icon from '@/components/Icon'
+import { maximumDateOfBirth, minimumDateOfBirth } from '@/lib/age-validation'
 import DestructiveConfirm from '@/components/DestructiveConfirm'
 import { buildCsv } from '@/lib/csv'
 
@@ -334,7 +335,7 @@ function EditMemberModal({
               </div>
               <div className="flex flex-col gap-1.5">
                 <label className="text-[12px] font-bold text-[#45464e] uppercase tracking-wide">Date of Birth</label>
-                <input type="date" value={form.dob} onChange={e => setForm(p => ({ ...p, dob: e.target.value }))} className={inputCls} />
+                <input type="date" value={form.dob} min={minimumDateOfBirth()} max={maximumDateOfBirth()} onChange={e => setForm(p => ({ ...p, dob: e.target.value }))} className={inputCls} />
               </div>
             </div>
             <div className="flex flex-col gap-1.5">

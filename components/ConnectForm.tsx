@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
+import { maximumDateOfBirth, minimumDateOfBirth, validateMemberDateOfBirth } from "@/lib/age-validation";
 
 const fadeUp = { hidden: { opacity: 0, y: 16 }, show: { opacity: 1, y: 0 } };
 
@@ -23,17 +24,25 @@ export default function ConnectForm() {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [dobError, setDobError] = useState("");
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
   ) => {
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+    if (e.target.name === "dob") setDobError(validateMemberDateOfBirth(e.target.value) ?? "");
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError("");
+    const dobValidationError = validateMemberDateOfBirth(form.dob);
+    if (dobValidationError) {
+      setDobError(dobValidationError);
+      setLoading(false);
+      return;
+    }
 
     try {
       const res = await fetch("/api/register", {
@@ -131,8 +140,15 @@ export default function ConnectForm() {
               type="date"
               className={inputClass}
               value={form.dob}
+              min={minimumDateOfBirth()}
+              max={maximumDateOfBirth()}
               onChange={handleChange}
             />
+            {dobError && (
+              <p className="mt-1 text-[12px] font-semibold leading-5 text-[#ba1a1a]" role="alert">
+                {dobError}
+              </p>
+            )}
           </div>
         </motion.div>
 

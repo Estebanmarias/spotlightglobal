@@ -78,9 +78,7 @@ export default function ConferencePreview() {
         setEventLoading(false);
         return;
       }
-      const selectedEvent = requestedEventId
-        ? data?.[0]
-        : data?.find((candidate: ChurchEventPreview) => isShiftConferenceTitle(candidate.title));
+      const selectedEvent = data?.[0];
       if (selectedEvent) {
         setEvent(selectedEvent);
       }
@@ -138,6 +136,7 @@ export default function ConferencePreview() {
     : event.registration_enabled || event.registration_deadline
       ? "closed"
       : "not-open";
+  const isConferenceStyle = Boolean(event.special_session_label || isShiftConferenceTitle(event.title));
 
   const eventPageUrl = typeof window === "undefined" ? `/conference?event=${encodeURIComponent(event.id)}` : window.location.href;
   const shareEvent = async () => {
@@ -172,7 +171,7 @@ export default function ConferencePreview() {
     setSubmitState("submitting");
     setSubmitMessage("");
 
-    if (form.attendanceDates.length === 0) {
+    if (isConferenceStyle && form.attendanceDates.length === 0) {
       setSubmitState("error");
       setSubmitMessage("Select at least one day you plan to attend.");
       return;
@@ -197,7 +196,7 @@ export default function ConferencePreview() {
           accommodationNeeded: form.accommodation === "yes",
           accommodationNotes: form.accommodationRequest,
           childrenCount: form.bringingChildren === "yes" ? Number(form.childrenCount || 0) : 0,
-          attendanceDates: form.attendanceDates,
+          attendanceDates: isConferenceStyle ? form.attendanceDates : [event.event_date],
           specialSessionAttending: form.fridaySession,
           specialRequest: form.specialRequest,
           prayerRequest: form.prayerRequest,
@@ -372,7 +371,7 @@ export default function ConferencePreview() {
             <p className="mb-5 border-l-2 border-[#fdc425] bg-white px-4 py-3 text-[12px] leading-5 text-[#5b5d66]">
               {registrationStatus === "closed"
                 ? "Registration for this event has closed. Thank you for your interest. Please check our events page for upcoming programmes."
-                : "Registration is not open yet. Please check back for updates."}
+                : "Registration has not started yet. Please check back soon for updates."}
             </p>
           )}
 
@@ -394,7 +393,7 @@ export default function ConferencePreview() {
                 City, state, and country <span className="text-[#ba1a1a]">*</span>
                 <input autoComplete="address-level2" required value={form.location} onChange={(event) => updateField("location", event.target.value)} className={`${textInputClass} mt-2`} placeholder="e.g. Karu, Abuja, Nigeria" />
               </label>
-              <fieldset className="sm:col-span-2">
+              {isConferenceStyle && <fieldset className="sm:col-span-2">
                 <legend className="text-[12px] font-semibold text-[#45464e]">Days attending <span className="text-[#ba1a1a]">*</span></legend>
                 <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-3">
                   {attendanceDays.map(day => (
@@ -404,8 +403,8 @@ export default function ConferencePreview() {
                     </label>
                   ))}
                 </div>
-              </fieldset>
-              <fieldset className="min-w-0">
+              </fieldset>}
+              {isConferenceStyle && <fieldset className="min-w-0">
                 <legend className="text-[12px] font-semibold text-[#45464e]">Need accommodation?</legend>
                 <div className="mt-2 flex gap-2">
                   {(["yes", "no"] as const).map((value) => (
@@ -415,8 +414,8 @@ export default function ConferencePreview() {
                     </label>
                   ))}
                 </div>
-              </fieldset>
-              <fieldset className="min-w-0">
+              </fieldset>}
+              {isConferenceStyle && <fieldset className="min-w-0">
                 <legend className="text-[12px] font-semibold text-[#45464e]">Coming with children?</legend>
                 <div className="mt-2 flex gap-2">
                   {(["yes", "no"] as const).map((value) => (
@@ -426,14 +425,14 @@ export default function ConferencePreview() {
                     </label>
                   ))}
                 </div>
-              </fieldset>
-              {form.accommodation === "yes" && (
+              </fieldset>}
+              {isConferenceStyle && form.accommodation === "yes" && (
                 <label className="block text-[12px] font-semibold text-[#45464e] sm:col-span-2">
                   What accommodation support do you need?
                   <input value={form.accommodationRequest} onChange={(event) => updateField("accommodationRequest", event.target.value)} className={`${textInputClass} mt-2`} placeholder="Optional details" />
                 </label>
               )}
-              {form.bringingChildren === "yes" && (
+              {isConferenceStyle && form.bringingChildren === "yes" && (
                 <label className="block text-[12px] font-semibold text-[#45464e]">
                   Number of children
                   <input type="number" inputMode="numeric" min="1" required value={form.childrenCount} onChange={(event) => updateField("childrenCount", event.target.value)} className={`${textInputClass} mt-2`} placeholder="Number of children" />
@@ -460,7 +459,7 @@ export default function ConferencePreview() {
 
             <div className="grid gap-5 sm:grid-cols-2">
               <label className="block text-[12px] font-semibold text-[#45464e] sm:col-span-2">
-                How did you hear about SHIFT Conference? <span className="text-[#ba1a1a]">*</span>
+                How did you hear about {event.title}? <span className="text-[#ba1a1a]">*</span>
                 <select required value={form.referralSource} onChange={(event) => updateField("referralSource", event.target.value)} className={`${textInputClass} mt-2`}>
                   <option value="" disabled>Select one</option>
                   <option>Church announcement</option>
@@ -471,8 +470,8 @@ export default function ConferencePreview() {
                 </select>
               </label>
               <label className="block text-[12px] font-semibold text-[#45464e] sm:col-span-2">
-                Share Testimony <span className="font-normal text-[#76777f]">(optional)</span>
-                <textarea rows={3} value={form.specialRequest} onChange={(event) => updateField("specialRequest", event.target.value)} className={`${textInputClass} mt-2 resize-y py-3`} placeholder="Share what the Lord has done for you and Bless Others." />
+                {isConferenceStyle ? "Share testimony" : "Additional notes"} <span className="font-normal text-[#76777f]">(optional)</span>
+                <textarea rows={3} value={form.specialRequest} onChange={(event) => updateField("specialRequest", event.target.value)} className={`${textInputClass} mt-2 resize-y py-3`} placeholder={isConferenceStyle ? "Share what the Lord has done and bless others." : "Anything else you would like us to know?"} />
               </label>
               <label className="block text-[12px] font-semibold text-[#45464e] sm:col-span-2">
                 Prayer request <span className="font-normal text-[#76777f]">(optional)</span>

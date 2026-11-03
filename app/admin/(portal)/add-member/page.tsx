@@ -6,6 +6,7 @@ import { motion } from 'framer-motion'
 import { useAdminAccess } from '@/lib/use-admin-permissions'
 import { getSupabaseClient } from '@/lib/supabase'
 import Icon from '@/components/Icon'
+import { maximumDateOfBirth, minimumDateOfBirth } from '@/lib/age-validation'
 
 type FormData = {
   first_name: string
@@ -170,7 +171,7 @@ export default function AddMemberPage() {
                     <div className="flex flex-col gap-2">
                       <label className="text-[13px] font-semibold text-[#45464e]">Date of Birth</label>
                       <input type="date" name="dob" value={form.dob}
-                        onChange={handleChange} className={inputClass} />
+                          min={minimumDateOfBirth()} max={maximumDateOfBirth()} onChange={handleChange} className={inputClass} />
                     </div>
                     <div className="flex flex-col gap-2">
                       <label className="text-[13px] font-semibold text-[#45464e]">Status</label>

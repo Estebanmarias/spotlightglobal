@@ -33,7 +33,7 @@ const BrandIcon = ({ name }: { name: string }) => <SharedBrandIcon name={name} c
 type Verse = { text: string; ref: string }
 type Action = { label: string; href: string; icon: ReactNode }
 type Topic = { id: string; label: string; icon: ReactNode; reply: string; verse?: Verse; actions?: Action[]; hidden?: boolean }
-type Message = { id: number; from: 'bot' | 'user'; text: string; verse?: Verse; actions?: Action[] }
+type Message = { id: number; from: 'bot' | 'user'; text: string; verse?: Verse; actions?: Action[]; feedback?: 'helpful' | 'not-helpful' }
 type SearchResult = { kind: 'event' | 'class' | 'sermon' | 'giving'; title: string; text: string; href: string }
 
 const GREETING = 'Hi, welcome to the company of the Blessed 👋 What would you like to know?'
@@ -228,6 +228,7 @@ export default function FaqChat() {
   const [draft, setDraft] = useState('')
   const [lastTopic, setLastTopic] = useState<string>()
   const [clarifyOptions, setClarifyOptions] = useState<string[]>([])
+  const [feedback, setFeedback] = useState<Record<number, 'helpful' | 'not-helpful'>>({})
   const closeButtonRef = useRef<HTMLButtonElement>(null)
   const triggerRef = useRef<HTMLButtonElement>(null)
   const wasOpen = useRef(false)
@@ -270,6 +271,17 @@ export default function FaqChat() {
   }, [])
 
   useEffect(() => { if (open) setTeaser(false) }, [open])
+
+  const rateMessage = (messageId: number, value: 'helpful' | 'not-helpful') => {
+    setFeedback(prev => ({ ...prev, [messageId]: value }))
+    try {
+      const current = JSON.parse(localStorage.getItem('spotlight-chat-feedback') || '{}') as Record<string, number>
+      const key = value === 'helpful' ? 'helpful' : 'not-helpful'
+      localStorage.setItem('spotlight-chat-feedback', JSON.stringify({ ...current, [key]: (current[key] || 0) + 1 }))
+    } catch (error) {
+      console.warn('[FAQ CHAT] Could not store feedback locally', error)
+    }
+  }
 
   // On phones the cookie banner spans the bottom, so hide the chat button until a choice is made
   useEffect(() => {
@@ -423,6 +435,13 @@ export default function FaqChat() {
                         {m.actions && (
                           <div className="mt-3 flex flex-wrap gap-2">
                             {m.actions.map(a => <ActionButton key={a.label} action={a} onNavigate={() => setOpen(false)} />)}
+                          </div>
+                        )}
+                        {m.id > 0 && (
+                          <div className="mt-3 flex items-center gap-2 border-t border-[#eef0f2] pt-2 text-[11px] text-[#76777f]">
+                            <span>Was this helpful?</span>
+                            <button type="button" aria-label="Helpful answer" onClick={() => rateMessage(m.id, 'helpful')} className={`rounded px-2 py-1 hover:bg-[#f2f4f6] ${feedback[m.id] === 'helpful' ? 'font-bold text-[#785a00]' : ''}`}>Yes</button>
+                            <button type="button" aria-label="Not helpful answer" onClick={() => rateMessage(m.id, 'not-helpful')} className={`rounded px-2 py-1 hover:bg-[#f2f4f6] ${feedback[m.id] === 'not-helpful' ? 'font-bold text-[#ba1a1a]' : ''}`}>No</button>
                           </div>
                         )}
                       </div>

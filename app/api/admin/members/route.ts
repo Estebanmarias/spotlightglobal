@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdminClient } from "@/lib/supabase-server";
 import { authorizeAdminPage } from "@/lib/admin-auth";
+import { validateMemberDateOfBirth } from "@/lib/age-validation";
 import { pushMemberToBrevo } from "@/lib/brevo-contact";
 
 const SOURCES = ["social", "friend", "website", "walkin"];
@@ -42,11 +43,8 @@ export async function POST(request: NextRequest) {
   if (!PHONE.test(phone)) return fail("Enter a valid phone number.");
   if (source && !SOURCES.includes(source)) return fail("Invalid discovery source.");
 
-  const dobDate = new Date(`${dob}T00:00:00Z`);
-  const age = (Date.now() - dobDate.getTime()) / (365.25 * 24 * 60 * 60 * 1000);
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(dob) || Number.isNaN(dobDate.getTime()) || age < 0 || age > 120) {
-    return fail("Enter a valid date of birth.");
-  }
+  const dobError = validateMemberDateOfBirth(dob);
+  if (dobError) return fail(dobError);
 
   const supabase = getSupabaseAdminClient();
   const { data: member, error } = await supabase

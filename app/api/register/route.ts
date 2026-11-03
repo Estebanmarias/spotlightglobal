@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSupabaseAdminClient } from '@/lib/supabase-server'
+import { validateMemberDateOfBirth } from '@/lib/age-validation'
 import { Ratelimit } from '@upstash/ratelimit'
 import { Redis } from '@upstash/redis'
 import { pushMemberToBrevo } from '@/lib/brevo-contact'
@@ -79,14 +80,8 @@ export async function POST(req: NextRequest) {
   }
 
   // Validate DOB
-  const dobDate = new Date(dob)
-  if (isNaN(dobDate.getTime())) {
-    return NextResponse.json({ error: 'Invalid date of birth.' }, { status: 400 })
-  }
-  const age = Math.floor((Date.now() - dobDate.getTime()) / (365.25 * 24 * 60 * 60 * 1000))
-  if (age < 0 || age > 120) {
-    return NextResponse.json({ error: 'Invalid date of birth.' }, { status: 400 })
-  }
+  const dobError = validateMemberDateOfBirth(dob)
+  if (dobError) return NextResponse.json({ error: dobError }, { status: 400 })
 
     // Everyone who registers starts as Attending. The status only becomes
   // Member when they complete Membership Class, so it is never read from

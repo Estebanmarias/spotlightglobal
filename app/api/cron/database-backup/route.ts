@@ -43,20 +43,6 @@ export async function GET(request: NextRequest) {
   }
 
   const supabase = getSupabaseAdminClient();
-  const tables: Record<string, unknown[]> = {};
-
-  for (const table of TABLES) {
-    const { data, error } = await supabase.from(table).select("*");
-    if (error) {
-      console.error(`[DATABASE BACKUP] ${table}:`, error.message);
-      return NextResponse.json({ error: `Could not back up ${table}.` }, { status: 500 });
-    }
-    tables[table] = data ?? [];
-  }
-
-  const createdAt = new Date().toISOString();
-  const payload = JSON.stringify({ version: 1, createdAt, tables });
-  const fileName = `backup-${createdAt.replace(/[:.]/g, "-")}.json`;
   const storage = supabase.storage.from(BUCKET);
 
   const { data: bucket } = await supabase.storage.getBucket(BUCKET);
@@ -68,6 +54,19 @@ export async function GET(request: NextRequest) {
     }
   }
 
+  const tables: Record<string, unknown[]> = {};
+  for (const table of TABLES) {
+    const { data, error } = await supabase.from(table).select("*");
+    if (error) {
+      console.error(`[DATABASE BACKUP] table=${table}:`, error.message);
+      return NextResponse.json({ error: `Could not back up ${table}. Apply the required database migrations, then retry.` }, { status: 500 });
+    }
+    tables[table] = data ?? [];
+  }
+
+  const createdAt = new Date().toISOString();
+  const payload = JSON.stringify({ version: 1, createdAt, tables });
+  const fileName = `backup-${createdAt.replace(/[:.]/g, "-")}.json`;
   const { error: uploadError } = await storage.upload(fileName, Buffer.from(payload), {
     contentType: "application/json",
     upsert: false,

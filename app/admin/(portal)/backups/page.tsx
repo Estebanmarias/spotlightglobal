@@ -21,6 +21,8 @@ const formatSize = (size: number | null) => {
   return `${(size / 1024).toFixed(1)} KB`;
 };
 
+const backupIsStale = (createdAt: string | null) => !createdAt || Date.now() - Date.parse(createdAt) > 36 * 60 * 60 * 1000;
+
 export default function BackupsPage() {
   const router = useRouter();
   const access = useAdminAccess();
@@ -117,6 +119,12 @@ export default function BackupsPage() {
           <p className="mt-2 text-[13px] text-[#45464e]">
             Daily application-data backups are kept in private storage for 30 days.
           </p>
+          {backups.length > 0 && backupIsStale(backups[0].createdAt) && (
+            <div className="mt-4 rounded-xl border border-[#ba1a1a]/20 bg-[#ffdad6] p-4 text-[12px] text-[#ba1a1a]" role="alert">
+              <p className="font-bold">Backup may be overdue</p>
+              <p className="mt-1">The newest backup is older than 36 hours. Check the scheduled backup job and Vercel cron logs.</p>
+            </div>
+          )}
         </div>
 
         {error ? (

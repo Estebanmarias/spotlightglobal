@@ -169,6 +169,8 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState(true);
   const [partnerCount, setPartnerCount] = useState(0);
   const [newPartnerCount, setNewPartnerCount] = useState(0);
+  const [upcomingEventCount, setUpcomingEventCount] = useState(0);
+  const [pendingRegistrationCount, setPendingRegistrationCount] = useState(0);
   const [testimonies, setTestimonies] = useState<
     { id: string; name: string; testimony: string; created_at: string }[]
   >([]);
@@ -218,6 +220,18 @@ export default function AdminDashboard() {
           counts[m.guest_status as keyof StatusCounts]++;
       });
       setStatusCounts(counts);
+
+      const today = new Date().toISOString().slice(0, 10);
+      const { count: upcomingCount } = await (supabase.from("church_events") as any)
+        .select("id", { count: "exact", head: true })
+        .gte("event_date", today);
+      setUpcomingEventCount(upcomingCount || 0);
+      if (access.canAccess("dashboard")) {
+        const { count: pendingCount } = await (supabase.from("event_registrations") as any)
+          .select("id", { count: "exact", head: true })
+          .eq("payment_status", "pending");
+        setPendingRegistrationCount(pendingCount || 0);
+      }
 
       // Partners — Setman OR admin with 'partners' permission
       if (access.canAccess("partners")) {
@@ -436,6 +450,19 @@ export default function AdminDashboard() {
             </div>
           </div>
         )}
+
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <button type="button" onClick={() => router.push("/admin/dashboard")} className="rounded-xl border border-[#c6c6cf] bg-white p-4 text-left hover:border-[#081534]">
+            <div className="flex items-center justify-between"><span className="text-[11px] font-bold uppercase tracking-widest text-[#76777f]">Upcoming events</span><Icon name="event" className="text-[20px] text-[#785a00]" /></div>
+            <p className="mt-2 text-[26px] font-bold text-[#081534]">{loading ? "—" : upcomingEventCount}</p>
+            <p className="text-[11px] text-[#45464e]">Review event dates and registration status in Events & Gallery below.</p>
+          </button>
+          <button type="button" onClick={() => router.push("/admin/dashboard")} className="rounded-xl border border-[#c6c6cf] bg-white p-4 text-left hover:border-[#081534]">
+            <div className="flex items-center justify-between"><span className="text-[11px] font-bold uppercase tracking-widest text-[#76777f]">Pending registrations</span><Icon name="pending_actions" className="text-[20px] text-[#785a00]" /></div>
+            <p className="mt-2 text-[26px] font-bold text-[#081534]">{loading ? "—" : pendingRegistrationCount}</p>
+            <p className="text-[11px] text-[#45464e]">Open an event to review attendees and insights.</p>
+          </button>
+        </div>
 
         {/* ── Middle row ── */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
