@@ -111,6 +111,14 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Registration failed. Please try again.' }, { status: 500 })
   }
 
-  
+    await pushMemberToBrevo({
+    email: email.toLowerCase().trim(),
+    firstName: first_name.trim(),
+    lastName: last_name.trim(),
+    phone: phone.trim(),
+    dob,
+    status: 'Attending',
+  })
+
   return NextResponse.json({ success: true, first_name: first_name.trim(), memberId: member?.id }, { status: 200 })
 }
