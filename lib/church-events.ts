@@ -30,6 +30,19 @@ export function isShiftConferenceTitle(title: string) {
   return /shift|soaring/i.test(title);
 }
 
+export function offersRegistration(
+  event: Pick<ChurchEventPreview, "title" | "registration_enabled" | "registration_deadline" | "registration_capacity" | "price_type" | "recurrence">,
+) {
+  if (event.recurrence === "weekly") return false;
+  return Boolean(
+    event.registration_enabled ||
+      event.registration_deadline ||
+      event.registration_capacity != null ||
+      event.price_type === "paid" ||
+      isShiftConferenceTitle(event.title),
+  );
+}
+
 function dateOnly(value: string) {
   const [year, month, day] = value.split("-").map(Number);
   return new Date(year, month - 1, day);

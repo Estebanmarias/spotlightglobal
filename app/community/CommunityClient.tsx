@@ -5,7 +5,8 @@ import { motion, Variants, AnimatePresence } from 'framer-motion'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import { getSupabaseClient } from '@/lib/supabase'
-import { isEventActive, isShiftConferenceTitle, resolveEventOccurrence } from '@/lib/church-events'
+import { isEventActive, isShiftConferenceTitle, recurrenceLabel, resolveEventOccurrence } from '@/lib/church-events'
+import BrandIcon from '@/components/BrandIcon'
 import Icon from '@/components/Icon'
 
 // ── CONFIG ──────────────────────────────────────────────────────
@@ -21,11 +22,11 @@ type ChurchEvent = {
 type CommunityPhoto = { id: string; image_url: string; caption: string | null }
 type Testimony = { id: string; name: string; testimony: string; created_at: string }
 
-const linkStack = [
-  { icon: 'radio_button_checked', live: true,  title: 'Daily Prayer — Live Service',    meta: 'Join Prayers Everyday 5pm',       href: 'https://t.me/thespotlightchurchLive' },
-  { icon: 'play_circle',          live: false, title: 'Sunday Sermons & Teachings',     meta: 'YouTube · @pstedetkingsley',      href: 'https://www.youtube.com/@pstedetkingsley' },
-  { icon: 'podcasts',             live: false, title: 'Audio Teachings',                meta: 'Sermons on the go',               href: 'https://t.me/companyoftheblessed' },
-  { icon: 'music_note',           live: false, title: 'Latest Worship Single',          meta: 'Download the Latest Single', href: 'https://kingdomboiz.com/download-music-edet-kingsley-holy-spirit-oyoyo/' },
+const nextSteps = [
+  { icon: 'person_add', title: 'Join the family', desc: 'Tell us about yourself so we can welcome you properly.', href: '/join', label: 'Join now', external: false },
+  { icon: 'school', title: 'Membership Class', desc: 'Confirm your place in the family as a committed member.', href: '/classes', label: 'See classes', external: false },
+  { icon: 'telegram', title: 'Daily prayer', desc: 'Join us on Telegram for prayer every day at 5 PM.', href: 'https://t.me/thespotlightchurchLive', label: 'Join on Telegram', external: true },
+  { icon: 'volunteer_activism', title: 'Give', desc: 'Partner with the work through tithes, offerings and seeds.', href: '/giving', label: 'Give now', external: false },
 ]
 
 const fadeUp: Variants = {
@@ -315,6 +316,7 @@ function CommunityPageContent() {
   const [showSuccessToast, setShowSuccessToast]   = useState(false)
 
   const closeLightbox = () => setLightboxIndex(null)
+  const services = events.filter(e => e.recurrence === 'weekly')
   const lightboxPrev  = () => setLightboxIndex(i => (i === null || i === 0 ? photos.length - 1 : i - 1))
   const lightboxNext  = () => setLightboxIndex(i => (i === null ? 0 : (i + 1) % photos.length))
 
@@ -560,34 +562,69 @@ function CommunityPageContent() {
         </div>
       </section>
 
-      {/* ── LINK STACK ────────────────────────────────────────────── */}
-      <section className="py-24 px-6 bg-[#f2f4f6]" id="links">
-        <div className="max-w-[860px] mx-auto">
+            {/* ── PLAN YOUR VISIT ───────────────────────────────────────── */}
+      <section className="py-24 px-6 bg-[#f2f4f6]" id="visit">
+        <div className="max-w-[1100px] mx-auto">
           <motion.div initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
-            className="text-center mb-10">
-            <h2 className="text-[24px] sm:text-[28px] font-bold text-[#081534]">Quick Links</h2>
+            className="text-center mb-12">
+            <h2 className="text-[24px] sm:text-[30px] font-bold text-[#081534]">Plan your visit</h2>
+            <p className="mt-2 text-[#45464e] text-[15px]">When we meet, where to find us, and where to go from here.</p>
           </motion.div>
-          <div className="space-y-4">
-            {linkStack.map((item, i) => (
-              <motion.a key={item.title} href={item.href} target="_blank" rel="noreferrer"
-                initial={{ opacity: 0, x: -16 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }}
-                transition={{ delay: i * 0.08 }}
-                className="flex items-center justify-between p-6 bg-white rounded-2xl shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all group">
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-full bg-[#f2f4f6] flex items-center justify-center text-[#785a00] group-hover:bg-[#785a00] group-hover:text-white transition-colors shrink-0">
-                    <Icon name={item.icon} className="text-[22px]" />
-                  </div>
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-[15px] font-bold text-[#081534]">{item.title}</span>
-                      {item.live && <span className="text-[9px] bg-[#ba1a1a] text-white px-1.5 py-0.5 rounded-full font-bold uppercase tracking-wider">Live</span>}
-                    </div>
-                    {item.meta && <p className="text-[12px] text-[#45464e] mt-0.5">{item.meta}</p>}
-                  </div>
-                </div>
-                <Icon name="chevron_right" className="text-[#76777f] group-hover:translate-x-1 transition-transform" />
-              </motion.a>
-            ))}
+
+          {services.length > 0 && (
+            <div className="grid gap-5 md:grid-cols-2 mb-16">
+              {services.map((s, i) => {
+                const next = new Date(s.event_date + 'T00:00:00').toLocaleDateString('en-NG', { weekday: 'long', day: 'numeric', month: 'long' })
+                const directions = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(s.location)}`
+                return (
+                  <motion.div key={s.id}
+                    initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
+                    transition={{ delay: i * 0.08 }}
+                    className="rounded-3xl bg-[#081534] p-7 sm:p-8 text-white">
+                    <p className="text-[11px] font-bold uppercase tracking-widest text-[#fdc425]">{recurrenceLabel(s)}</p>
+                    <h3 className="mt-2 text-[22px] font-bold leading-snug">{s.title}</h3>
+                    <p className="mt-1 text-[14px] text-white/70">Next: {next}{s.event_time ? ` · ${s.event_time}` : ''}</p>
+                    <p className="mt-4 flex items-start gap-2 text-[13px] leading-5 text-white/70">
+                      <Icon name="location_on" className="mt-0.5 text-[16px] text-[#fdc425]" />
+                      {s.location}
+                    </p>
+                    <a href={directions} target="_blank" rel="noopener noreferrer"
+                      className="mt-6 inline-flex min-h-11 items-center gap-2 rounded-full bg-[#fdc425] px-6 text-[13px] font-bold text-[#6d5200] transition hover:brightness-110">
+                      Get directions <Icon name="arrow_outward" className="text-[16px]" />
+                    </a>
+                  </motion.div>
+                )
+              })}
+            </div>
+          )}
+
+          <h3 className="mb-5 text-center text-[12px] font-bold uppercase tracking-[0.18em] text-[#785a00]">Your next step</h3>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {nextSteps.map((c, i) => {
+              const inner = (
+                <>
+                  <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#081534] text-[#fdc425]">
+                    {c.icon === 'telegram'
+                      ? <BrandIcon name="telegram" className="h-5 w-5" />
+                      : <Icon name={c.icon} className="text-[22px]" />}
+                  </span>
+                  <span className="mt-4 text-[16px] font-bold text-[#081534]">{c.title}</span>
+                  <span className="mt-1 text-[13px] leading-5 text-[#45464e]">{c.desc}</span>
+                  <span className="mt-auto inline-flex items-center gap-1.5 pt-5 text-[13px] font-bold text-[#785a00] group-hover:gap-2.5 transition-all">
+                    {c.label} <Icon name="arrow_forward" className="text-[15px]" />
+                  </span>
+                </>
+              )
+              const cls = 'group flex h-full flex-col rounded-2xl border border-[#d9dbe0] bg-white p-6 transition hover:-translate-y-1 hover:border-[#fdc425] hover:shadow-lg'
+              return (
+                <motion.div key={c.title} initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }} transition={{ delay: i * 0.08 }}>
+                  {c.external
+                    ? <a href={c.href} target="_blank" rel="noopener noreferrer" className={cls}>{inner}</a>
+                    : <Link href={c.href} className={cls}>{inner}</Link>}
+                </motion.div>
+              )
+            })}
           </div>
         </div>
       </section>

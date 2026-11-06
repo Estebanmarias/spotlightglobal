@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import { useSearchParams } from "next/navigation";
 import { getSupabaseClient } from "@/lib/supabase";
-import { isShiftConferenceTitle, type ChurchEventPreview } from "@/lib/church-events";
+import { isShiftConferenceTitle, offersRegistration, recurrenceLabel, resolveEventOccurrence, type ChurchEventPreview } from "@/lib/church-events";
 import Icon from '@/components/Icon'
 
 type ConferenceForm = {
@@ -65,7 +65,7 @@ export default function ConferencePreview() {
 
     const loadShiftEvent = async () => {
       let eventQuery = supabase.from("church_events")
-        .select("id, title, description, event_date, event_end_date, event_time, flyer_url, location, is_featured, registration_enabled, registration_capacity, registration_deadline, price_type, price, currency, payment_instructions, special_session_label, special_session_date");
+        .select("id, title, description, event_date, event_end_date, event_time, flyer_url, location, is_featured, registration_enabled, registration_capacity, registration_deadline, price_type, price, currency, payment_instructions, special_session_label, special_session_date, recurrence");
       eventQuery = requestedEventId
         ? eventQuery.eq("id", requestedEventId)
         : eventQuery.gte("event_date", todayString).order("event_date", { ascending: true });
@@ -80,7 +80,7 @@ export default function ConferencePreview() {
       }
       const selectedEvent = data?.[0];
       if (selectedEvent) {
-        setEvent(selectedEvent);
+      setEvent(resolveEventOccurrence(selectedEvent, todayString));
       }
       setEventLoading(false);
     };
@@ -137,6 +137,20 @@ export default function ConferencePreview() {
       ? "closed"
       : "not-open";
   const isConferenceStyle = Boolean(event.special_session_label || isShiftConferenceTitle(event.title));
+  const hasRegistration = offersRegistration(event);
+  const directionsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(event.location)}`;
+  const shortDate = (d: string, withYear = false) => {
+    const opts: Intl.DateTimeFormatOptions = withYear
+      ? { day: "numeric", month: "short", year: "numeric" }
+      : { day: "numeric", month: "short" };
+    return new Date(`${d}T00:00:00`).toLocaleDateString("en-NG", opts);
+  };
+  const lastDay = event.event_end_date || event.event_date;
+  const dateLabel = recurrenceLabel(event)
+    ? `${recurrenceLabel(event)} · next ${shortDate(event.event_date)}`
+    : lastDay === event.event_date
+      ? new Date(`${event.event_date}T00:00:00`).toLocaleDateString("en-NG", { weekday: "short", day: "numeric", month: "short", year: "numeric" })
+      : `${shortDate(event.event_date)}–${shortDate(lastDay, true)}`;
 
   const eventPageUrl = typeof window === "undefined" ? `/conference?event=${encodeURIComponent(event.id)}` : window.location.href;
   const shareEvent = async () => {
@@ -243,7 +257,7 @@ export default function ConferencePreview() {
             <div className="mt-8 flex flex-wrap items-center gap-3 text-[13px] font-semibold text-white/90">
               <span className="inline-flex items-center gap-2 rounded-full border border-white/25 bg-[#081534]/35 px-4 py-2">
                 <Icon name="event" className="text-[17px] text-[#fdc425]" />
-                {new Date(`${event.event_date}T00:00:00`).toLocaleDateString("en-NG", { day: "numeric", month: "short" })}–{new Date(`${event.event_end_date || event.event_date}T00:00:00`).toLocaleDateString("en-NG", { day: "numeric", month: "short", year: "numeric" })}
+                {dateLabel}
               </span>
               <span className="inline-flex items-center gap-2 rounded-full border border-white/25 bg-[#081534]/35 px-4 py-2">
                 <Icon name="schedule" className="text-[17px] text-[#fdc425]" />
@@ -251,11 +265,12 @@ export default function ConferencePreview() {
               </span>
             </div>
             <a
-              href="#registration"
+              href={hasRegistration ? "#registration" : directionsUrl}
+              {...(!hasRegistration && { target: "_blank", rel: "noopener noreferrer" })}
               className="mt-9 inline-flex min-h-12 items-center gap-2 rounded-md bg-[#fdc425] px-6 text-[14px] font-bold text-[#081534] transition hover:bg-[#ffe07a] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
             >
-              {registrationStatus === "open" ? "Register now" : "Event details"}
-              <Icon name="arrow_downward" className="text-[18px]" />
+              {!hasRegistration ? "Get directions" : registrationStatus === "open" ? "Register now" : "Event details"}
+              <Icon name={hasRegistration ? "arrow_downward" : "arrow_outward"} className="text-[18px]" />
             </a>
             <div className="mt-3 flex flex-wrap gap-2">
               <button type="button" onClick={downloadCalendar} className="inline-flex min-h-10 items-center gap-2 rounded-md border border-white/25 px-4 text-[12px] font-semibold text-white hover:bg-white/10">
@@ -293,7 +308,7 @@ export default function ConferencePreview() {
             <Icon name="calendar_month" className="text-[22px] text-[#785a00]" />
             <div>
               <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-[#76777f]">Dates</p>
-              <p className="mt-0.5 text-[14px] font-semibold text-[#081534]">{new Date(`${event.event_date}T00:00:00`).toLocaleDateString("en-NG", { day: "numeric", month: "short" })}–{new Date(`${event.event_end_date || event.event_date}T00:00:00`).toLocaleDateString("en-NG", { day: "numeric", month: "short", year: "numeric" })}</p>
+              <p className="mt-0.5 text-[14px] font-semibold text-[#081534]">{dateLabel}</p>
             </div>
           </div>
           <div className="flex items-center gap-3 py-5 sm:px-6">
@@ -313,6 +328,7 @@ export default function ConferencePreview() {
         </div>
       </section>
 
+      {hasRegistration && (
       <section className="mx-auto grid max-w-7xl gap-12 px-5 py-16 sm:px-8 sm:py-20 lg:grid-cols-[0.8fr_1.2fr] lg:gap-20 lg:px-12">
         <div className="lg:sticky lg:top-28 lg:self-start">
             <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-[#785a00]">{event.title}</p>
@@ -340,7 +356,7 @@ export default function ConferencePreview() {
               <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#785a00]">Special session</p>
               <h3 className="mt-1 text-[17px] font-bold text-[#081534]">{event.special_session_date ? new Date(`${event.special_session_date}T00:00:00`).toLocaleDateString("en-NG", { weekday: "long", day: "numeric", month: "long" }) : "Special session"}</h3>
               <p className="mt-1 text-[13px] leading-6 text-[#5b5d66]">
-                {event.special_session_label}. Let us know if you plan to attend.
+                {event.special_session_label}{registrationStatus === "open" ? ". Let us know if you plan to attend." : "."}
               </p>
             </div>
           )}
@@ -497,6 +513,7 @@ export default function ConferencePreview() {
           </form> : null}
         </div>
       </section>
+      )}
     </main>
   );
 }
