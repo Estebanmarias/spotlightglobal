@@ -42,11 +42,17 @@ export default function Navbar() {
       >
         <div className="flex justify-between items-center px-4 sm:px-8 lg:px-16 w-full max-w-[1280px] mx-auto">
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-2 min-w-0" onClick={() => setOpen(false)}>
-            <img src="/images/logo.png"
-              alt="Spotlight Global Logo" className="h-8 sm:h-10 w-auto shrink-0" />
-            <span className="font-bold text-[16px] sm:text-[20px] lg:text-[24px] leading-tight text-[#081534] truncate">
-              theSpotlightChurch
+          <Link href="/" className="flex items-center gap-3 min-w-0" onClick={() => setOpen(false)} aria-label="theSpotlightChurch home">
+            <span className="relative block h-10 w-10 shrink-0 overflow-hidden rounded-xl bg-[#081534] shadow-sm ring-2 ring-[#fdc425]/70 sm:h-11 sm:w-11">
+              <img
+                src="/images/logo.png"
+                alt=""
+                className="absolute max-w-none"
+                style={{ width: '205%', left: '-52.5%', top: '-46%' }}
+              />
+            </span>
+            <span className="truncate py-0.5 text-[17px] font-semibold leading-[1.35] tracking-tight text-[#081534] sm:text-[20px] lg:text-[22px]">
+              the<span className="font-extrabold">Spotlight</span>Church
             </span>
           </Link>
 

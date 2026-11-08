@@ -11,6 +11,7 @@ import {
   PageKey,
 } from "@/lib/use-admin-permissions";
 import Icon from '@/components/Icon'
+import NeedsAttention from '@/components/NeedsAttention'
 
 type Member = {
   id: string;
@@ -422,6 +423,8 @@ export default function AdminDashboard() {
       </div>
 
       <div className="p-4 sm:p-6 lg:p-8 space-y-6">
+        <NeedsAttention />
+
         {/* ── Quick Actions ── */}
         {quickActions.length > 0 && (
           <div>

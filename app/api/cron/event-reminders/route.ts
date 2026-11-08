@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdminClient } from "@/lib/supabase-server";
 import { renderEventEmail, reserveEventEmail, sendBrevoEmail } from "@/lib/media-event-auth";
+import { sendEventThankYous } from "@/lib/event-thank-you";
+import { runRetentionIfDue } from "@/lib/retention";
 
 type EventRow = {
   id: string;
@@ -202,5 +204,7 @@ export async function GET(request: NextRequest) {
     else results.failed += 1;
   }
 
-  return NextResponse.json({ success: true, results });
+  const thankYou = await sendEventThankYous(supabase);
+  const retention = await runRetentionIfDue(supabase);
+  return NextResponse.json({ success: true, results, thankYou, retention });
 }

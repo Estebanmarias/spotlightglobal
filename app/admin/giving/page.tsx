@@ -20,14 +20,35 @@ type GivingRecord = {
   notes: string | null
 }
 
-const GIVING_TYPES = ['Offering', 'Tithe', 'Welfare', 'Projects', 'Other']
+type ConfirmStatus = 'new' | 'matched' | 'not_found' | 'duplicate'
+type Confirmation = {
+  id: string
+  created_at: string
+  donor_name: string
+  contact: string
+  amount: number
+  currency: string
+  purpose: string
+  given_on: string
+  reference: string | null
+  status: ConfirmStatus
+  note: string | null
+}
+
+const GIVING_TYPES = ['Offering', 'Tithe', 'Prophetic Seed', 'Welfare', 'Projects', 'Partnership', 'Other']
 const PAYMENT_METHODS = ['Bank Transfer', 'Cash', 'Card', 'Online', 'Other']
+const CONFIRM_STATUSES: { key: ConfirmStatus; label: string; cls: string }[] = [
+  { key: 'new', label: 'New', cls: 'bg-[#fff4d6] text-[#785a00]' },
+  { key: 'matched', label: 'Matched', cls: 'bg-green-100 text-green-800' },
+  { key: 'not_found', label: 'Couldn’t find', cls: 'bg-[#ffefed] text-[#8f1717]' },
+  { key: 'duplicate', label: 'Duplicate', cls: 'bg-[#f2f4f6] text-[#45464e]' },
+]
 
 const inputCls = 'w-full bg-[#f2f4f6] border-b-2 border-transparent focus:border-[#081534] outline-none px-4 py-3 rounded-t-lg text-[14px] transition-colors'
 
 const emptyForm = {
   donor_name: '', donor_email: '', amount: '', currency: 'NGN',
-  giving_type: 'General', payment_method: 'Bank Transfer', notes: '',
+  giving_type: 'Offering', payment_method: 'Bank Transfer', notes: '',
 }
 
 const typeColor = (type: string) => {
@@ -36,6 +57,7 @@ const typeColor = (type: string) => {
     case 'Tithe': return 'bg-[#d8e2ff] text-[#002960]'
     case 'Welfare': return 'bg-purple-100 text-purple-800'
     case 'Projects': return 'bg-green-100 text-green-800'
+    case 'Partnership': return 'bg-blue-50 text-blue-700'
     default: return 'bg-[#f2f4f6] text-[#45464e]'
   }
 }
@@ -45,6 +67,7 @@ export default function GivingPage() {
   const supabase = getSupabaseClient()
 
   const access = useAdminAccess('giving')
+  const [tab, setTab] = useState<'records' | 'confirmations'>('records')
   const [records, setRecords] = useState<GivingRecord[]>([])
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -54,11 +77,23 @@ export default function GivingPage() {
   const [filterType, setFilterType] = useState('All')
   const [form, setForm] = useState(emptyForm)
 
+  const [confirmations, setConfirmations] = useState<Confirmation[]>([])
+  const [confirmLoading, setConfirmLoading] = useState(true)
+  const [confirmError, setConfirmError] = useState('')
+  const [confirmFilter, setConfirmFilter] = useState<'all' | ConfirmStatus>('all')
+  const [deleteConfirm, setDeleteConfirm] = useState<Confirmation | null>(null)
+  const [linkedId, setLinkedId] = useState<string | null>(null)
+
   const showToast = (msg: string) => { setToast(msg); setTimeout(() => setToast(null), 3000) }
+
+  const authHeaders = async () => {
+    const { data } = await supabase.auth.getSession()
+    return { 'Content-Type': 'application/json', Authorization: `Bearer ${data.session?.access_token ?? ''}` }
+  }
 
   useEffect(() => {
     if (access.loading) return
-    if (access.canAccess('giving')) fetchRecords()
+    if (access.canAccess('giving')) { fetchRecords(); fetchConfirmations() }
   }, [access.loading])
 
   const fetchRecords = async () => {
@@ -67,6 +102,67 @@ export default function GivingPage() {
       .from('giving_records').select('*').order('created_at', { ascending: false })
     if (!error && data) setRecords(data)
     setLoading(false)
+  }
+
+  const fetchConfirmations = async () => {
+    try {
+      const res = await fetch('/api/admin/giving-confirmations', { headers: await authHeaders() })
+      const json = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(json.error || 'Could not load confirmations.')
+      setConfirmations(json.confirmations ?? [])
+      setConfirmError('')
+    } catch (e) {
+      setConfirmError((e as Error).message)
+    }
+    setConfirmLoading(false)
+  }
+
+  const patchConfirmation = async (id: string, patch: { status?: ConfirmStatus; note?: string }) => {
+    const before = confirmations
+    setConfirmations(list => list.map(c => (c.id === id ? { ...c, ...patch, note: patch.note !== undefined ? patch.note || null : c.note } : c)))
+    try {
+      const res = await fetch('/api/admin/giving-confirmations', {
+        method: 'PATCH', headers: await authHeaders(), body: JSON.stringify({ id, ...patch }),
+      })
+      if (!res.ok) throw new Error()
+    } catch {
+      setConfirmations(before)
+      showToast('Could not save that change')
+    }
+  }
+
+  const removeConfirmation = async () => {
+    if (!deleteConfirm) return
+    const id = deleteConfirm.id
+    setDeleteConfirm(null)
+    try {
+      const res = await fetch(`/api/admin/giving-confirmations?id=${encodeURIComponent(id)}`, {
+        method: 'DELETE', headers: await authHeaders(),
+      })
+      if (!res.ok) throw new Error()
+      setConfirmations(list => list.filter(c => c.id !== id))
+      showToast('Confirmation removed')
+    } catch {
+      showToast('Could not remove it')
+    }
+  }
+
+  const openBlankModal = () => { setForm(emptyForm); setLinkedId(null); setShowModal(true) }
+  const closeModal = () => { setShowModal(false); setLinkedId(null) }
+
+  const recordFromConfirmation = (c: Confirmation) => {
+    const isEmail = c.contact.includes('@')
+    setForm({
+      donor_name: c.donor_name,
+      donor_email: isEmail ? c.contact : '',
+      amount: String(c.amount),
+      currency: c.currency,
+      giving_type: GIVING_TYPES.includes(c.purpose) ? c.purpose : 'Other',
+      payment_method: 'Bank Transfer',
+      notes: `Reported by giver on ${new Date(c.created_at).toLocaleDateString('en-NG')}${c.reference ? `, ref ${c.reference}` : ''}${isEmail ? '' : `, phone ${c.contact}`}`,
+    })
+    setLinkedId(c.id)
+    setShowModal(true)
   }
 
   const handleSave = async () => {
@@ -84,9 +180,10 @@ export default function GivingPage() {
     const { error } = await supabase.from('giving_records').insert([payload] as any)
     setSaving(false)
     if (error) return showToast('Error saving record')
+    if (linkedId) await patchConfirmation(linkedId, { status: 'matched' })
     showToast('Giving record added')
     setForm(emptyForm)
-    setShowModal(false)
+    closeModal()
     fetchRecords()
   }
 
@@ -100,6 +197,8 @@ export default function GivingPage() {
   }
 
   const filtered = filterType === 'All' ? records : records.filter(r => r.giving_type === filterType)
+  const shownConfirmations = confirmFilter === 'all' ? confirmations : confirmations.filter(c => c.status === confirmFilter)
+  const newCount = confirmations.filter(c => c.status === 'new').length
 
   const totalAll = records.reduce((s, r) => s + r.amount, 0)
   const thisMonthTotal = records
@@ -110,9 +209,7 @@ export default function GivingPage() {
   const formatCurrency = (amount: number, currency: string) =>
     new Intl.NumberFormat('en-NG', { style: 'currency', currency: currency || 'NGN', maximumFractionDigits: 0 }).format(amount)
 
-  if (access.loading) {
-    return <div className="min-h-screen bg-[#f7f9fb] flex items-center justify-center"><p className="text-[#45464e]">Loading...</p></div>
-  }
+  if (access.loading) return <AdminLoader fullScreen label="Loading..." />
 
   if (!access.canAccess('giving')) {
     return (
@@ -151,7 +248,7 @@ export default function GivingPage() {
               className="lg:hidden flex items-center gap-1.5 px-3 py-2 border border-[#c6c6cf] text-[#45464e] rounded-lg text-[12px] font-semibold hover:bg-[#f2f4f6] hover:text-[#081534] transition-colors">
               <Icon name="arrow_back" className="text-[18px]" />
             </button>
-            <button onClick={() => setShowModal(true)}
+            <button onClick={openBlankModal}
               className="flex items-center gap-2 bg-[#081534] text-white px-5 py-2.5 rounded-xl text-[13px] font-semibold hover:opacity-90 transition-opacity shadow-sm w-fit">
               <Icon name="add" className="text-[18px]" /> Record Giving
             </button>
@@ -181,65 +278,162 @@ export default function GivingPage() {
           ))}
         </div>
 
-        {/* Filter + table */}
-        <div className="bg-white border border-[#c6c6cf] rounded-xl overflow-hidden">
-          <div className="p-5 border-b border-[#c6c6cf] flex flex-wrap gap-2">
-            {['All', ...GIVING_TYPES].map(t => (
-              <button key={t} onClick={() => setFilterType(t)}
-                className={`px-3 py-1.5 rounded-full text-[12px] font-semibold transition-colors
-                  ${filterType === t ? 'bg-[#081534] text-white' : 'bg-[#f2f4f6] text-[#45464e] hover:bg-[#eceef0]'}`}>
-                {t}
-              </button>
-            ))}
-          </div>
-
-          {loading ? (
-            <div className="p-8 space-y-3">
-              {[1,2,3].map(i => <div key={i} className="h-12 bg-[#f2f4f6] rounded-lg animate-pulse" />)}
-            </div>
-          ) : filtered.length === 0 ? (
-            <div className="py-16 text-center">
-              <Icon name="receipt_long" className="text-[48px] text-[#c6c6cf] block mb-2" />
-              <p className="text-[#45464e] font-semibold text-[14px]">No giving records yet</p>
-              <p className="text-[12px] text-[#76777f] mt-1">Record your first donation or tithe above</p>
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse min-w-[640px]">
-                <thead className="bg-[#f2f4f6] border-b border-[#c6c6cf]">
-                  <tr>
-                    {['Donor', 'Type', 'Amount', 'Method', 'Date', ''].map(h => (
-                      <th key={h} className="px-5 py-3 text-[11px] font-bold text-[#45464e] uppercase tracking-wider">{h}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-[#f2f4f6]">
-                  {filtered.map(r => (
-                    <tr key={r.id} className="hover:bg-[#f7f9fb] transition-colors">
-                      <td className="px-5 py-4">
-                        <p className="text-[13px] font-semibold text-[#081534]">{r.donor_name || 'Anonymous'}</p>
-                        {r.donor_email && <p className="text-[11px] text-[#45464e]">{r.donor_email}</p>}
-                      </td>
-                      <td className="px-5 py-4">
-                        <span className={`px-2.5 py-1 text-[11px] font-bold rounded-full ${typeColor(r.giving_type)}`}>{r.giving_type}</span>
-                      </td>
-                      <td className="px-5 py-4 text-[14px] font-bold text-[#081534]">{formatCurrency(r.amount, r.currency)}</td>
-                      <td className="px-5 py-4 text-[13px] text-[#45464e]">{r.payment_method}</td>
-                      <td className="px-5 py-4 text-[13px] text-[#45464e]">
-                        {new Date(r.created_at).toLocaleDateString('en-NG', { month: 'short', day: 'numeric', year: 'numeric' })}
-                      </td>
-                      <td className="px-5 py-4">
-                        <button onClick={() => setDeleteTarget(r)} className="p-1.5 text-[#45464e] hover:text-[#ba1a1a] hover:bg-[#ffdad6] rounded transition-colors">
-                          <Icon name="delete" className="text-[16px]" />
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
+        {/* Tabs */}
+        <div className="flex gap-2" role="tablist" aria-label="Giving sections">
+          {([
+            { key: 'records', label: 'Records' },
+            { key: 'confirmations', label: 'Giver confirmations' },
+          ] as const).map(t => (
+            <button key={t.key} role="tab" aria-selected={tab === t.key} onClick={() => setTab(t.key)}
+              className={`flex min-h-10 items-center gap-2 rounded-full px-4 text-[13px] font-bold transition
+                ${tab === t.key ? 'bg-[#081534] text-white' : 'border border-[#c6c6cf] bg-white text-[#45464e] hover:border-[#081534]'}`}>
+              {t.label}
+              {t.key === 'confirmations' && newCount > 0 && (
+                <span className="rounded-full bg-[#fdc425] px-2 py-0.5 text-[10px] font-extrabold text-[#6d5200]">{newCount} new</span>
+              )}
+            </button>
+          ))}
         </div>
+
+        {tab === 'records' && (
+          <div className="bg-white border border-[#c6c6cf] rounded-xl overflow-hidden">
+            <div className="p-5 border-b border-[#c6c6cf] flex flex-wrap gap-2">
+              {['All', ...GIVING_TYPES].map(t => (
+                <button key={t} onClick={() => setFilterType(t)}
+                  className={`px-3 py-1.5 rounded-full text-[12px] font-semibold transition-colors
+                    ${filterType === t ? 'bg-[#081534] text-white' : 'bg-[#f2f4f6] text-[#45464e] hover:bg-[#eceef0]'}`}>
+                  {t}
+                </button>
+              ))}
+            </div>
+
+            {loading ? (
+              <div className="p-8 space-y-3">
+                {[1,2,3].map(i => <div key={i} className="h-12 bg-[#f2f4f6] rounded-lg animate-pulse" />)}
+              </div>
+            ) : filtered.length === 0 ? (
+              <div className="py-16 text-center">
+                <Icon name="receipt_long" className="text-[48px] text-[#c6c6cf] block mb-2" />
+                <p className="text-[#45464e] font-semibold text-[14px]">No giving records yet</p>
+                <p className="text-[12px] text-[#76777f] mt-1">Record your first donation or tithe above</p>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse min-w-[640px]">
+                  <thead className="bg-[#f2f4f6] border-b border-[#c6c6cf]">
+                    <tr>
+                      {['Donor', 'Type', 'Amount', 'Method', 'Date', ''].map(h => (
+                        <th key={h} className="px-5 py-3 text-[11px] font-bold text-[#45464e] uppercase tracking-wider">{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-[#f2f4f6]">
+                    {filtered.map(r => (
+                      <tr key={r.id} className="hover:bg-[#f7f9fb] transition-colors">
+                        <td className="px-5 py-4">
+                          <p className="text-[13px] font-semibold text-[#081534]">{r.donor_name || 'Anonymous'}</p>
+                          {r.donor_email && <p className="text-[11px] text-[#45464e]">{r.donor_email}</p>}
+                        </td>
+                        <td className="px-5 py-4">
+                          <span className={`px-2.5 py-1 text-[11px] font-bold rounded-full ${typeColor(r.giving_type)}`}>{r.giving_type}</span>
+                        </td>
+                        <td className="px-5 py-4 text-[14px] font-bold text-[#081534]">{formatCurrency(r.amount, r.currency)}</td>
+                        <td className="px-5 py-4 text-[13px] text-[#45464e]">{r.payment_method}</td>
+                        <td className="px-5 py-4 text-[13px] text-[#45464e]">
+                          {new Date(r.created_at).toLocaleDateString('en-NG', { month: 'short', day: 'numeric', year: 'numeric' })}
+                        </td>
+                        <td className="px-5 py-4">
+                          <button onClick={() => setDeleteTarget(r)} aria-label="Delete record" className="p-1.5 text-[#45464e] hover:text-[#ba1a1a] hover:bg-[#ffdad6] rounded transition-colors">
+                            <Icon name="delete" className="text-[16px]" />
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        )}
+
+        {tab === 'confirmations' && (
+          <div className="space-y-4">
+            <p className="flex items-start gap-2 rounded-xl border border-[#fdc425]/50 bg-[#fff9e8] px-4 py-3 text-[12px] leading-5 text-[#5a4300]">
+              <Icon name="info" className="mt-0.5 text-[16px] shrink-0" />
+              These are notes from givers, not proof of payment. Match each one to your bank statement before recording it.
+            </p>
+
+            {confirmError && (
+              <div role="alert" className="flex items-center justify-between gap-3 rounded-xl bg-[#ffefed] px-4 py-3 text-[13px] text-[#8f1717]">
+                <span>{confirmError}</span>
+                <button onClick={() => { setConfirmLoading(true); fetchConfirmations() }}
+                  className="rounded-lg border border-[#8f1717]/40 px-3 py-1.5 text-[12px] font-bold">Retry</button>
+              </div>
+            )}
+
+            <div className="flex flex-wrap gap-2">
+              {([{ key: 'all', label: 'All' }, ...CONFIRM_STATUSES] as { key: 'all' | ConfirmStatus; label: string }[]).map(f => (
+                <button key={f.key} onClick={() => setConfirmFilter(f.key)}
+                  className={`px-3 py-1.5 rounded-full text-[12px] font-semibold transition-colors
+                    ${confirmFilter === f.key ? 'bg-[#081534] text-white' : 'bg-white border border-[#c6c6cf] text-[#45464e] hover:border-[#081534]'}`}>
+                  {f.label}
+                </button>
+              ))}
+            </div>
+
+            {confirmLoading ? (
+              <div className="space-y-3">{[1,2,3].map(i => <div key={i} className="h-24 bg-white rounded-xl animate-pulse" />)}</div>
+            ) : shownConfirmations.length === 0 ? (
+              <div className="rounded-2xl border border-dashed border-[#c6c6cf] bg-white px-6 py-14 text-center">
+                <Icon name="receipt_long" className="mx-auto text-[40px] text-[#c6c6cf]" />
+                <p className="mt-3 text-[14px] font-bold text-[#081534]">No confirmations here</p>
+              </div>
+            ) : (
+              shownConfirmations.map(c => (
+                <article key={c.id} className="rounded-xl border border-[#c6c6cf] bg-white p-5">
+                  <div className="flex flex-wrap items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="text-[14px] font-bold text-[#081534]">{c.donor_name}</p>
+                      <p className="break-all text-[12px] text-[#45464e]">{c.contact}</p>
+                    </div>
+                    <p className="text-[18px] font-bold text-[#081534]">{formatCurrency(c.amount, c.currency)}</p>
+                  </div>
+
+                  <div className="mt-3 flex flex-wrap items-center gap-2 text-[12px] text-[#45464e]">
+                    <span className={`px-2.5 py-1 text-[11px] font-bold rounded-full ${typeColor(c.purpose)}`}>{c.purpose}</span>
+                    <span>Given {new Date(`${c.given_on}T00:00:00`).toLocaleDateString('en-NG', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+                    <span className="text-[#76777f]">· sent {new Date(c.created_at).toLocaleDateString('en-NG', { day: 'numeric', month: 'short' })}</span>
+                    {c.reference && <span>· Ref: {c.reference}</span>}
+                  </div>
+
+                  <div className="mt-4 grid gap-3 sm:grid-cols-[180px_1fr]">
+                    <select aria-label="Status" value={c.status} onChange={e => patchConfirmation(c.id, { status: e.target.value as ConfirmStatus })}
+                      className="min-h-10 rounded-md border border-[#c6c6cf] bg-white px-2 text-[12px] text-[#45464e]">
+                      {CONFIRM_STATUSES.map(s => <option key={s.key} value={s.key}>{s.label}</option>)}
+                    </select>
+                    <input defaultValue={c.note ?? ''} maxLength={500} placeholder="Note (saved when you click away)"
+                      aria-label="Note"
+                      onBlur={e => { if (e.target.value !== (c.note ?? '')) patchConfirmation(c.id, { note: e.target.value }) }}
+                      className="min-h-10 rounded-md border border-[#c6c6cf] px-3 text-[12px]" />
+                  </div>
+
+                  <div className="mt-4 flex flex-wrap items-center justify-between gap-2">
+                    {c.status !== 'matched' ? (
+                      <button onClick={() => recordFromConfirmation(c)}
+                        className="rounded-lg bg-[#081534] px-4 py-2 text-[12px] font-bold text-white hover:opacity-90">
+                        Record as giving
+                      </button>
+                    ) : <span className="text-[12px] font-semibold text-green-700">Recorded</span>}
+                    <button onClick={() => setDeleteConfirm(c)} aria-label="Delete confirmation"
+                      className="p-1.5 text-[#45464e] hover:text-[#ba1a1a] hover:bg-[#ffdad6] rounded transition-colors">
+                      <Icon name="delete" className="text-[16px]" />
+                    </button>
+                  </div>
+                </article>
+              ))
+            )}
+          </div>
+        )}
       </div>
 
       {/* Add modal */}
@@ -247,7 +441,7 @@ export default function GivingPage() {
         {showModal && (
           <>
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black/50 z-40 backdrop-blur-sm" onClick={() => setShowModal(false)} />
+              className="fixed inset-0 bg-black/50 z-40 backdrop-blur-sm" onClick={closeModal} />
             <motion.div initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }} transition={{ type: 'spring', damping: 25, stiffness: 280 }}
               className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -255,9 +449,11 @@ export default function GivingPage() {
                 <div className="flex items-center justify-between px-6 py-5 border-b border-[#c6c6cf]">
                   <div>
                     <h3 className="text-[18px] font-bold text-[#081534]">Record Giving</h3>
-                    <p className="text-[12px] text-[#45464e] mt-0.5">Log a donation, tithe, or partnership contribution</p>
+                    <p className="text-[12px] text-[#45464e] mt-0.5">
+                      {linkedId ? 'From a giver’s note. Check it against the bank statement first.' : 'Log a donation, tithe, or partnership contribution'}
+                    </p>
                   </div>
-                  <button onClick={() => setShowModal(false)} className="w-8 h-8 flex items-center justify-center rounded-lg text-[#45464e] hover:bg-[#f2f4f6]">
+                  <button onClick={closeModal} aria-label="Close" className="w-8 h-8 flex items-center justify-center rounded-lg text-[#45464e] hover:bg-[#f2f4f6]">
                     <Icon name="close" className="text-[20px]" />
                   </button>
                 </div>
@@ -310,7 +506,7 @@ export default function GivingPage() {
                   </div>
                 </div>
                 <div className="px-6 py-4 border-t border-[#c6c6cf] flex gap-3">
-                  <button onClick={() => setShowModal(false)}
+                  <button onClick={closeModal}
                     className="flex-1 py-3 border border-[#c6c6cf] text-[#45464e] rounded-xl text-[13px] font-semibold hover:bg-[#f2f4f6]">
                     Cancel
                   </button>
@@ -325,7 +521,7 @@ export default function GivingPage() {
         )}
       </AnimatePresence>
 
-      {/* Delete confirm */}
+      {/* Delete record confirm */}
       <AnimatePresence>
         {deleteTarget && (
           <>
@@ -347,6 +543,35 @@ export default function GivingPage() {
                   <button onClick={handleDelete}
                     className="flex-1 py-3 bg-[#ba1a1a] text-white rounded-xl text-[13px] font-bold hover:opacity-90">
                     Yes, Remove
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
+      {/* Delete confirmation confirm */}
+      <AnimatePresence>
+        {deleteConfirm && (
+          <>
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/50 z-40 backdrop-blur-sm" onClick={() => setDeleteConfirm(null)} />
+            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }}
+              className="fixed inset-0 z-50 flex items-center justify-center p-4">
+              <div className="bg-white rounded-2xl w-full max-w-[400px] p-6 shadow-2xl">
+                <h3 className="text-[18px] font-bold text-[#081534] text-center mb-2">Remove this note?</h3>
+                <p className="text-[13px] text-[#45464e] text-center mb-6">
+                  The note from {deleteConfirm.donor_name} will be permanently deleted.
+                </p>
+                <div className="flex gap-3">
+                  <button onClick={() => setDeleteConfirm(null)}
+                    className="flex-1 py-3 border border-[#c6c6cf] rounded-xl text-[13px] font-semibold text-[#45464e] hover:bg-[#f2f4f6]">
+                    Cancel
+                  </button>
+                  <button onClick={removeConfirmation}
+                    className="flex-1 py-3 bg-[#ba1a1a] text-white rounded-xl text-[13px] font-bold hover:opacity-90">
+                    Remove
                   </button>
                 </div>
               </div>

@@ -73,11 +73,14 @@ export default function SplashScreen({ onComplete }: SplashScreenProps) {
                 delay: 1,
               }}
             >
-              <img
-                src={LOGO_URL}
-                alt="theSpotlightChurch"
-                className="h-28 sm:h-36 w-auto object-contain drop-shadow-2xl"
-              />
+              <span className="relative block h-28 w-28 overflow-hidden rounded-[28px] bg-[#081534] shadow-2xl ring-2 ring-[#fdc425]/80 sm:h-36 sm:w-36 sm:rounded-[36px]">
+                <img
+                  src={LOGO_URL}
+                  alt="theSpotlightChurch"
+                  className="absolute max-w-none"
+                  style={{ width: '205%', left: '-52.5%', top: '-46%' }}
+                />
+              </span>
             </motion.div>
 
             {/* Church name */}

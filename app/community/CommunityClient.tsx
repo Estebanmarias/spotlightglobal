@@ -433,11 +433,18 @@ function CommunityPageContent() {
             <h3 className="text-[22px] sm:text-[24px] font-bold text-[#081534]">Live Testimonies</h3>
             <p className="text-[#45464e] text-[14px] mt-1">Real stories from our church family.</p>
           </div>
-          <button onClick={() => setShowTestimonyModal(true)}
-            className="bg-[#fdc425] text-[#6d5200] px-6 py-2.5 rounded-full text-[13px] font-bold hover:brightness-110 hover:scale-105 transition-all shadow-md flex items-center gap-2 active:scale-95">
-            <Icon name="chat_bubble" className="text-[16px]" />
-            Share Yours
-          </button>
+          <div className="flex flex-wrap items-center gap-3">
+            <Link href="/prayer"
+              className="border-2 border-[#081534] text-[#081534] px-6 py-2.5 rounded-full text-[13px] font-bold hover:bg-[#081534] hover:text-white transition-all flex items-center gap-2 active:scale-95">
+              <Icon name="favorite" className="text-[16px]" />
+              Request Prayer
+            </Link>
+            <button onClick={() => setShowTestimonyModal(true)}
+              className="bg-[#fdc425] text-[#6d5200] px-6 py-2.5 rounded-full text-[13px] font-bold hover:brightness-110 hover:scale-105 transition-all shadow-md flex items-center gap-2 active:scale-95">
+              <Icon name="chat_bubble" className="text-[16px]" />
+              Share Yours
+            </button>
+          </div>
         </div>
 
         {testimonies.length > 0 ? (

@@ -9,7 +9,7 @@ import { CONSENT_EVENT, readConsent } from '@/lib/consent'
 import SharedBrandIcon from '@/components/BrandIcon'
 import {
   BookOpen, Car, CalendarDays, Clock, GraduationCap, HandHeart, Handshake, Headphones,
-  HeartHandshake, Mail, MapPin, Navigation, Phone, Send, User, UserPlus, X,
+  Heart, HeartHandshake, Mail, MapPin, Navigation, Phone, Send, User, UserPlus, X,
 } from 'lucide-react'
 import { SITE_CONFIG } from '@/lib/site-config'
 import { CRISIS_REPLY, matchQuestion, NOT_SURE_REPLY } from '@/lib/chat-search'
@@ -104,6 +104,18 @@ const TOPICS: Topic[] = [
       { label: SETMAN.name, href: wa(SETMAN.number, "Hello, I'd like to speak with a counselor."), icon: <BrandIcon name="whatsapp" /> },
       { label: COUNSELOR_2.name, href: wa(COUNSELOR_2.number, "Hello, I'd like to speak with a counselor."), icon: <BrandIcon name="whatsapp" /> },
     ],
+  },
+  {
+    id: 'prayer',
+    label: 'Prayer request',
+    icon: <Heart className={ICON} />,
+    reply:
+      'We would love to pray with you. Send your request to our pastoral team. It is private and never shown publicly.',
+    verse: {
+      text: 'Be careful for nothing; but in every thing by prayer and supplication with thanksgiving let your requests be made known unto God.',
+      ref: 'Philippians 4:6',
+    },
+    actions: [{ label: 'Send a prayer request', href: '/prayer', icon: <Heart className={ICON} /> }],
   },
   {
     id: 'events',

@@ -1,5 +1,6 @@
 'use client'
 
+import GivingConfirmForm from '@/components/GivingConfirmForm'
 import { useEffect, useState } from 'react'
 import { motion, AnimatePresence, Variants } from 'framer-motion'
 import Icon from '@/components/Icon'
@@ -273,6 +274,8 @@ export default function GivingClient() {
           )}
         </div>
       </section>
+
+      <GivingConfirmForm />
 
       {/* ── Other Ways ── */}
       <section className="py-20 sm:py-24 bg-[#081534] text-white">

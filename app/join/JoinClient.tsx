@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import Link from 'next/link'
 import Icon from '@/components/Icon'
@@ -10,6 +11,7 @@ import { maximumDateOfBirth, minimumDateOfBirth, validateMemberDateOfBirth } fro
 const inputCls = 'w-full bg-[#f2f4f6] border-b-2 border-transparent focus:border-[#081534] outline-none px-4 py-3.5 rounded-t-lg text-[16px] transition-colors'
 
 export default function JoinClient() {
+  const router = useRouter()
   const supabase = getSupabaseClient()
 
   const [form, setForm] = useState({
@@ -57,8 +59,7 @@ export default function JoinClient() {
         return
       }
 
-      setSubmitted(true)
-      window.scrollTo({ top: 0, behavior: 'smooth' })
+    router.push(`/success?name=${encodeURIComponent(data.first_name || form.first_name)}`)
     } catch {
       setError('We could not connect right now. Please check your connection and try again.')
     } finally {

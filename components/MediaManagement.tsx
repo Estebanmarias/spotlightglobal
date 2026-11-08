@@ -43,6 +43,8 @@ type ChurchEvent = {
   special_session_label: string | null
   special_session_date: string | null
   recurrence: 'none' | 'weekly'
+  thank_you_enabled: boolean
+  thank_you_message: string | null
 }
 
 type EventRegistration = {
@@ -304,6 +306,8 @@ export default function MediaManagement({ viewerRole }: MediaManagementProps) {
       special_session_label: e.special_session_label ?? '',
       special_session_date: e.special_session_date ?? '',
       recurrence: e.recurrence ?? 'none',
+      thank_you_enabled: e.thank_you_enabled ?? true,
+      thank_you_message: e.thank_you_message ?? '',
     })
     setEditEvent(e)
     setFlyerFile(null)
@@ -372,6 +376,8 @@ export default function MediaManagement({ viewerRole }: MediaManagementProps) {
       special_session_label: eventForm.special_session_label.trim() || null,
       special_session_date: eventForm.special_session_date || null,
       recurrence: eventForm.recurrence,
+      thank_you_enabled: eventForm.recurrence === 'weekly' ? false : eventForm.thank_you_enabled,
+      thank_you_message: eventForm.recurrence === 'weekly' ? null : eventForm.thank_you_message.trim() || null,
       added_by: user?.id ?? null,
     }
 
@@ -976,6 +982,23 @@ export default function MediaManagement({ viewerRole }: MediaManagementProps) {
                       className={inputCls} />
                   </div>
 
+                                    <div className="border-t border-[#e2e2e9] pt-4 space-y-3">
+                    <label className="flex items-start gap-2.5 cursor-pointer">
+                      <input type="checkbox" checked={eventForm.thank_you_enabled}
+                        onChange={e => setEventForm(p => ({ ...p, thank_you_enabled: e.target.checked }))}
+                        className="mt-0.5 w-4 h-4 accent-[#081534]" />
+                      <span>
+                        <span className="block text-[13px] font-semibold text-[#191c1e]">Send a thank-you email after the event</span>
+                        <span className="block text-[11px] text-[#76777f]">Goes to everyone with a confirmed registration, the morning after the event ends.</span>
+                      </span>
+                    </label>
+                    {eventForm.thank_you_enabled && (
+                      <textarea rows={4} maxLength={2000} value={eventForm.thank_you_message}
+                        onChange={e => setEventForm(p => ({ ...p, thank_you_message: e.target.value }))}
+                        placeholder="Optional. Write your own message (a blank line starts a new paragraph), or leave this empty to send the standard thank-you."
+                        className={inputCls + ' resize-y'} />
+                    )}
+                  </div>
                   </>)}
 
                   {/* Location */}

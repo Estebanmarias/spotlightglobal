@@ -20,6 +20,7 @@ export type PageKey =
   | "blog"
   | "broadcast"
   | "classes"
+  | "prayer"
   | "settings";
 
 export const ALL_PAGES: { key: PageKey; label: string; icon: string }[] = [
@@ -34,6 +35,7 @@ export const ALL_PAGES: { key: PageKey; label: string; icon: string }[] = [
   { key: "blog", label: "Devotionals", icon: "menu_book" },
   { key: "broadcast", label: "Broadcast", icon: "campaign" },
   { key: "classes", label: "Classes", icon: "school" },
+  { key: "prayer", label: "Prayer Requests", icon: "favorite" },
 ];
 
 type AdminAccess = {

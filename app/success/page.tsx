@@ -7,6 +7,10 @@ import { motion } from 'framer-motion'
 import Icon from '@/components/Icon'
 import BrandIcon from '@/components/BrandIcon'
 import { verseFor } from '@/lib/class-verses'
+import dynamic from 'next/dynamic'
+
+// Browser-only, so the server never renders it
+const Confetti = dynamic(() => import('@/components/Confetti'), { ssr: false })
 
 const communities = [
   {
@@ -43,6 +47,7 @@ function SuccessContent() {
 
   return (
     <main className="flex-grow flex items-center justify-center py-14 sm:py-20 px-4">
+      {params.get('name') && <Confetti />}
       <div className="max-w-4xl w-full text-center">
         {/* Icon */}
         <motion.div
@@ -148,6 +153,10 @@ function SuccessContent() {
             Register Someone Else
           </Link>
         </motion.div>
+
+        <p className="mt-10 text-[13px] text-[#45464e]">
+          Have a need? <Link href="/prayer" className="font-bold text-[#785a00] hover:underline">Request prayer</Link> and our pastoral team will pray with you.
+        </p>
       </div>
     </main>
   )

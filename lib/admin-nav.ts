@@ -17,6 +17,7 @@ export const ADMIN_NAV_GROUPS: AdminNavItem[][] = [
     { icon: "fact_check", label: "Attendance", href: "/admin/attendance", page: "attendance" },
     { icon: "school", label: "Classes", href: "/admin/classes", page: "classes" },
     { icon: "church", label: "Ministries", href: "/admin/ministries", page: "ministries" },
+    { icon: "favorite", label: "Prayer", href: "/admin/prayer", page: "prayer" },
   ],
   [
     { icon: "volunteer_activism", label: "Giving", href: "/admin/giving", page: "giving" },

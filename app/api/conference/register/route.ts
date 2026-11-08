@@ -12,7 +12,7 @@ const redisConfigured = Boolean(
 const rateLimit = redisConfigured
   ? new Ratelimit({
       redis: Redis.fromEnv(),
-      limiter: Ratelimit.slidingWindow(5, "1 h"),
+      limiter: Ratelimit.slidingWindow(50, "1 h"),
       analytics: true,
       prefix: "spotlight:event-registration",
     })

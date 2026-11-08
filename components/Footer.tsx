@@ -58,7 +58,7 @@ export default function Footer() {
           <div>
             <h5 className="text-[11px] font-bold text-[#fdc425] uppercase tracking-widest mb-4">Get Involved</h5>
             <ul className="space-y-2.5">
-              <li><Link href="/join"    className="text-[14px] text-white/70 hover:text-white transition-colors">Become a Member</Link></li>
+              <li><Link href="/prayer"  className="text-[14px] text-white/70 hover:text-white transition-colors">Prayer Request</Link></li>
               <li><Link href="/partner" className="text-[14px] text-white/70 hover:text-white transition-colors">Partnership</Link></li>
               <li><Link href="/giving"  className="text-[14px] font-semibold text-[#fdc425] hover:brightness-110 transition-all">Give Now</Link></li>
             </ul>
