@@ -42,3 +42,5 @@ fix(conference): remove undefined isRealEvent reference breaking build
 Replace the dead isRealEvent/eventLoading ternaries in ConferencePreview
 with direct text. Early returns already guarantee a loaded event, so the
 removed branches were unreachable. Fixes the Vercel type-check failure.
+
+enebled the thank you message in supabase
