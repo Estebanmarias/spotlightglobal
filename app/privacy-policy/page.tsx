@@ -3,6 +3,8 @@
 import { motion } from 'framer-motion'
 import Link from 'next/link'
 import Icon from '@/components/Icon'
+import { SITE_CONFIG } from '@/lib/site-config'
+import { LockKeyhole, TrendingUp, UserCog } from 'lucide-react'
 
 const sections = [
   {
@@ -20,6 +22,9 @@ const sections = [
             'Testimonies submitted for public display and private prayer requests submitted through church forms',
             'Event registration details, including attendance days, accommodation requests, accompanying children counts, special-session selections, and referral source',
             'Optional special requests and prayer requests submitted with event registrations',
+            'Class registrations, including your name, email, phone number and class progress',
+            'Notes you send us about a gift you have given: your name, contact details, amount, purpose, date and optional transfer reference',
+            'Questions you type into the website chat, which are sent to our server to find an answer. We do not keep them in our database, but our hosting provider’s technical logs may record them for a short time.',
           ].map(item => (
             <li key={item} className="flex items-start gap-3">
               <Icon name="check_circle" className="text-[#fdc425] text-[18px] mt-0.5 shrink-0" />
@@ -59,7 +64,7 @@ const sections = [
       <>
         <p>
           Our website uses cookies to enhance your experience. Cookies are small files stored on your device
-          that help us remember your preferences and keep your admin session active.
+          that help us remember your preferences and keep your admin session active. With your consent, we also use analytics tools (including Google Analytics, Microsoft Clarity and Google Tag Manager) to understand how the site is used. These load only after you accept, and you can change your choice at any time from Cookie settings in the footer.
         </p>
         <div className="mt-5 p-5 bg-[#081534]/5 rounded-xl border-l-4 border-[#fdc425]">
           <p className="text-[14px] text-[#191c1e] leading-relaxed">
@@ -76,11 +81,37 @@ const sections = [
     content: (
       <>
         <p>
-          We take the security of your personal data seriously. Member, event registration, and prayer-request data is stored in Supabase. Row-level security and server-side access checks restrict attendee records to approved Media Ministry managers; event prayer requests are additionally restricted to the super admin.
+          We take the security of your personal data seriously. Member, event registration, class and prayer-request information is held in a secured, access-controlled database. Access is limited to approved church staff and only to the records their role requires, and pastoral prayer requests are further restricted to a small number of authorised pastoral leaders.
         </p>
         <p className="mt-4">
-          Connections are encrypted via SSL/TLS. We do not sell personal information. We use service providers, including Supabase for data storage, Brevo for email delivery, Vercel for hosting, and analytics providers described by their own policies, only to operate and improve the service. Payment card details are not collected by this event registration form.
+          Information sent between your device and our website is encrypted. We do not sell personal information. We use trusted third-party service providers for secure data storage, email delivery, website hosting and analytics, only to operate and improve our services. They handle information on our behalf under their own security and privacy commitments, and some of them may process it outside Nigeria. Payment card details are not collected through our forms.
         </p>
+      </>
+    ),
+  },
+  {
+    icon: 'schedule',
+    title: 'How Long We Keep Your Information',
+    content: (
+      <>
+        <p>We keep personal information only for as long as we need it for the purpose it was given. In practice:</p>
+        <ul className="mt-4 space-y-3">
+          {[
+            'Prayer requests are kept until our pastoral team has dealt with them, and for up to 90 days after that.',
+            'Personal details on event registrations (name, email, phone, location and notes) are removed 12 months after the event. We keep anonymous totals.',
+            'Records of the emails we send about events and classes are kept for 12 months.',
+            'Notes you send us about a gift are kept for up to 24 months after we have reviewed them.',
+            'For classes, we keep your name, the class and the completion date so your certificate can be verified. We remove your phone number after 24 months.',
+            'Partnership submissions and administrative activity logs are kept for 24 months.',
+            'Giving records are kept as financial records for as long as the law requires.',
+          ].map(item => (
+            <li key={item} className="flex items-start gap-3">
+              <Icon name="check_circle" className="text-[#fdc425] text-[18px] mt-0.5 shrink-0" />
+              <span>{item}</span>
+            </li>
+          ))}
+        </ul>
+        <p className="mt-4">Our backups roll over every 30 days, so deleted information can remain in a backup for up to 30 days. You can ask us to delete your information at any time.</p>
       </>
     ),
   },
@@ -136,7 +167,7 @@ export default function PrivacyPolicyPage() {
               Privacy Policy
             </h1>
             <p className="text-[#45464e] text-[16px] sm:text-[18px] leading-[28px] max-w-2xl">
-              Last updated: September 2026. This policy describes how theSpotlightChurch collects,
+              Last updated: November 2026. This policy describes how theSpotlightChurch collects,
               uses, and protects your personal information.
             </p>
           </motion.div>
@@ -206,4 +237,4 @@ export default function PrivacyPolicyPage() {
     </main>
   )
 }
-import { SITE_CONFIG } from '@/lib/site-config'
+

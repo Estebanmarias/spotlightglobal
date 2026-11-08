@@ -94,6 +94,8 @@ const blankEventForm = {
   price: '', currency: 'NGN', special_session_label: '', special_session_date: '',
   payment_instructions: '',
   recurrence: 'none' as 'none' | 'weekly',
+  thank_you_enabled: true,
+  thank_you_message: '',
 }
 
 const inputCls = 'w-full bg-[#f2f4f6] border-b-2 border-transparent focus:border-[#081534] outline-none px-4 py-3 rounded-t-lg text-[14px] transition-colors'

@@ -53,3 +53,26 @@ export async function pushMemberToBrevo(m: {
     return false;
   }
 }
+
+export async function deleteBrevoContact(
+  email: string,
+): Promise<{ ok: true; existed: boolean } | { ok: false; error: string }> {
+  const key = process.env.BREVO_API_KEY;
+  if (!key) return { ok: false, error: "Brevo is not configured." };
+  try {
+    const res = await fetch(`https://api.brevo.com/v3/contacts/${encodeURIComponent(email)}?identifierType=email_id`, {
+      method: "DELETE",
+      headers: { accept: "application/json", "api-key": key },
+    });
+    if (res.status === 404) return { ok: true, existed: false };
+    if (!res.ok) {
+      const detail = (await res.text().catch(() => "")).slice(0, 200);
+      console.error("[BREVO DELETE]", res.status, detail);
+      return { ok: false, error: `Brevo returned ${res.status}` };
+    }
+    return { ok: true, existed: true };
+  } catch (error) {
+    console.error("[BREVO DELETE]", error);
+    return { ok: false, error: "Could not reach Brevo." };
+  }
+}

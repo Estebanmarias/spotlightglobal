@@ -57,7 +57,7 @@ function MemberDrawer({
   member: Member
   onClose: () => void
   onEdit: (m: Member) => void
-  onDeleted: () => void
+  onDeleted: (brevoRemoved: boolean) => void
 }) {
   const supabase = getSupabaseClient()
   const [deleting, setDeleting] = useState(false)
@@ -79,10 +79,32 @@ function MemberDrawer({
   const handleDelete = async () => {
     setDeleting(true)
     const { error } = await supabase.from('members').delete().eq('id', member.id)
+    if (error) {
+      setDeleting(false)
+      alert('Error deleting member: ' + error.message)
+      return
+    }
+
+    // Also remove them from Brevo so they stop receiving emails. A failure here doesn't undo the delete.
+    let brevoRemoved = true
+    try {
+      const { data: sessionData } = await supabase.auth.getSession()
+      const res = await fetch('/api/admin/brevo-contact', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${sessionData.session?.access_token ?? ''}`,
+        },
+        body: JSON.stringify({ email: member.email }),
+      })
+      brevoRemoved = res.ok
+    } catch {
+      brevoRemoved = false
+    }
+
     setDeleting(false)
-    if (error) { alert('Error deleting member: ' + error.message); return }
     setDeleteConfirmation('')
-    onDeleted()
+    onDeleted(brevoRemoved)
   }
 
   return (
@@ -166,7 +188,7 @@ function MemberDrawer({
             </div>
           </div>
 
-          <div>
+                    <div>
             <h3 className="text-[11px] font-bold text-[#45464e] uppercase tracking-widest mb-3">Registration Timeline</h3>
             <div className="relative pl-5">
               <div className="absolute left-2 top-2 bottom-2 w-[2px] bg-[#f2f4f6]" />
@@ -181,28 +203,28 @@ function MemberDrawer({
                     <p className="text-[12px] font-bold text-[#191c1e]">{t.label}</p>
                     <p className="text-[11px] text-[#45464e]">{t.detail}</p>
                   </div>
-
-                  <div>
-                    <h3 className="text-[11px] font-bold text-[#45464e] uppercase tracking-widest mb-3">Additional Information</h3>
-                    <div className="space-y-3">
-                      <div className="rounded-xl bg-[#f7f9fb] p-3">
-                        <p className="text-[11px] font-semibold text-[#45464e]">Notes</p>
-                        <p className="mt-1 whitespace-pre-wrap text-[13px] font-semibold text-[#191c1e]">{member.admin_notes || '—'}</p>
-                      </div>
-                      <div className="grid grid-cols-2 gap-3">
-                        <div className="rounded-xl bg-[#f7f9fb] p-3">
-                          <p className="text-[11px] font-semibold text-[#45464e]">Source</p>
-                          <p className="mt-1 text-[13px] font-bold text-[#191c1e]">{sourceLabels[member.discovery_source ?? ''] || member.discovery_source || '—'}</p>
-                        </div>
-                        <div className="rounded-xl bg-[#f7f9fb] p-3">
-                          <p className="text-[11px] font-semibold text-[#45464e]">Interests</p>
-                          <p className="mt-1 text-[13px] font-bold text-[#191c1e]">{member.interests?.map(interest => interestLabels[interest] || interest).join(', ') || '—'}</p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
                 </div>
               ))}
+            </div>
+          </div>
+
+          <div>
+            <h3 className="text-[11px] font-bold text-[#45464e] uppercase tracking-widest mb-3">Additional Information</h3>
+            <div className="space-y-3">
+              <div className="rounded-xl bg-[#f7f9fb] p-3">
+                <p className="text-[11px] font-semibold text-[#45464e]">Notes</p>
+                <p className="mt-1 whitespace-pre-wrap text-[13px] font-semibold text-[#191c1e]">{member.admin_notes || '—'}</p>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="rounded-xl bg-[#f7f9fb] p-3">
+                  <p className="text-[11px] font-semibold text-[#45464e]">Source</p>
+                  <p className="mt-1 text-[13px] font-bold text-[#191c1e]">{sourceLabels[member.discovery_source ?? ''] || member.discovery_source || '—'}</p>
+                </div>
+                <div className="rounded-xl bg-[#f7f9fb] p-3">
+                  <p className="text-[11px] font-semibold text-[#45464e]">Interests</p>
+                  <p className="mt-1 text-[13px] font-bold text-[#191c1e]">{member.interests?.map(interest => interestLabels[interest] || interest).join(', ') || '—'}</p>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -458,9 +480,9 @@ export default function MembersPage() {
     fetchMembers()
   }
 
-  const handleDeleted = () => {
+  const handleDeleted = (brevoRemoved = true) => {
     setActive(null)
-    showToast('Member removed')
+    showToast(brevoRemoved ? 'Member removed' : 'Member removed. The Brevo contact could not be removed, so delete it in Brevo.')
     fetchMembers()
   }
 
