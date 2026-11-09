@@ -437,7 +437,7 @@ function CommunityPageContent() {
             <Link href="/prayer"
               className="border-2 border-[#081534] text-[#081534] px-6 py-2.5 rounded-full text-[13px] font-bold hover:bg-[#081534] hover:text-white transition-all flex items-center gap-2 active:scale-95">
               <Icon name="favorite" className="text-[16px]" />
-              Request Prayer
+              Prayer Requests
             </Link>
             <button onClick={() => setShowTestimonyModal(true)}
               className="bg-[#fdc425] text-[#6d5200] px-6 py-2.5 rounded-full text-[13px] font-bold hover:brightness-110 hover:scale-105 transition-all shadow-md flex items-center gap-2 active:scale-95">
