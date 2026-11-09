@@ -378,7 +378,7 @@ export default function AdminDashboard() {
         <div className="absolute right-10 top-6 z-30 hidden lg:block">
           <BirthdayNotifications access={access} activeOn="desktop" />
         </div>
-        <div className="relative z-10 pl-12 lg:pl-0 lg:pr-16">
+        <div className="relative z-10 lg:pr-16">
           <p className="text-[#fdc425] text-[12px] font-semibold uppercase tracking-widest mb-1">
             {today}
           </p>
@@ -395,7 +395,7 @@ export default function AdminDashboard() {
           </p>
         </div>
 
-        <div className="relative z-10 mt-6 grid grid-cols-3 gap-2 sm:gap-3 pl-12 lg:pl-0">
+        <div className="relative z-10 mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3">
           {[
             { label: "Total Members", value: total, icon: "group" },
             { label: "This Week", value: thisWeek, icon: "person_add" },
@@ -406,15 +406,15 @@ export default function AdminDashboard() {
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.1 }}
-              className="bg-white/10 backdrop-blur-sm border border-white/10 rounded-xl p-2.5 sm:p-4 min-w-0"
+              className={`bg-white/10 backdrop-blur-sm border border-white/10 rounded-xl p-3.5 sm:p-4 min-w-0 ${i === 0 ? "col-span-2 sm:col-span-1" : ""}`}
             >
               <div className="flex items-center gap-1 sm:gap-2 mb-1">
                 <Icon name={s.icon} className="text-[#fdc425] text-[14px] sm:text-[16px] shrink-0" />
-                <span className="text-white/60 text-[9px] sm:text-[11px] font-semibold truncate">
+                <span className="text-white/60 text-[11px] font-semibold truncate">
                   {s.label}
                 </span>
               </div>
-              <p className="text-white text-[18px] sm:text-[28px] font-bold">
+              <p className="text-white text-[24px] sm:text-[28px] font-bold">
                 {loading ? "—" : s.value.toLocaleString()}
               </p>
             </motion.div>

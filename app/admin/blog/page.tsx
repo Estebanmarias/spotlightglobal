@@ -208,7 +208,7 @@ function BlogAdminContent() {
       {/* ── Header ── */}
       <div className="sticky top-0 z-30 bg-white border-b border-[#c6c6cf] px-4 sm:px-6 py-4">
         <div className="flex items-center justify-between gap-3">
-          <div className="flex items-center gap-2 pl-12 lg:pl-0">
+          <div className="flex items-center gap-2">
             {/* Back to dashboard */}
             <button onClick={() => view === 'editor' ? setView('list') : router.push('/admin/dashboard')}
               className="w-9 h-9 flex items-center justify-center rounded-lg text-[#45464e] hover:bg-[#f2f4f6] transition-colors shrink-0">

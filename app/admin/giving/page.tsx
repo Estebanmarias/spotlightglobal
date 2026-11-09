@@ -233,7 +233,7 @@ export default function GivingPage() {
       {/* Header */}
       <div className="sticky top-0 z-30 bg-white border-b border-[#c6c6cf] px-4 sm:px-8 py-4">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-          <div className="flex items-center gap-3 pl-12 lg:pl-0">
+          <div className="flex items-center gap-3">
             <button onClick={() => router.push('/admin/dashboard')}
               className="hidden lg:flex items-center gap-1.5 px-3 py-2 border border-[#c6c6cf] text-[#45464e] rounded-lg text-[13px] font-semibold hover:bg-[#f2f4f6] hover:text-[#081534] transition-colors shrink-0">
               <Icon name="arrow_back" className="text-[18px]" />

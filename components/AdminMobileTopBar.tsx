@@ -14,7 +14,7 @@ function Brand() {
   const [src, setSrc] = useState("/images/logo.png");
   return (
     <div className="flex h-16 shrink-0 items-center gap-3 border-b border-white/10 px-4">
-      <Image src={src} onError={() => setSrc("/apple-touch-icon-v2.png")} alt="theSpotlightChurch logo" width={32} height={32} className="h-8 w-8 rounded-full object-cover" />
+      <Image src={src} onError={() => setSrc("/apple-touch-icon-v2.png")} alt="theSpotlightChurch logo" width={32} height={32} className="h-8 w-8 rounded-lg object-cover" />
       <div>
         <div className="text-[13px] font-bold text-white">theSpotlightChurch</div>
         <div className="text-[11px] text-white/50">Admin portal</div>

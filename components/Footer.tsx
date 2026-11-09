@@ -34,11 +34,11 @@ const socials: Social[] = [
 export default function Footer() {
   return (
     <footer className="bg-[#081534] text-white mt-auto">
-      <div className="px-4 sm:px-8 lg:px-16 py-12 sm:py-16 w-full max-w-[1280px] mx-auto">
+      <div className="px-4 sm:px-8 lg:px-16 pt-12 pb-24 sm:pt-16 w-full max-w-[1280px] mx-auto">
 
         {/* ── Main grid ── */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10 mb-10">
-          <div className="sm:col-span-2 lg:col-span-1">
+        <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-4 gap-10 mb-10">
+          <div className="sm:col-span-3 lg:col-span-1">
             <span className="font-bold text-[20px] text-[#fdc425]">theSpotlightChurch</span>
             <p className="text-white/60 text-[13px] mt-3 leading-relaxed max-w-xs">
               Company of the Blessed — we are a People Marvelously Helped, Greatly Blessed, Deeply Loved, and Highly Favored.

@@ -11,9 +11,9 @@ ChevronRight, Church, Smartphone, CircleAlert, CircleCheck, CircleDot, CirclePla
 } from 'lucide-react'
 
 import { Gem, GraduationCap, PartyPopper, Zap } from 'lucide-react'
-import { ChartColumn, Cookie, Lightbulb, Megaphone, RefreshCw, Settings, Table } from 'lucide-react'
+import { ChartColumn, Cookie, Lightbulb, Megaphone, Settings, Table } from 'lucide-react'
 import { Banknote, Eye, EyeOff } from 'lucide-react'
-import { LockKeyhole, TrendingUp, UserCog } from 'lucide-react'
+import { ClipboardList, LockKeyhole, RefreshCw, TrendingUp, TriangleAlert, UserCog } from 'lucide-react'
 
 const ICONS: Record<string, LucideIcon> = {
   payments: Banknote, visibility: Eye, visibility_off: EyeOff,
@@ -22,6 +22,7 @@ const ICONS: Record<string, LucideIcon> = {
   settings: Settings, analytics: ChartColumn, campaign: Megaphone, space_dashboard: LayoutDashboard,
   table_rows: Table, grid_view: LayoutGrid,
   insights: TrendingUp, shield_lock: LockKeyhole, manage_accounts: UserCog, update: RefreshCw,
+  pending_actions: ClipboardList, trending_up: TrendingUp, warning: TriangleAlert,
   add: Plus, bolt: Zap, celebration: PartyPopper, diamond: Gem, school: GraduationCap, menu_book: BookOpen, add_circle: CirclePlus, add_photo_alternate: ImagePlus,
   arrow_back: ArrowLeft, arrow_downward: ArrowDown, arrow_forward: ArrowRight, arrow_outward: ArrowUpRight,
   article: FileText, auto_stories: BookOpen, badge: IdCard, block: Ban,

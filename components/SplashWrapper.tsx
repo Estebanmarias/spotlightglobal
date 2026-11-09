@@ -12,7 +12,7 @@ export default function SplashWrapper({
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    if (process.env.NODE_ENV === "development") {
+      if (false) {
       setReady(true);
       return;
     }
