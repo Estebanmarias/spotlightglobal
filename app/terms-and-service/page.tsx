@@ -2,8 +2,10 @@
 
 import { motion } from 'framer-motion'
 import Link from 'next/link'
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import Icon from '@/components/Icon'
+import LegalAccordion from '@/components/LegalAccordion'
+import { SITE_CONFIG } from '@/lib/site-config'
 
 const sections = [
   {
@@ -107,7 +109,6 @@ const sections = [
 
 export default function TermsPage() {
   const [activeSection, setActiveSection] = useState('acceptance')
-  const contentRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     const handleScroll = () => {
@@ -123,7 +124,7 @@ export default function TermsPage() {
   }, [])
 
   return (
-    <main className="bg-[#f7f9fb] text-[#191c1e]">
+    <main className="bg-[#f7f9fb] text-[#191c1e] overflow-x-clip">
 
       {/* ── HERO ─────────────────────────────────────────────────── */}
       <section className="bg-[#081534] pt-20 pb-12 px-6 relative overflow-hidden">
@@ -145,11 +146,11 @@ export default function TermsPage() {
       </section>
 
       {/* ── CONTENT + TOC ─────────────────────────────────────────── */}
-      <section className="max-w-[1000px] mx-auto px-6 py-16">
-        <div className="flex flex-col lg:flex-row gap-10 items-start">
+      <section className="max-w-[1000px] mx-auto px-6 py-10 sm:py-16">
+        <div className="block lg:flex lg:flex-row gap-10 lg:items-start">
 
           {/* Table of contents — sticky */}
-          <aside className="lg:sticky lg:top-24 lg:w-[220px] shrink-0 w-full">
+          <aside className="hidden sm:block lg:sticky lg:top-24 lg:w-[220px] shrink-0 w-full">
             <p className="text-[11px] font-bold text-[#45464e] uppercase tracking-widest mb-3 px-1">Sections</p>
             <ul className="space-y-1">
               {sections.map(s => (
@@ -181,36 +182,44 @@ export default function TermsPage() {
           </aside>
 
           {/* Main content */}
-          <div ref={contentRef} className="flex-1 space-y-6">
-            {sections.map((s, i) => (
-              <motion.article
-                key={s.id}
-                id={s.id}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.05 }}
-                className={`p-7 sm:p-9 rounded-2xl border scroll-mt-28 relative overflow-hidden
-                  ${s.dark
-                    ? 'bg-[#081534] border-transparent text-white'
-                    : 'bg-white border-[#eceef0] text-[#45464e]'}`}>
+          <div className="w-full max-w-full flex-1 min-w-0 space-y-6">
 
-                {s.dark && (
-                  <div className="absolute -right-10 -top-10 w-40 h-40 bg-[#fdc425]/10 rounded-full blur-[60px] pointer-events-none" />
-                )}
+            {/* Phones: collapsible sections */}
+            <div className="sm:hidden">
+              <LegalAccordion sections={sections} />
+            </div>
 
-                <h2 className={`flex items-center gap-3 text-[18px] sm:text-[22px] font-bold mb-5 ${s.dark ? 'text-white' : 'text-[#081534]'}`}>
-                  <span className="w-8 h-8 rounded-lg bg-[#fdc425] flex items-center justify-center text-[#081534] text-[11px] font-bold shrink-0">
-                    {s.number}
-                  </span>
-                  {s.title}
-                </h2>
+            {/* Tablets and larger: the full page */}
+            <div className="hidden space-y-6 sm:block">
+              {sections.map((s, i) => (
+                <motion.article
+                  key={s.id}
+                  id={s.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: i * 0.05 }}
+                  className={`p-9 rounded-2xl border scroll-mt-28 relative overflow-hidden
+                    ${s.dark
+                      ? 'bg-[#081534] border-transparent text-white'
+                      : 'bg-white border-[#eceef0] text-[#45464e]'}`}>
 
-                <div className={`text-[14px] sm:text-[15px] leading-[1.85] ${s.dark ? 'text-white/75' : ''}`}>
-                  {s.content}
-                </div>
-              </motion.article>
-            ))}
+                  {s.dark && (
+                    <div className="absolute -right-10 -top-10 w-40 h-40 bg-[#fdc425]/10 rounded-full blur-[60px] pointer-events-none" />
+                  )}
+
+                  <h2 className={`flex items-center gap-3 text-[22px] font-bold mb-5 ${s.dark ? 'text-white' : 'text-[#081534]'}`}>
+                    <span className="w-8 h-8 rounded-lg bg-[#fdc425] flex items-center justify-center text-[#081534] text-[11px] font-bold shrink-0">
+                      {s.number}
+                    </span>
+                    {s.title}
+                  </h2>
+
+                  <div className={`text-[15px] leading-[1.85] ${s.dark ? 'text-white/75' : ''}`}>
+                    {s.content}
+                  </div>
+                </motion.article>
+              ))}
+            </div>
 
             {/* Footer CTA */}
             <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
@@ -247,4 +256,3 @@ export default function TermsPage() {
     </main>
   )
 }
-import { SITE_CONFIG } from '@/lib/site-config'

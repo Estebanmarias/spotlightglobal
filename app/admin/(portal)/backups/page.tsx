@@ -82,9 +82,11 @@ export default function BackupsPage() {
     const json = await response.json().catch(() => ({}));
     if (!response.ok) {
       setError(json.error || "Could not unlock backups.");
+      setPin("");
       setUnlocking(false);
       return;
     }
+    setPin("");
     window.location.reload();
   };
 
@@ -102,9 +104,9 @@ export default function BackupsPage() {
             </div>
             <h1 className="text-[22px] font-bold text-[#081534]">Unlock database backups</h1>
             <p className="mt-2 text-[13px] leading-5 text-[#45464e]">Enter the separate 8-digit backup PIN. This unlock expires after 15 minutes.</p>
-            <form onSubmit={unlock} className="mt-6 space-y-4">
+            <form onSubmit={unlock} autoComplete="off" className="mt-6 space-y-4">
               <label className="block text-[11px] font-bold uppercase tracking-wide text-[#45464e]" htmlFor="backup-pin">Backup PIN</label>
-              <input id="backup-pin" inputMode="numeric" pattern="[0-9]{8}" maxLength={8} required value={pin} onChange={(event) => setPin(event.target.value.replace(/\D/g, ""))} className="w-full rounded-xl border border-[#c6c6cf] px-4 py-3 text-center text-[22px] tracking-[0.35em] outline-none focus:border-[#081534]" />
+              <input id="backup-pin" name="backup-access-code" type="password" inputMode="numeric" autoComplete="one-time-code" data-lpignore="true" data-1p-ignore data-bwignore spellCheck={false} pattern="[0-9]{8}" maxLength={8} required value={pin} onChange={(event) => setPin(event.target.value.replace(/\D/g, ""))} className="w-full rounded-xl border border-[#c6c6cf] px-4 py-3 text-center text-[22px] tracking-[0.35em] outline-none focus:border-[#081534]" />
               {error && <p className="text-[12px] font-semibold text-[#ba1a1a]" role="alert">{error}</p>}
               <button type="submit" disabled={unlocking || pin.length !== 8} className="w-full rounded-xl bg-[#081534] py-3 text-[13px] font-bold text-white disabled:opacity-50">{unlocking ? "Unlocking..." : "Unlock backups"}</button>
             </form>

@@ -4,7 +4,7 @@ import { motion } from 'framer-motion'
 import Link from 'next/link'
 import Icon from '@/components/Icon'
 import { SITE_CONFIG } from '@/lib/site-config'
-import { LockKeyhole, TrendingUp, UserCog } from 'lucide-react'
+import LegalAccordion from '@/components/LegalAccordion'
 
 const sections = [
   {
@@ -178,24 +178,28 @@ export default function PrivacyPolicyPage() {
       <section className="pb-24 px-6">
         <div className="max-w-[860px] mx-auto">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
-            className="bg-white border border-[#eceef0] rounded-2xl p-8 sm:p-14 shadow-sm">
+            className="sm:bg-white sm:border sm:border-[#eceef0] sm:rounded-2xl sm:p-14 sm:shadow-sm">
 
-            <div className="space-y-14">
+            {/* Phones: collapsible sections */}
+            <div className="sm:hidden">
+              <LegalAccordion sections={sections} />
+            </div>
+
+            {/* Tablets and larger: the full page */}
+            <div className="hidden space-y-14 sm:block">
               {sections.map((s, i) => (
                 <div key={s.title}>
-                  {/* Section header */}
                   <div className="flex items-center gap-4 mb-6">
                     <div className="w-12 h-12 rounded-xl bg-[#f2f4f6] flex items-center justify-center shrink-0">
                       <Icon name={s.icon} className="text-[#081534] text-[24px]" />
                     </div>
-                    <h2 className="text-[#081534] text-[20px] sm:text-[24px] font-bold">{s.title}</h2>
+                    <h2 className="text-[#081534] text-[24px] font-bold">{s.title}</h2>
                   </div>
 
                   <div className="text-[#45464e] text-[15px] leading-[1.8] pl-16">
                     {s.content}
                   </div>
 
-                  {/* Divider — not after last */}
                   {i < sections.length - 1 && (
                     <div className="mt-14 h-px bg-gradient-to-r from-transparent via-[#c6c6cf]/40 to-transparent" />
                   )}
@@ -204,7 +208,7 @@ export default function PrivacyPolicyPage() {
             </div>
 
             {/* Contact CTA */}
-            <div className="mt-16 p-8 sm:p-10 bg-[#081534] rounded-2xl text-center relative overflow-hidden">
+            <div className="mt-10 sm:mt-16 p-8 sm:p-10 bg-[#081534] rounded-2xl text-center relative overflow-hidden">
               <div className="absolute -right-16 -top-16 w-48 h-48 bg-[#fdc425]/10 rounded-full blur-[60px] pointer-events-none" />
               <div className="absolute -left-12 -bottom-12 w-36 h-36 bg-[#fdc425]/5 rounded-full blur-[40px] pointer-events-none" />
               <div className="relative z-10">
