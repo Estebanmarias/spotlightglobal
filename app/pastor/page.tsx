@@ -13,7 +13,7 @@ const fadeUp: Variants = {
 
 const statCards = [
   { icon: 'church',             label: 'Founded',      value: 'theSpotlightChurch' },
-  { icon: 'volunteer_activism', label: 'Daily Prayer',  value: '5:00 AM' },
+  { icon: 'volunteer_activism', label: 'Daily Prayer',  value: '5:00 PM' },
   { icon: 'auto_stories',       label: 'Sermons',       value: '1,200+' },
   { icon: 'school',             label: 'Teachings',     value: 'Global' },
 ]
