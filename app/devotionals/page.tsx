@@ -30,10 +30,6 @@ const categoryColor = (c: string) => {
   return 'bg-[#f2f4f6] text-[#45464e]'
 }
 
-const readTime = (excerpt: string | null) => {
-  const words = (excerpt || '').split(' ').length
-  return Math.max(1, Math.ceil(words / 200))
-}
 
 const formatDate = (d: string | null) => {
   if (!d) return ''
@@ -93,9 +89,9 @@ export default function DevotionalsPage() {
       <section className="max-w-[1100px] mx-auto px-6 py-16">
 
         {/* Category filter */}
-        <div className="flex flex-wrap gap-2 mb-10">
+        <div className="flex gap-2 mb-10 overflow-x-auto pb-1 -mx-6 px-6 sm:mx-0 sm:px-0 sm:flex-wrap" role="group" aria-label="Filter by category">
           {CATEGORIES.map(c => (
-            <button key={c} onClick={() => setActiveCategory(c)}
+            <button key={c} aria-pressed={activeCategory === c} onClick={() => setActiveCategory(c)}
               className={`px-4 py-2 rounded-full text-[12px] font-bold transition-all border
                 ${activeCategory === c
                   ? 'bg-[#081534] text-white border-[#081534]'
@@ -116,7 +112,7 @@ export default function DevotionalsPage() {
           <div className="text-center py-20 bg-white rounded-2xl border border-[#eceef0]">
             <Icon name="article" className="text-[56px] text-[#c6c6cf] block mb-3" />
             <p className="text-[#45464e] font-semibold text-[16px]">No posts yet</p>
-            <p className="text-[13px] text-[#76777f] mt-1">Check back soon for fresh word from Apostle Edet Kingsley</p>
+            <p className="text-[13px] text-[#5f6068] mt-1">Check back soon for fresh word from Apostle Edet Kingsley</p>
           </div>
         ) : (
           <>
@@ -154,15 +150,12 @@ export default function DevotionalsPage() {
                           {featured.excerpt}
                         </p>
                       )}
-                      <div className="flex items-center gap-3 text-[12px] text-[#76777f]">
+                      <div className="flex items-center gap-3 text-[12px] text-[#5f6068]">
                         <span className="flex items-center gap-1">
                           <Icon name="person" className="text-[14px]" />
                           {featured.author_name}
                         </span>
-                        <span>·</span>
-                        <span>{formatDate(featured.published_at || featured.created_at)}</span>
-                        <span>·</span>
-                        <span>{readTime(featured.excerpt)} min read</span>
+                        <span className="flex items-center gap-1"><Icon name="calendar_today" className="text-[14px]" />{formatDate(featured.published_at || featured.created_at)}</span>
                       </div>
                       <div className="mt-6 flex items-center gap-2 text-[#081534] text-[13px] font-bold group-hover:gap-3 transition-all">
                         Read Post <Icon name="arrow_forward" className="text-[16px]" />
@@ -204,9 +197,8 @@ export default function DevotionalsPage() {
                             {p.excerpt}
                           </p>
                         )}
-                        <div className="flex items-center justify-between text-[11px] text-[#76777f] pt-3 border-t border-[#f2f4f6]">
-                          <span>{formatDate(p.published_at || p.created_at)}</span>
-                          <span>{readTime(p.excerpt)} min read</span>
+                        <div className="flex items-center justify-between text-[11px] text-[#5f6068] pt-3 border-t border-[#f2f4f6]">
+                          <span className="flex items-center gap-1"><Icon name="calendar_today" className="text-[13px]" />{formatDate(p.published_at || p.created_at)}</span>
                         </div>
                       </div>
                     </Link>

@@ -450,7 +450,7 @@ export default function FaqChat() {
                           </div>
                         )}
                         {m.id > 0 && (
-                          <div className="mt-3 flex items-center gap-2 border-t border-[#eef0f2] pt-2 text-[11px] text-[#76777f]">
+                          <div className="mt-3 flex items-center gap-2 border-t border-[#eef0f2] pt-2 text-[11px] text-[#5f6068]">
                             <span>Was this helpful?</span>
                             <button type="button" aria-label="Helpful answer" onClick={() => rateMessage(m.id, 'helpful')} className={`rounded px-2 py-1 hover:bg-[#f2f4f6] ${feedback[m.id] === 'helpful' ? 'font-bold text-[#785a00]' : ''}`}>Yes</button>
                             <button type="button" aria-label="Not helpful answer" onClick={() => rateMessage(m.id, 'not-helpful')} className={`rounded px-2 py-1 hover:bg-[#f2f4f6] ${feedback[m.id] === 'not-helpful' ? 'font-bold text-[#ba1a1a]' : ''}`}>No</button>

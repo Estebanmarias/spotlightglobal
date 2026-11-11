@@ -73,7 +73,7 @@ export default function NeedsAttention() {
               </span>
               <div className="min-w-0">
                 <p className="text-[13px] font-semibold text-[#081534]">{i.label}</p>
-                {i.hint && <p className="text-[11px] text-[#76777f]">{i.hint}</p>}
+                {i.hint && <p className="text-[11px] text-[#5f6068]">{i.hint}</p>}
               </div>
             </div>
             {i.href && (
@@ -84,7 +84,7 @@ export default function NeedsAttention() {
           </li>
         ))}
       </ul>
-      {partial && <p className="border-t border-[#f2f4f6] px-5 py-2 text-[11px] text-[#76777f]">Some checks couldn’t run. This list may be incomplete.</p>}
+      {partial && <p className="border-t border-[#f2f4f6] px-5 py-2 text-[11px] text-[#5f6068]">Some checks couldn’t run. This list may be incomplete.</p>}
     </section>
   )
 }

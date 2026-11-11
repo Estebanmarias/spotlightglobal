@@ -307,21 +307,21 @@ export default function ConferencePreview() {
           <div className="flex items-center gap-3 py-5 sm:px-6 sm:first:pl-0">
             <Icon name="calendar_month" className="text-[22px] text-[#785a00]" />
             <div>
-              <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-[#76777f]">Dates</p>
+              <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-[#5f6068]">Dates</p>
               <p className="mt-0.5 text-[14px] font-semibold text-[#081534]">{dateLabel}</p>
             </div>
           </div>
           <div className="flex items-center gap-3 py-5 sm:px-6">
             <Icon name="place" className="text-[22px] text-[#785a00]" />
             <div>
-              <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-[#76777f]">Sessions</p>
+              <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-[#5f6068]">Sessions</p>
               <p className="mt-0.5 text-[14px] font-semibold text-[#081534]">{event.event_time || "To be announced"}</p>
             </div>
           </div>
           <div className="flex items-center gap-3 py-5 sm:px-6 sm:last:pr-0">
             <Icon name="place" className="text-[22px] text-[#785a00]" />
             <div>
-              <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-[#76777f]">Venue</p>
+              <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-[#5f6068]">Venue</p>
               <p className="mt-0.5 text-[14px] font-semibold text-[#081534]">{event.location}</p>
             </div>
           </div>
@@ -361,7 +361,7 @@ export default function ConferencePreview() {
             </div>
           )}
 
-          <p className="mt-8 border-t border-[#d9dbe0] pt-5 text-[12px] leading-5 text-[#76777f]">
+          <p className="mt-8 border-t border-[#d9dbe0] pt-5 text-[12px] leading-5 text-[#5f6068]">
             {event.location}
           </p>
         </div>
@@ -468,7 +468,7 @@ export default function ConferencePreview() {
                 <input type="checkbox" checked={form.fridaySession} onChange={(event) => updateField("fridaySession", event.target.checked)} className="mt-0.5 h-4 w-4 accent-[#081534]" />
                 <span>
                   <span className="block text-[13px] font-semibold text-[#081534]">I plan to attend: {event.special_session_label}</span>
-                  <span className="mt-1 block text-[11px] leading-5 text-[#76777f]">Optional special session preference.</span>
+                  <span className="mt-1 block text-[11px] leading-5 text-[#5f6068]">Optional special session preference.</span>
                 </span>
               </label>
             )}
@@ -486,11 +486,11 @@ export default function ConferencePreview() {
                 </select>
               </label>
               <label className="block text-[12px] font-semibold text-[#45464e] sm:col-span-2">
-                {isConferenceStyle ? "Share testimony" : "Additional notes"} <span className="font-normal text-[#76777f]">(optional)</span>
+                {isConferenceStyle ? "Share testimony" : "Additional notes"} <span className="font-normal text-[#5f6068]">(optional)</span>
                 <textarea rows={3} value={form.specialRequest} onChange={(event) => updateField("specialRequest", event.target.value)} className={`${textInputClass} mt-2 resize-y py-3`} placeholder={isConferenceStyle ? "Share what the Lord has done and bless others." : "Anything else you would like us to know?"} />
               </label>
               <label className="block text-[12px] font-semibold text-[#45464e] sm:col-span-2">
-                Prayer request <span className="font-normal text-[#76777f]">(optional)</span>
+                Prayer request <span className="font-normal text-[#5f6068]">(optional)</span>
                 <textarea rows={3} value={form.prayerRequest} onChange={(event) => updateField("prayerRequest", event.target.value)} className={`${textInputClass} mt-2 resize-y py-3`} placeholder="Share only what you feel comfortable sharing." />
               </label>
             </div>
@@ -502,7 +502,7 @@ export default function ConferencePreview() {
             )}
 
             <div className="flex flex-col gap-4 border-t border-[#e2e2e9] pt-5 sm:flex-row sm:items-center sm:justify-between">
-              <p className="max-w-md text-[11px] leading-5 text-[#76777f]">
+              <p className="max-w-md text-[11px] leading-5 text-[#5f6068]">
                 Your registration details are stored securely for event administration. 
               </p>
               <button type="submit" disabled={!registrationOpen || submitState === "submitting" || submitState === "success"} className="inline-flex min-h-12 shrink-0 items-center justify-center gap-2 rounded-md bg-[#081534] px-6 text-[13px] font-bold text-white transition hover:bg-[#17305f] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#fdc425] disabled:cursor-not-allowed disabled:opacity-50">

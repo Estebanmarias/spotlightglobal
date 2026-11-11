@@ -144,7 +144,7 @@ export default function JoinClient() {
                     <label className="text-[12px] font-bold text-[#45464e] uppercase tracking-wide">
                       Date of Birth *
                     </label>
-                    <input type="date" name="dob" value={form.dob} onChange={handleChange}
+                    <input type="date" name="dob" aria-label="Date of birth" value={form.dob} onChange={handleChange}
                       min={minimumDateOfBirth()} max={maximumDateOfBirth()} className={inputCls} required />
                     {dobError && <p className="mt-1 text-[12px] font-semibold leading-5 text-[#ba1a1a]" role="alert">{dobError}</p>}
                   </div>
@@ -174,7 +174,7 @@ export default function JoinClient() {
                   )}
                 </motion.button>
 
-                <p className="text-[11px] text-[#76777f] text-center">
+                <p className="text-[11px] text-[#5f6068] text-center">
                   Your information is kept private and never sold or shared.
                 </p>
               </form>

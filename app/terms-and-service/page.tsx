@@ -161,7 +161,7 @@ export default function TermsPage() {
                       ${activeSection === s.id
                         ? 'text-[#081534] bg-[#eceef0] border-[#fdc425]'
                         : 'text-[#45464e] border-transparent hover:text-[#081534] hover:bg-[#f2f4f6]'}`}>
-                    <span className="text-[#fdc425] text-[10px] font-bold w-5 shrink-0">{s.number}</span>
+                    <span className="text-[#785a00] text-[10px] font-bold w-5 shrink-0">{s.number}</span>
                     {s.title}
                   </a>
                 </li>
@@ -242,7 +242,7 @@ export default function TermsPage() {
             </motion.div>
 
             {/* Bottom links */}
-            <div className="flex flex-wrap gap-4 justify-center text-[12px] text-[#76777f]">
+            <div className="flex flex-wrap gap-4 justify-center text-[12px] text-[#5f6068]">
               <Link href="/privacy-policy" className="hover:text-[#fdc425] transition-colors">Privacy Policy</Link>
               <span>·</span>
               <Link href="/contact" className="hover:text-[#fdc425] transition-colors">Contact Us</Link>

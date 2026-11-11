@@ -6,6 +6,7 @@ import { motion } from 'framer-motion'
 import Link from 'next/link'
 import { getSupabaseClient } from '@/lib/supabase'
 import Icon from '@/components/Icon'
+import BrandIcon from '@/components/BrandIcon'
 
 type Post = {
   id: string
@@ -78,79 +79,75 @@ export default function DevotionalPostPage() {
     </div>
   )
 
-  return (
+    return (
     <main className="bg-[#f7f9fb] text-[#191c1e]">
 
-      {/* Cover */}
-      {post.cover_image && (
-        <div className="w-full h-[40vh] sm:h-[50vh] overflow-hidden bg-[#081534]">
-          <img src={post.cover_image} alt={post.title}
-            className="w-full h-full object-cover opacity-80" />
-        </div>
-      )}
+      <article className="max-w-[760px] mx-auto px-6 pt-10 pb-14">
 
-      {/* Article */}
-      <div className="max-w-[760px] mx-auto px-6 py-14">
-
-        {/* Back */}
         <Link href="/devotionals"
           className="inline-flex items-center gap-1.5 text-[#45464e] text-[13px] font-semibold hover:text-[#081534] transition-colors mb-8">
           <Icon name="arrow_back" className="text-[16px]" />
           Back to Devotionals
         </Link>
 
-        {/* Meta */}
-        <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}>
+        <motion.header initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
           <span className="inline-block px-3 py-1 bg-[#fdc425]/20 text-[#785a00] rounded-full text-[11px] font-bold uppercase tracking-widest mb-4">
             {post.category}
           </span>
           <h1 className="text-[#081534] text-[28px] sm:text-[36px] lg:text-[44px] font-bold leading-tight mb-5">
             {post.title}
           </h1>
-          <div className="flex flex-wrap items-center gap-4 text-[13px] text-[#76777f] pb-6 border-b border-[#eceef0] mb-8">
-            <span className="flex items-center gap-1.5">
-              <div className="w-7 h-7 rounded-full bg-[#081534] text-white flex items-center justify-center text-[10px] font-bold">
+          <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-[13px] text-[#5f6068] pb-6 border-b border-[#eceef0]">
+            <span className="inline-flex items-center gap-2">
+              <span className="w-7 h-7 rounded-full bg-[#081534] text-white inline-flex items-center justify-center text-[10px] font-bold">
                 {post.author_name.charAt(0)}
-              </div>
+              </span>
               {post.author_name}
             </span>
-            <span>·</span>
-            <span>{formatDate(post.published_at || post.created_at)}</span>
-            <span>·</span>
-            <span>{readTime(post.content)} min read</span>
+            <span className="inline-flex items-center gap-1.5">
+              <Icon name="calendar_today" className="text-[15px]" />
+              {formatDate(post.published_at || post.created_at)}
+            </span>
+            <span className="inline-flex items-center gap-1.5">
+              <Icon name="schedule" className="text-[15px]" />
+              {readTime(post.content)} min read
+            </span>
           </div>
-        </motion.div>
+        </motion.header>
 
-        {/* Content */}
+        {post.cover_image && (
+          <div className="mb-10 overflow-hidden rounded-2xl bg-[#081534] aspect-[16/9]">
+            <img src={post.cover_image} alt="" className="w-full h-full object-cover" />
+          </div>
+        )}
+
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2 }}
           className="prose prose-lg max-w-none
             prose-headings:text-[#081534] prose-headings:font-bold
             prose-p:text-[#45464e] prose-p:leading-[1.85]
             prose-strong:text-[#081534]
             prose-blockquote:border-l-4 prose-blockquote:border-[#fdc425] prose-blockquote:bg-[#fdc425]/5 prose-blockquote:px-5 prose-blockquote:py-3 prose-blockquote:rounded-r-xl prose-blockquote:text-[#45464e] prose-blockquote:not-italic
-            prose-a:text-[#785a00] prose-a:no-underline hover:prose-a:underline
+            prose-a:text-[#785a00] prose-a:underline
             prose-ul:text-[#45464e] prose-ol:text-[#45464e]"
           dangerouslySetInnerHTML={{ __html: post.content }} />
 
-        {/* Share */}
         <div className="mt-12 pt-8 border-t border-[#eceef0]">
           <p className="text-[13px] font-bold text-[#45464e] mb-3">Share this post</p>
-          <div className="flex gap-3">
+          <div className="flex flex-wrap gap-3">
             <a href={`https://wa.me/?text=${encodeURIComponent(`${post.title} - ${typeof window !== 'undefined' ? window.location.href : ''}`)}`}
               target="_blank" rel="noreferrer"
-              className="flex items-center gap-2 px-4 py-2.5 bg-green-500 text-white rounded-full text-[12px] font-bold hover:opacity-90 transition-all">
-              <Icon name="share" className="text-[16px]" /> WhatsApp
+              className="inline-flex items-center gap-2 px-4 py-2.5 bg-[#25D366] text-[#06331a] rounded-full text-[12px] font-bold hover:opacity-90 transition-all">
+              <BrandIcon name="whatsapp" className="w-4 h-4" /> WhatsApp
             </a>
             <a href={`https://t.me/share/url?url=${encodeURIComponent(typeof window !== 'undefined' ? window.location.href : '')}&text=${encodeURIComponent(post.title)}`}
               target="_blank" rel="noreferrer"
-              className="flex items-center gap-2 px-4 py-2.5 bg-[#229ED9] text-white rounded-full text-[12px] font-bold hover:opacity-90 transition-all">
-              <Icon name="send" className="text-[16px]" /> Telegram
+              className="inline-flex items-center gap-2 px-4 py-2.5 bg-[#229ED9] text-[#031a26] rounded-full text-[12px] font-bold hover:opacity-90 transition-all">
+              <BrandIcon name="telegram" className="w-4 h-4" /> Telegram
             </a>
           </div>
         </div>
-      </div>
+      </article>
 
-      {/* Related posts */}
       {related.length > 0 && (
         <section className="bg-white border-t border-[#eceef0] py-16 px-6">
           <div className="max-w-[1100px] mx-auto">
@@ -161,7 +158,7 @@ export default function DevotionalPostPage() {
                   className="group block bg-[#f7f9fb] rounded-xl border border-[#eceef0] overflow-hidden hover:shadow-md hover:border-[#fdc425]/30 transition-all">
                   {p.cover_image && (
                     <div className="h-36 overflow-hidden">
-                      <img src={p.cover_image} alt={p.title}
+                      <img src={p.cover_image} alt=""
                         className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
                     </div>
                   )}
@@ -169,7 +166,8 @@ export default function DevotionalPostPage() {
                     <h3 className="text-[13px] font-bold text-[#081534] line-clamp-2 group-hover:text-[#785a00] transition-colors">
                       {p.title}
                     </h3>
-                    <p className="text-[11px] text-[#76777f] mt-2">
+                    <p className="inline-flex items-center gap-1 text-[11px] text-[#5f6068] mt-2">
+                      <Icon name="calendar_today" className="text-[13px]" />
                       {formatDate(p.published_at || p.created_at)}
                     </p>
                   </div>

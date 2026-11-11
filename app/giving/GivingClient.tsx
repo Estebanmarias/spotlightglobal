@@ -59,7 +59,7 @@ function CopyRow({ label, value, copied, onCopy }: { label: string; value: strin
       <button onClick={onCopy}
         type="button"
         aria-label={`Copy ${label.toLowerCase()} ${value}`}
-        className="p-2 rounded-lg text-[#76777f] hover:text-[#081534] hover:bg-[#eceef0] transition-all"
+        className="p-2 rounded-lg text-[#5f6068] hover:text-[#081534] hover:bg-[#eceef0] transition-all"
         title="Copy">
         <AnimatePresence mode="wait">
           {copied ? (
@@ -231,7 +231,7 @@ export default function GivingClient() {
               <button disabled title="International accounts coming soon"
                 className="px-6 py-2.5 rounded-full font-bold text-[13px] text-[#a3a4ab] bg-transparent cursor-not-allowed flex items-center gap-1.5">
                 International
-                <span className="text-[9px] font-bold bg-[#e6e7ea] text-[#76777f] px-1.5 py-0.5 rounded-full">SOON</span>
+                <span className="text-[9px] font-bold bg-[#e6e7ea] text-[#5f6068] px-1.5 py-0.5 rounded-full">SOON</span>
               </button>
             </div>
           </div>

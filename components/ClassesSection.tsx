@@ -37,7 +37,7 @@ export default function ClassesSection() {
                     <span className="inline-flex rounded-full bg-[#fdc425]/25 px-3 py-1 text-[11px] font-extrabold uppercase tracking-widest text-[#785a00]">
                       Step {i + 1}
                     </span>
-                    <span className="text-[11px] font-semibold text-[#76777f]">{c.tag}</span>
+                    <span className="text-[11px] font-semibold text-[#5f6068]">{c.tag}</span>
                   </div>
 
                   <div className="mt-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-[#081534] text-[#fdc425] transition-colors group-hover:bg-[#fdc425] group-hover:text-[#6d5200]">

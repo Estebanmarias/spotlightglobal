@@ -137,7 +137,7 @@ export default function ConnectForm() {
             <label className={labelClass}>Date of Birth</label>
             <input
               name="dob"
-              type="date"
+              type="date" aria-label="Date of birth"
               className={inputClass}
               value={form.dob}
               min={minimumDateOfBirth()}

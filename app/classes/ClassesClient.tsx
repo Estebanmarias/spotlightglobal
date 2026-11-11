@@ -212,7 +212,7 @@ export default function ClassesClient({ programs, intakes }: { programs: PublicP
           </div>
 
           {ordered.length === 0 ? (
-            <p className="rounded-2xl border border-dashed border-[#c6c6cf] bg-white px-6 py-16 text-center text-[14px] text-[#76777f]">
+            <p className="rounded-2xl border border-dashed border-[#c6c6cf] bg-white px-6 py-16 text-center text-[14px] text-[#5f6068]">
               Classes are being set up. Please check back soon.
             </p>
           ) : (
@@ -271,9 +271,9 @@ export default function ClassesClient({ programs, intakes }: { programs: PublicP
                       </ul>
 
                       <div className="mt-auto pt-8">
-                        <p className="mb-3 text-[11px] font-bold uppercase tracking-[0.15em] text-[#76777f]">Upcoming cohorts</p>
+                        <p className="mb-3 text-[11px] font-bold uppercase tracking-[0.15em] text-[#5f6068]">Upcoming cohorts</p>
                         {list.length === 0 ? (
-                          <p className="rounded-xl border border-dashed border-[#c6c6cf] px-4 py-4 text-center text-[13px] text-[#76777f]">
+                          <p className="rounded-xl border border-dashed border-[#c6c6cf] px-4 py-4 text-center text-[13px] text-[#5f6068]">
                             Next cohort to be announced.
                           </p>
                         ) : (
@@ -305,7 +305,7 @@ export default function ClassesClient({ programs, intakes }: { programs: PublicP
                                     <span className={`rounded-full px-2.5 py-1 text-[11px] font-bold ${st.cls}`}>{st.label}</span>
                                   </div>
                                   <button type="button" disabled={!i.open} onClick={() => open(i, p)}
-                                    className="mt-3 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-full bg-[#081534] px-5 text-[13px] font-bold text-white transition hover:bg-[#17305f] focus-visible:ring-2 focus-visible:ring-[#fdc425] disabled:cursor-not-allowed disabled:bg-[#e2e2e9] disabled:text-[#76777f]">
+                                    className="mt-3 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-full bg-[#081534] px-5 text-[13px] font-bold text-white transition hover:bg-[#17305f] focus-visible:ring-2 focus-visible:ring-[#fdc425] disabled:cursor-not-allowed disabled:bg-[#e2e2e9] disabled:text-[#5f6068]">
                                     {i.open ? 'Register' : i.spotsLeft === 0 ? 'Class full' : 'Registration closed'}
                                   </button>
                                 </div>
@@ -404,7 +404,7 @@ export default function ClassesClient({ programs, intakes }: { programs: PublicP
                   <div className="flex items-start justify-between gap-3 border-b border-[#e2e2e9] px-6 py-5">
                     <div>
                       <h3 className="text-[18px] font-bold text-[#081534]">{title}</h3>
-                      <p className="mt-0.5 text-[12px] text-[#76777f]">{target.program.name} · {target.intake.title}</p>
+                      <p className="mt-0.5 text-[12px] text-[#5f6068]">{target.program.name} · {target.intake.title}</p>
                     </div>
                     <button onClick={close} aria-label="Close"
                       className="flex h-8 w-8 items-center justify-center rounded-lg text-[#45464e] hover:bg-[#f2f4f6]">
@@ -484,7 +484,7 @@ export default function ClassesClient({ programs, intakes }: { programs: PublicP
                         <label htmlFor="cls-email" className={labelCls}>Email</label>
                         <input id="cls-email" required type="email" autoComplete="email" value={form.email}
                           onChange={e => setForm(f => ({ ...f, email: e.target.value }))} className={inputCls} />
-                        <p className="mt-1.5 text-[11px] text-[#76777f]">Use the same email you joined the church with, so we can match your record.</p>
+                        <p className="mt-1.5 text-[11px] text-[#5f6068]">Use the same email you joined the church with, so we can match your record.</p>
                       </div>
                       <div>
                         <label htmlFor="cls-phone" className={labelCls}>Phone number</label>

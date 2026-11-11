@@ -48,7 +48,7 @@ export default function Footer() {
             </Link>
           </div>
           <div>
-            <h5 className="text-[11px] font-bold text-[#fdc425] uppercase tracking-widest mb-4">Explore</h5>
+            <h2 className="text-[11px] font-bold text-[#fdc425] uppercase tracking-widest mb-4">Explore</h2>
             <ul className="space-y-2.5">
               {exploreLinks.map(l => (
                 <li key={l.href}><Link href={l.href} className="text-[14px] text-white/70 hover:text-white transition-colors">{l.label}</Link></li>
@@ -56,7 +56,7 @@ export default function Footer() {
             </ul>
           </div>
           <div>
-            <h5 className="text-[11px] font-bold text-[#fdc425] uppercase tracking-widest mb-4">Get Involved</h5>
+            <h2 className="text-[11px] font-bold text-[#fdc425] uppercase tracking-widest mb-4">Get Involved</h2>
             <ul className="space-y-2.5">
               <li><Link href="/prayer"  className="text-[14px] text-white/70 hover:text-white transition-colors">Prayer Request</Link></li>
               <li><Link href="/partner" className="text-[14px] text-white/70 hover:text-white transition-colors">Partnership</Link></li>
@@ -64,7 +64,7 @@ export default function Footer() {
             </ul>
           </div>
           <div>
-            <h5 className="text-[11px] font-bold text-[#fdc425] uppercase tracking-widest mb-4">Legal</h5>
+            <h2 className="text-[11px] font-bold text-[#fdc425] uppercase tracking-widest mb-4">Legal</h2>
             <ul className="space-y-2.5">
               {legalLinks.map(l => (
                 <li key={l.label}><Link href={l.href} className="text-[14px] text-white/70 hover:text-white transition-colors">{l.label}</Link></li>
@@ -83,7 +83,7 @@ export default function Footer() {
             <div>
               <p className="text-[10px] font-bold text-[#fdc425] uppercase tracking-widest leading-none mb-1">Lead Pastor</p>
               <p className="text-white text-[14px] font-bold leading-none">Apostle Edet Kingsley</p>
-              <p className="text-white/40 text-[11px] group-hover:text-[#fdc425] transition-colors flex items-center gap-0.5 mt-1">
+              <p className="text-white/70 text-[11px] group-hover:text-[#fdc425] transition-colors flex items-center gap-0.5 mt-1">
                 Learn more <Icon name="arrow_forward" className="text-[12px]" />
               </p>
             </div>

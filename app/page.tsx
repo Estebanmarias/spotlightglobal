@@ -46,7 +46,7 @@ function VisionSection() {
             href={CHURCH_MAPS_URL}
             target="_blank"
             rel="noopener noreferrer"
-            aria-label="Open church location in maps"
+
             className="group flex items-start gap-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#fdc425] rounded-lg"
           >
             <div className="bg-[#1e2a4a] p-3 rounded-lg text-[#fdc425] shrink-0 transition-transform group-hover:scale-105">
@@ -76,7 +76,7 @@ function VisionSection() {
               className="rounded-lg sm:rounded-xl w-full aspect-[4/5] object-cover shadow-sm" />
             <Link href="/vision" className="group flex flex-col justify-center bg-[#fdc425] p-4 sm:p-6 rounded-lg sm:rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#081534]">
               <h3 className="text-[16px] sm:text-[20px] lg:text-[24px] font-semibold text-[#6d5200] mb-1 sm:mb-2">Our Vision &amp; Mission</h3>
-              <p className="text-[11px] sm:text-[13px] lg:text-[14px] font-semibold text-[#6d5200] opacity-80 leading-snug">
+              <p className="text-[11px] sm:text-[13px] lg:text-[14px] font-semibold text-[#6d5200] leading-snug">
                 Discover the beliefs and commitments that shape our church.
               </p>
               <span className="mt-3 inline-flex items-center gap-1 text-[12px] font-bold text-[#6d5200]">

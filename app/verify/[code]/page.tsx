@@ -23,12 +23,12 @@ export default async function VerifyPage({ params }: { params: Promise<{ code: s
               <Icon name="check_circle" className="text-[30px] text-green-700" />
             </div>
             <h1 className="mt-5 text-[22px] font-bold text-[#081534]">Certificate verified</h1>
-            <p className="mt-1 text-[13px] text-[#76777f]">This certificate was issued by theSpotlightChurch.</p>
+            <p className="mt-1 text-[13px] text-[#5f6068]">This certificate was issued by theSpotlightChurch.</p>
             <dl className="mt-6 space-y-3 rounded-2xl bg-[#f7f9fb] p-5 text-left text-[14px]">
-              <div><dt className="text-[11px] font-bold uppercase tracking-wide text-[#76777f]">Awarded to</dt><dd className="font-bold text-[#081534]">{cert.name}</dd></div>
-              <div><dt className="text-[11px] font-bold uppercase tracking-wide text-[#76777f]">Class</dt><dd className="font-semibold text-[#191c1e]">{cert.className}</dd></div>
-              <div><dt className="text-[11px] font-bold uppercase tracking-wide text-[#76777f]">Completed</dt><dd className="font-semibold text-[#191c1e]">{date}</dd></div>
-              <div><dt className="text-[11px] font-bold uppercase tracking-wide text-[#76777f]">Certificate no.</dt><dd className="font-mono font-semibold text-[#191c1e]">{cert.code}</dd></div>
+              <div><dt className="text-[11px] font-bold uppercase tracking-wide text-[#5f6068]">Awarded to</dt><dd className="font-bold text-[#081534]">{cert.name}</dd></div>
+              <div><dt className="text-[11px] font-bold uppercase tracking-wide text-[#5f6068]">Class</dt><dd className="font-semibold text-[#191c1e]">{cert.className}</dd></div>
+              <div><dt className="text-[11px] font-bold uppercase tracking-wide text-[#5f6068]">Completed</dt><dd className="font-semibold text-[#191c1e]">{date}</dd></div>
+              <div><dt className="text-[11px] font-bold uppercase tracking-wide text-[#5f6068]">Certificate no.</dt><dd className="font-mono font-semibold text-[#191c1e]">{cert.code}</dd></div>
             </dl>
           </>
         ) : (

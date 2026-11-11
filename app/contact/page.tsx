@@ -116,12 +116,12 @@ export default function ContactPage() {
 
             {/* Social icons */}
             <div className="mt-auto pt-6 border-t border-white/10">
-              <p className="text-white/40 text-[11px] uppercase tracking-widest mb-4">Follow Us</p>
+              <p className="text-white/70 text-[11px] uppercase tracking-widest mb-4">Follow Us</p>
               <div className="flex gap-3">
                 {[
-                  { href: 'https://instagram.com/thespotlightchurch', icon: 'instagram' },
-                  { href: 'https://www.youtube.com/@thespotlightchurch', icon: 'youtube' },
-                  { href: 'https://t.me/thespotlightchurchLive', icon: 'telegram' },
+                  { href: 'https://instagram.com/thespotlightchurch', icon: 'instagram', label: 'Instagram' },
+                  { href: 'https://www.youtube.com/@thespotlightchurch', icon: 'youtube', label: 'YouTube' },
+                  { href: 'https://t.me/thespotlightchurchLive', icon: 'telegram', label: 'Telegram' },
                 ].map(s => (
                   <a key={s.icon} href={s.href} target="_blank" rel="noreferrer"
                     className="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center hover:bg-[#fdc425] transition-all group">
@@ -207,9 +207,9 @@ export default function ContactPage() {
                 </AnimatePresence>
 
                 <div className="flex items-center justify-between pt-2 border-t border-[#f2f4f6]">
-                  <p className="text-[11px] text-[#76777f] italic">
+                  <p className="text-[11px] text-[#5f6068] italic">
                     By submitting, you agree to our{' '}
-                    <Link href="/privacy-policy" className="text-[#785a00] hover:underline">Privacy Policy</Link>.
+                    <Link href="/privacy-policy" className="text-[#785a00] underline">Privacy Policy</Link>.
                   </p>
                   <motion.button whileTap={{ scale: 0.97 }} type="submit" disabled={formState === 'submitting'}
                     className="flex items-center gap-2 bg-[#fdc425] text-[#6d5200] px-8 py-3 rounded-full text-[13px] font-bold hover:brightness-110 transition-all disabled:opacity-60">
@@ -237,7 +237,7 @@ export default function ContactPage() {
             Can't wait? Reach us directly on Telegram or YouTube.
           </p>
           <div className="flex flex-wrap gap-3 justify-center">
-            <a href="https://t.me/thespotlightchurchLive" target="_blank" rel="noreferrer"
+            <a href="https://t.me/thespotlightchurchLive" aria-label="Telegram" target="_blank" rel="noreferrer"
               className="flex items-center gap-2 bg-[#fdc425] text-[#6d5200] px-6 py-3 rounded-full text-[13px] font-bold hover:brightness-110 transition-all">
               <BrandIcon name="telegram" className="h-4 w-4" /> Join on Telegram
             </a>

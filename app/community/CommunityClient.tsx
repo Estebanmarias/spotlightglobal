@@ -143,7 +143,7 @@ function EventsCarousel({ events }: { events: ChurchEvent[] }) {
     <div className="text-center py-20 bg-white rounded-3xl border border-[#c6c6cf]">
       <Icon name="event" className="text-[56px] text-[#c6c6cf] block mb-3" />
       <p className="text-[#45464e] font-semibold text-[16px]">No upcoming Services scheduled yet</p>
-      <p className="text-[13px] text-[#76777f] mt-1">Check back soon, or join us this Sunday</p>
+      <p className="text-[13px] text-[#5f6068] mt-1">Check back soon, or join us this Sunday</p>
     </div>
   )
 
@@ -195,7 +195,7 @@ function EventsCarousel({ events }: { events: ChurchEvent[] }) {
               {e.description && (
                 <p className="text-[#45464e] text-[13px] mb-4 line-clamp-2 leading-relaxed">{e.description}</p>
               )}
-              <div className="flex items-center gap-1.5 text-[12px] text-[#76777f] mb-4">
+              <div className="flex items-center gap-1.5 text-[12px] text-[#5f6068] mb-4">
                 <Icon name="location_on" className="text-[14px] text-[#fdc425]" />
                 {e.location}
               </div>
@@ -275,7 +275,7 @@ function TestimonyModal({ onClose, onSuccess }: { onClose: () => void; onSuccess
               <textarea value={testimony} onChange={e => setTestimony(e.target.value)}
                 placeholder="Share what God has done in your life…" rows={5}
                 className="w-full bg-[#f2f4f6] border-b-2 border-transparent focus:border-[#081534] outline-none px-4 py-3 rounded-t-lg text-[14px] transition-colors resize-none" />
-              <p className="text-[10px] text-[#76777f] text-right mt-1">{testimony.length} chars</p>
+              <p className="text-[10px] text-[#5f6068] text-right mt-1">{testimony.length} chars</p>
             </div>
             {error && (
               <div className="flex items-center gap-2 p-3 bg-[#ffdad6] rounded-lg">
@@ -451,7 +451,7 @@ function CommunityPageContent() {
           <TestimonyTicker testimonies={testimonies} />
         ) : (
           <div className="max-w-[1280px] mx-auto px-6 md:px-16 text-center py-8">
-            <p className="text-[#76777f] text-[14px]">Be the first to share what God has done in your life.</p>
+            <p className="text-[#5f6068] text-[14px]">Be the first to share what God has done in your life.</p>
           </div>
         )}
       </section>
@@ -538,7 +538,7 @@ function CommunityPageContent() {
             <div className="text-center py-16 bg-[#f7f9fb] rounded-2xl border border-[#c6c6cf]">
               <Icon name="photo_library" className="text-[48px] text-[#c6c6cf] block mb-3" />
               <p className="text-[#45464e] font-semibold">Gallery coming soon</p>
-              <p className="text-[13px] text-[#76777f] mt-1">Follow us on Instagram for the latest moments</p>
+              <p className="text-[13px] text-[#5f6068] mt-1">Follow us on Instagram for the latest moments</p>
             </div>
           ) : (
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 auto-rows-[200px]">
@@ -546,13 +546,13 @@ function CommunityPageContent() {
                 // Template masonry layout: col 0 and 2 span 2 rows
                 const rowSpan = (i === 0 || i === 2) ? 'row-span-2' : ''
                 return (
-                  <motion.button key={p.id} type="button"
+                  <motion.button key={p.id} type="button" aria-label={p.caption || `Open gallery photo ${i + 1}`}
                     initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
                     transition={{ delay: i * 0.06 }}
                     onClick={() => setLightboxIndex(i)}
                     className={`${rowSpan} rounded-2xl overflow-hidden bg-[#eceef0] hover:scale-[1.02] transition-transform focus:outline-none cursor-zoom-in group`}>
                     <div className="relative w-full h-full">
-                      <img src={p.image_url} alt={p.caption ?? ''}
+                      <img src={p.image_url} alt=""
                         className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
                       <div className="absolute inset-0 bg-[#081534]/0 group-hover:bg-[#081534]/30 transition-colors" />
                       {p.caption && (

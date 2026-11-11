@@ -98,7 +98,7 @@ export default function GivingConfirmForm() {
               </div>
             </div>
             <div>
-              <label htmlFor="gc-ref" className={labelCls}>Transfer reference <span className="font-normal normal-case text-[#76777f]">(optional)</span></label>
+              <label htmlFor="gc-ref" className={labelCls}>Transfer reference <span className="font-normal normal-case text-[#5f6068]">(optional)</span></label>
               <input id="gc-ref" value={form.reference} onChange={set('reference')} maxLength={120} placeholder="Narration or reference on your transfer" className={inputCls} />
             </div>
             <input name="hp_field" tabIndex={-1} autoComplete="off" aria-hidden="true" value={form.trap} onChange={set('trap')} className="hidden" />

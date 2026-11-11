@@ -335,7 +335,7 @@ export default function EventDirectory() {
             <h2 className="text-[18px] font-bold text-[#081534]">
               {view === "upcoming" ? "Nothing on the calendar yet" : "No past events yet"}
             </h2>
-            <p className="mx-auto mt-2 max-w-sm text-[14px] leading-6 text-[#76777f]">
+            <p className="mx-auto mt-2 max-w-sm text-[14px] leading-6 text-[#5f6068]">
               {view === "upcoming"
                 ? "New events are announced here first. Check back soon."
                 : "Once our events wrap up, you'll find them here."}

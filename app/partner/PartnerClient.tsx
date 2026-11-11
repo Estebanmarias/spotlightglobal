@@ -232,8 +232,8 @@ export default function PartnerClient() {
                         placeholder="+234 000 0000" className={inputCls} />
                     </div>
                     <div>
-                      <label className="block text-[13px] font-semibold text-[#45464e] mb-2">Gender</label>
-                      <select value={gender} onChange={e => setGender(e.target.value)}
+                      <label htmlFor="partner-gender" className="block text-[13px] font-semibold text-[#45464e] mb-2">Gender</label>
+                      <select id="partner-gender" value={gender} onChange={e => setGender(e.target.value)}
                         className={inputCls + ' cursor-pointer'}>
                         <option value="">Choose</option>
                         <option>Male</option>

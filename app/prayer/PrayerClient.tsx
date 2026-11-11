@@ -103,7 +103,7 @@ export default function PrayerClient() {
           ) : (
             <form onSubmit={submit} className="space-y-5 rounded-2xl border border-[#c6c6cf] bg-white p-6 sm:p-8">
               <div>
-                <label htmlFor="pr-name" className={labelCls}>Your name <span className="font-normal normal-case text-[#76777f]">(optional)</span></label>
+                <label htmlFor="pr-name" className={labelCls}>Your name <span className="font-normal normal-case text-[#5f6068]">(optional)</span></label>
                 <input id="pr-name" autoComplete="name" value={name} onChange={e => setName(e.target.value)} maxLength={80} className={inputCls} />
               </div>
 
@@ -111,7 +111,7 @@ export default function PrayerClient() {
                 <label htmlFor="pr-request" className={labelCls}>Your prayer request</label>
                 <textarea id="pr-request" required rows={6} maxLength={MAX} value={request} onChange={e => setRequest(e.target.value)}
                   placeholder="Share as much or as little as you like." className={`${inputCls} resize-none`} />
-                <p className="mt-1 text-right text-[11px] text-[#76777f]">{request.length}/{MAX}</p>
+                <p className="mt-1 text-right text-[11px] text-[#5f6068]">{request.length}/{MAX}</p>
               </div>
 
               <label htmlFor="pr-reply" className="flex cursor-pointer items-start gap-3 rounded-xl border border-[#e2e2e9] p-4">
@@ -134,7 +134,7 @@ export default function PrayerClient() {
                 className="min-h-12 w-full rounded-full bg-[#081534] px-6 text-[14px] font-bold text-white transition hover:bg-[#17305f] disabled:opacity-60">
                 {sending ? 'Sending…' : 'Send my request'}
               </button>
-              <p className="text-center text-[11px] leading-5 text-[#76777f]">Requests are seen only by our pastoral team and are never shown publicly.</p>
+              <p className="text-center text-[11px] leading-5 text-[#5f6068]">Requests are seen only by our pastoral team and are never shown publicly.</p>
             </form>
           )}
         </div>

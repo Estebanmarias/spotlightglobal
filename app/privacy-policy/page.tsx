@@ -228,7 +228,7 @@ export default function PrivacyPolicyPage() {
           </motion.div>
 
           {/* Back links */}
-          <div className="flex flex-wrap gap-4 justify-center mt-8 text-[12px] text-[#76777f]">
+          <div className="flex flex-wrap gap-4 justify-center mt-8 text-[12px] text-[#5f6068]">
             <Link href="/" className="hover:text-[#fdc425] transition-colors">← Back to Home</Link>
             <span>·</span>
             <Link href="/contact" className="hover:text-[#fdc425] transition-colors">Contact Us</Link>
