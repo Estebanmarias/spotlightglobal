@@ -4,6 +4,7 @@ import { validateMemberDateOfBirth } from '@/lib/age-validation'
 import { Ratelimit } from '@upstash/ratelimit'
 import { Redis } from '@upstash/redis'
 import { pushMemberToBrevo } from '@/lib/brevo-contact'
+import { normalizePhone, checkEmail, PHONE_HINT } from '@/lib/contact-validation'
 
 // ── Rate limiter — 5 submissions per IP per hour ──────────────────
 const ratelimit = new Ratelimit({
@@ -79,6 +80,11 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Address is too long.' }, { status: 400 })
   }
 
+  const mail = checkEmail(email)
+  if (!mail.ok) return NextResponse.json({ error: mail.error }, { status: 400 })
+  const cleanPhone = normalizePhone(phone)
+  if (!cleanPhone) return NextResponse.json({ error: PHONE_HINT }, { status: 400 })
+
   // Validate DOB
   const dobError = validateMemberDateOfBirth(dob)
   if (dobError) return NextResponse.json({ error: dobError }, { status: 400 })
@@ -94,8 +100,8 @@ export async function POST(req: NextRequest) {
     .insert([{
       first_name: first_name.trim(),
       last_name: last_name.trim(),
-      email: email.toLowerCase().trim(),
-      phone: phone.trim(),
+      email: mail.email,
+      phone: cleanPhone,
       address: address?.trim() || null,
       dob,
       guest_status: resolvedStatus,
@@ -112,13 +118,14 @@ export async function POST(req: NextRequest) {
   }
 
     await pushMemberToBrevo({
-    email: email.toLowerCase().trim(),
+    email: mail.email,
     firstName: first_name.trim(),
     lastName: last_name.trim(),
-    phone: phone.trim(),
+    phone: cleanPhone,
     dob,
     status: 'Attending',
   })
 
   return NextResponse.json({ success: true, first_name: first_name.trim(), memberId: member?.id }, { status: 200 })
 }
+

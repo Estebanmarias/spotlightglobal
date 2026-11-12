@@ -239,9 +239,12 @@ function TestimonyModal({ onClose, onSuccess }: { onClose: () => void; onSuccess
     if (!name.trim() || !testimony.trim()) { setError('Please fill in both fields.'); return }
     if (testimony.trim().length < 20) { setError('Please share a bit more (at least 20 characters).'); return }
     setSaving(true); setError('')
-    const { error: dbErr } = await (supabase.from('testimonies') as any).insert({
-      name: name.trim(), testimony: testimony.trim(),
+    const res = await fetch('/api/testimonies', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: name.trim(), testimony: testimony.trim() }),
     })
+    const dbErr = res.ok ? null : true
     setSaving(false)
     if (dbErr) { setError('Failed to submit. Please try again.'); return }
     onSuccess()

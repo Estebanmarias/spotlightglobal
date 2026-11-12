@@ -123,7 +123,7 @@ export default function ContactPage() {
                   { href: 'https://www.youtube.com/@thespotlightchurch', icon: 'youtube', label: 'YouTube' },
                   { href: 'https://t.me/thespotlightchurchLive', icon: 'telegram', label: 'Telegram' },
                 ].map(s => (
-                  <a key={s.icon} href={s.href} target="_blank" rel="noreferrer"
+                  <a key={s.icon} href={s.href} aria-label={s.label} target="_blank" rel="noreferrer"
                     className="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center hover:bg-[#fdc425] transition-all group">
                     <BrandIcon name={s.icon} className="w-[15px] h-[15px] text-white group-hover:text-[#081534] transition-colors" />
                   </a>

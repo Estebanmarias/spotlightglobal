@@ -7,6 +7,7 @@ import Link from 'next/link'
 import Icon from '@/components/Icon'
 import { getSupabaseClient } from '@/lib/supabase'
 import { maximumDateOfBirth, minimumDateOfBirth, validateMemberDateOfBirth } from '@/lib/age-validation'
+import { normalizePhone, checkEmail, PHONE_HINT } from '@/lib/contact-validation'
 
 const inputCls = 'w-full bg-[#f2f4f6] border-b-2 border-transparent focus:border-[#081534] outline-none px-4 py-3.5 rounded-t-lg text-[16px] transition-colors'
 
@@ -43,6 +44,10 @@ export default function JoinClient() {
       setError(dobError)
       return
     }
+
+    const mail = checkEmail(form.email)
+    if (!mail.ok) { setError(mail.error); return }
+    if (!normalizePhone(form.phone)) { setError(PHONE_HINT); return }
 
     setSubmitting(true)
 
@@ -129,7 +134,7 @@ export default function JoinClient() {
                     Email Address *
                   </label>
                   <input type="email" name="email" value={form.email} onChange={handleChange}
-                    placeholder="you@example.com" className={inputCls} required />
+                    placeholder="you@example.com" autoComplete="email" inputMode="email" className={inputCls} required />
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -138,7 +143,7 @@ export default function JoinClient() {
                       Phone Number *
                     </label>
                     <input type="tel" name="phone" value={form.phone} onChange={handleChange}
-                      placeholder="+234 000 0000" className={inputCls} required />
+                      placeholder="0803 123 4567" autoComplete="tel" inputMode="tel" className={inputCls} required />
                   </div>
                   <div className="flex flex-col gap-1.5">
                     <label className="text-[12px] font-bold text-[#45464e] uppercase tracking-wide">
