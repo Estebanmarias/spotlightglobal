@@ -18,6 +18,7 @@ export const ADMIN_NAV_GROUPS: AdminNavItem[][] = [
     { icon: "school", label: "Classes", href: "/admin/classes", page: "classes" },
     { icon: "church", label: "Ministries", href: "/admin/ministries", page: "ministries" },
     { icon: "favorite", label: "Prayer", href: "/admin/prayer", page: "prayer" },
+    { icon: "chat_bubble", label: "Testimonies", href: "/admin/testimonies", page: "testimonies" },
   ],
   [
     { icon: "volunteer_activism", label: "Giving", href: "/admin/giving", page: "giving" },
