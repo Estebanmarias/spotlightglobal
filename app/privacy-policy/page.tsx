@@ -23,6 +23,7 @@ const sections = [
             'Event registration details, including attendance days, accommodation requests, accompanying children counts, special-session selections, and referral source',
             'Optional special requests and prayer requests submitted with event registrations',
             'Class registrations, including your name, email, phone number and class progress',
+            'Notification subscriptions: if you choose to receive daily notifications, we store a technical address for your browser or device that its push service gives us. It is not linked to your name, email or phone number.',
             'Notes you send us about a gift you have given: your name, contact details, amount, purpose, date and optional transfer reference',
             'Questions you type into the website chat, which are sent to our server to find an answer. We do not keep them in our database, but our hosting provider’s technical logs may record them for a short time.',
           ].map(item => (
@@ -104,6 +105,7 @@ const sections = [
             'For classes, we keep your name, the class and the completion date so your certificate can be verified. We remove your phone number after 24 months.',
             'Partnership submissions and administrative activity logs are kept for 24 months.',
             'Giving records are kept as financial records for as long as the law requires.',
+            'Notification subscriptions are kept until you turn notifications off or your device tells us the subscription is no longer valid, and then they are deleted.',
           ].map(item => (
             <li key={item} className="flex items-start gap-3">
               <Icon name="check_circle" className="text-[#fdc425] text-[18px] mt-0.5 shrink-0" />
@@ -112,6 +114,20 @@ const sections = [
           ))}
         </ul>
         <p className="mt-4">Our backups roll over every 30 days, so deleted information can remain in a backup for up to 30 days. You can ask us to delete your information at any time.</p>
+      </>
+    ),
+  },
+  {
+    icon: 'campaign',
+    title: 'Notifications',
+    content: (
+      <>
+        <p>
+          You can choose to receive a daily scripture or word of encouragement on your device. This is optional and off by default, and we only ask for permission after you tap the button.
+        </p>
+        <p className="mt-4">
+          To stop, tap &quot;Turn off&quot; on the Community page, or block notifications for this site in your browser or phone settings. Notifications are delivered through your browser&apos;s push service (for example Google or Apple), which receives the message in order to deliver it.
+        </p>
       </>
     ),
   },

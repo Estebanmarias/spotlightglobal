@@ -8,6 +8,7 @@ import { getSupabaseClient } from '@/lib/supabase'
 import { isEventActive, isShiftConferenceTitle, recurrenceLabel, resolveEventOccurrence } from '@/lib/church-events'
 import BrandIcon from '@/components/BrandIcon'
 import Icon from '@/components/Icon'
+import PushOptIn from '@/components/PushOptIn'
 
 // ── CONFIG ──────────────────────────────────────────────────────
 
@@ -573,6 +574,12 @@ function CommunityPageContent() {
       </section>
 
             {/* ── PLAN YOUR VISIT ───────────────────────────────────────── */}
+      <section className="py-16 px-6 bg-[#f7f9fb]">
+        <div className="mx-auto max-w-[520px]">
+          <PushOptIn />
+        </div>
+      </section>
+
       <section className="py-24 px-6 bg-[#f2f4f6]" id="visit">
         <div className="max-w-[1100px] mx-auto">
           <motion.div initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}

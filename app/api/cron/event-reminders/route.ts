@@ -3,6 +3,7 @@ import { getSupabaseAdminClient } from "@/lib/supabase-server";
 import { renderEventEmail, reserveEventEmail, sendBrevoEmail } from "@/lib/media-event-auth";
 import { sendEventThankYous } from "@/lib/event-thank-you";
 import { runRetentionIfDue } from "@/lib/retention";
+import { sendScheduledPush } from "@/lib/push";
 
 type EventRow = {
   id: string;
@@ -206,5 +207,12 @@ export async function GET(request: NextRequest) {
 
   const thankYou = await sendEventThankYous(supabase);
   const retention = await runRetentionIfDue(supabase);
-  return NextResponse.json({ success: true, results, thankYou, retention });
+  let push: unknown = null;
+  try {
+    push = await sendScheduledPush();
+  } catch (e) {
+    console.error("[EVENT REMINDERS] push failed:", (e as Error).message);
+    push = { error: "push failed" };
+  }
+  return NextResponse.json({ success: true, results, thankYou, retention, push });
 }
