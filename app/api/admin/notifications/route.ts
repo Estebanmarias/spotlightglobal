@@ -26,11 +26,12 @@ function clean(b: any, partial: boolean) {
   return { value: out };
 }
 
-async function dateTaken(sendOn: string, exceptId?: string) {
+const MAX_PER_DAY = 3;
+async function dayCount(sendOn: string, exceptId?: string) {
   let q = db().from("push_messages").select("id").eq("send_on", sendOn);
   if (exceptId) q = q.neq("id", exceptId);
-  const { data } = await q.limit(1);
-  return !!data?.length;
+  const { data } = await q.limit(MAX_PER_DAY + 1);
+  return data?.length ?? 0;
 }
 
 export async function GET(request: NextRequest) {
@@ -49,7 +50,7 @@ export async function POST(request: NextRequest) {
   try { body = await request.json(); } catch { return fail("Invalid request."); }
   const parsed = clean(body, false);
   if (parsed.error) return fail(parsed.error);
-  if (await dateTaken(parsed.value!.send_on)) return fail("A message is already scheduled for that date.", 409);
+  if ((await dayCount(parsed.value!.send_on)) >= MAX_PER_DAY) return fail(`Only ${MAX_PER_DAY} messages can be scheduled per day.`, 409);
   const { error } = await db().from("push_messages").insert([parsed.value]);
   if (error) { console.error("[ADMIN NOTIFICATIONS] create failed:", error.message); return fail("Could not save the message.", 500); }
   return NextResponse.json({ success: true });
@@ -63,7 +64,7 @@ export async function PATCH(request: NextRequest) {
   const parsed = clean(body, true);
   if (parsed.error) return fail(parsed.error);
   if (!Object.keys(parsed.value!).length) return fail("Nothing to update.");
-  if (parsed.value!.send_on && (await dateTaken(parsed.value!.send_on, body.id))) return fail("A message is already scheduled for that date.", 409);
+  if (parsed.value!.send_on && (await dayCount(parsed.value!.send_on, body.id)) >= MAX_PER_DAY) return fail(`Only ${MAX_PER_DAY} messages can be scheduled per day.`, 409);
   const { data, error } = await db().from("push_messages").update(parsed.value).eq("id", body.id).is("sent_at", null).select("id");
   if (error) { console.error("[ADMIN NOTIFICATIONS] update failed:", error.message); return fail("Could not update the message.", 500); }
   if (!data?.length) return fail("That message has already been sent.", 409);

@@ -63,8 +63,10 @@ export default function NotificationsAdminPage() {
     setSaving(true); setError('')
     try {
       await call('POST', draft)
-      // next free day after the one just used, as a convenience for batch writing
-      const next = new Date(`${draft.send_on}T00:00:00Z`); next.setUTCDate(next.getUTCDate() + 1)
+      // stay on the same day until it has 2 messages, then move to the next day
+      const onDay = items.filter(m => m.send_on === draft.send_on).length + 1
+      const next = new Date(`${draft.send_on}T00:00:00Z`)
+      if (onDay >= 2) next.setUTCDate(next.getUTCDate() + 1)
       setDraft({ ...blank(), send_on: next.toISOString().slice(0, 10) })
       await load()
     } catch (e) { setError((e as Error).message) }
@@ -97,7 +99,7 @@ export default function NotificationsAdminPage() {
     <div className="min-h-screen bg-[#f7f9fb]">
       <div className="sticky top-0 z-30 border-b border-[#c6c6cf] bg-white px-4 py-4 sm:px-8">
         <h2 className="text-[20px] font-bold text-[#081534] sm:text-[24px]">Notifications</h2>
-        <p className="text-[12px] text-[#45464e]">One message a day goes to phones that turned notifications on. {subscribers} {subscribers === 1 ? 'person is' : 'people are'} subscribed.</p>
+        <p className="text-[12px] text-[#45464e]">Up to 3 messages a day go to phones that turned notifications on. {subscribers} {subscribers === 1 ? 'person is' : 'people are'} subscribed.</p>
       </div>
 
       <div className="space-y-5 p-4 sm:p-6 lg:p-8">
