@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { motion } from 'framer-motion'
+import { motion, useReducedMotion } from 'framer-motion'
 import Link from 'next/link'
 import { getSupabaseClient } from '@/lib/supabase'
 import Icon from '@/components/Icon'
@@ -30,7 +30,6 @@ const categoryColor = (c: string) => {
   return 'bg-[#f2f4f6] text-[#45464e]'
 }
 
-
 const formatDate = (d: string | null) => {
   if (!d) return ''
   return new Date(d).toLocaleDateString('en-NG', { day: 'numeric', month: 'long', year: 'numeric' })
@@ -38,6 +37,7 @@ const formatDate = (d: string | null) => {
 
 export default function DevotionalsPage() {
   const supabase = getSupabaseClient()
+  const reduce = useReducedMotion()
   const [posts, setPosts]         = useState<Post[]>([])
   const [loading, setLoading]     = useState(true)
   const [activeCategory, setActiveCategory] = useState('All')
@@ -65,20 +65,20 @@ export default function DevotionalsPage() {
     <main className="bg-[#f7f9fb] text-[#191c1e]">
 
       {/* ── HERO ── */}
-      <section className="bg-[#081534] py-24 px-6 relative overflow-hidden">
-        <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute top-0 right-0 w-96 h-96 bg-[#fdc425]/5 rounded-full blur-[100px] translate-x-1/2 -translate-y-1/2" />
+      <section className="relative overflow-hidden bg-[#081534] px-5 py-14 sm:px-6 sm:py-24">
+        <div className="pointer-events-none absolute inset-0">
+          <div className="absolute right-0 top-0 h-96 w-96 translate-x-1/2 -translate-y-1/2 rounded-full bg-[#fdc425]/5 blur-[100px]" />
         </div>
-        <div className="max-w-[1100px] mx-auto relative z-10">
-          <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}>
-            <span className="inline-flex items-center gap-2 px-4 py-1.5 bg-[#fdc425]/20 text-[#fdc425] border border-[#fdc425]/30 rounded-full text-[11px] font-bold uppercase tracking-widest mb-6">
+        <div className="relative z-10 mx-auto max-w-[1100px]">
+          <motion.div initial={reduce ? false : { opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}>
+            <span className="mb-5 inline-flex items-center gap-2 rounded-full border border-[#fdc425]/30 bg-[#fdc425]/20 px-4 py-1.5 text-[11px] font-bold uppercase tracking-widest text-[#fdc425] sm:mb-6">
               <Icon name="auto_stories" className="text-[14px]" />
               Fresh Word
             </span>
-            <h1 className="text-white text-[36px] sm:text-[48px] lg:text-[56px] font-bold leading-tight mb-4">
+            <h1 className="mb-3 text-[30px] font-bold leading-tight text-white sm:mb-4 sm:text-[48px] lg:text-[56px]">
               Devotionals & Teachings
             </h1>
-            <p className="text-white/70 text-[16px] sm:text-[18px] leading-[28px] max-w-2xl">
+            <p className="max-w-2xl text-[15px] leading-[26px] text-white/70 sm:text-[18px] sm:leading-[28px]">
               Weekly devotionals, sermon notes, and teachings from Apostle Edet Kingsley
               to nourish your spirit and strengthen your walk with God.
             </p>
@@ -86,78 +86,82 @@ export default function DevotionalsPage() {
         </div>
       </section>
 
-      <section className="max-w-[1100px] mx-auto px-6 py-16">
+      <section className="mx-auto max-w-[1100px] px-5 py-8 sm:px-6 sm:py-16">
 
-        {/* Category filter */}
-        <div className="flex gap-2 mb-10 overflow-x-auto pb-1 -mx-6 px-6 sm:mx-0 sm:px-0 sm:flex-wrap" role="group" aria-label="Filter by category">
+        {/* Category filter: one swipeable row on phones, wraps on larger screens */}
+        <div className="-mx-5 mb-6 flex gap-2 overflow-x-auto px-5 pb-1 [scrollbar-width:none] sm:mx-0 sm:mb-10 sm:flex-wrap sm:px-0 [&::-webkit-scrollbar]:hidden"
+          role="group" aria-label="Filter by category">
           {CATEGORIES.map(c => (
             <button key={c} aria-pressed={activeCategory === c} onClick={() => setActiveCategory(c)}
-              className={`px-4 py-2 rounded-full text-[12px] font-bold transition-all border
+              className={`min-h-10 shrink-0 whitespace-nowrap rounded-full border px-4 text-[13px] font-bold transition-colors sm:text-[12px]
                 ${activeCategory === c
-                  ? 'bg-[#081534] text-white border-[#081534]'
-                  : 'bg-white text-[#45464e] border-[#c6c6cf] hover:border-[#081534]'}`}>
+                  ? 'border-[#081534] bg-[#081534] text-white'
+                  : 'border-[#c6c6cf] bg-white text-[#45464e] hover:border-[#081534]'}`}>
               {c}
             </button>
           ))}
         </div>
 
         {loading ? (
-          <div className="space-y-6">
-            <div className="h-64 bg-[#eceef0] rounded-2xl animate-pulse" />
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-              {[1,2,3].map(i => <div key={i} className="h-48 bg-[#eceef0] rounded-xl animate-pulse" />)}
+          <div className="space-y-4 sm:space-y-6">
+            <div className="h-56 animate-pulse rounded-2xl bg-[#eceef0] sm:h-64" />
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-5 lg:grid-cols-3">
+              {[1, 2, 3].map(i => <div key={i} className="h-28 animate-pulse rounded-xl bg-[#eceef0] sm:h-48" />)}
             </div>
           </div>
         ) : filtered.length === 0 ? (
-          <div className="text-center py-20 bg-white rounded-2xl border border-[#eceef0]">
-            <Icon name="article" className="text-[56px] text-[#c6c6cf] block mb-3" />
-            <p className="text-[#45464e] font-semibold text-[16px]">No posts yet</p>
-            <p className="text-[13px] text-[#5f6068] mt-1">Check back soon for fresh word from Apostle Edet Kingsley</p>
+          <div className="rounded-2xl border border-[#eceef0] bg-white px-5 py-16 text-center sm:py-20">
+            <Icon name="article" className="mb-3 block text-[56px] text-[#c6c6cf]" />
+            <p className="text-[16px] font-semibold text-[#45464e]">No posts yet</p>
+            <p className="mt-1 text-[14px] text-[#5f6068]">Check back soon for fresh word from Apostle Edet Kingsley</p>
           </div>
         ) : (
           <>
             {/* Featured post */}
             {featured && (
-              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
-                className="mb-10">
+              <motion.div initial={reduce ? false : { opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
+                className="mb-6 sm:mb-10">
                 <Link href={`/devotionals/${featured.slug}`}
-                  className="group block bg-white rounded-2xl border border-[#eceef0] overflow-hidden hover:shadow-xl hover:border-[#fdc425]/30 transition-all duration-500">
+                  className="group block overflow-hidden rounded-2xl border border-[#eceef0] bg-white transition-all duration-500 hover:border-[#fdc425]/30 hover:shadow-xl">
                   <div className="grid grid-cols-1 md:grid-cols-2">
                     {featured.cover_image ? (
-                      <div className="h-64 md:h-full overflow-hidden bg-[#eceef0]">
+                      <div className="h-52 overflow-hidden bg-[#eceef0] sm:h-64 md:h-full">
                         <img src={featured.cover_image} alt={featured.title}
-                          className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
+                          className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105" />
                       </div>
                     ) : (
-                      <div className="h-64 md:h-full bg-[#081534] flex items-center justify-center">
-                        <Icon name="auto_stories" className="text-[#fdc425] text-[64px]" />
+                      <div className="flex h-40 items-center justify-center bg-[#081534] sm:h-64 md:h-full">
+                        <Icon name="auto_stories" className="text-[56px] text-[#fdc425] sm:text-[64px]" />
                       </div>
                     )}
-                    <div className="p-7 sm:p-10 flex flex-col justify-center">
-                      <div className="flex items-center gap-2 mb-4">
-                        <span className="px-2 py-0.5 bg-[#fdc425] text-[#6d5200] rounded-full text-[10px] font-bold uppercase tracking-widest">
+                    <div className="flex flex-col justify-center p-5 sm:p-8 md:p-10">
+                      <div className="mb-3 flex flex-wrap items-center gap-2 sm:mb-4">
+                        <span className="rounded-full bg-[#fdc425] px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-widest text-[#6d5200]">
                           Featured
                         </span>
-                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${categoryColor(featured.category)}`}>
+                        <span className={`rounded-full px-2.5 py-0.5 text-[11px] font-bold ${categoryColor(featured.category)}`}>
                           {featured.category}
                         </span>
                       </div>
-                      <h2 className="text-[#081534] text-[22px] sm:text-[26px] font-bold leading-snug mb-3 group-hover:text-[#785a00] transition-colors">
+                      <h2 className="mb-2 text-[21px] font-bold leading-snug text-[#081534] transition-colors group-hover:text-[#785a00] sm:mb-3 sm:text-[26px]">
                         {featured.title}
                       </h2>
                       {featured.excerpt && (
-                        <p className="text-[#45464e] text-[14px] leading-relaxed mb-5 line-clamp-3">
+                        <p className="mb-4 line-clamp-3 text-[14px] leading-relaxed text-[#45464e] sm:mb-5">
                           {featured.excerpt}
                         </p>
                       )}
-                      <div className="flex items-center gap-3 text-[12px] text-[#5f6068]">
+                      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[12px] text-[#5f6068]">
                         <span className="flex items-center gap-1">
                           <Icon name="person" className="text-[14px]" />
                           {featured.author_name}
                         </span>
-                        <span className="flex items-center gap-1"><Icon name="calendar_today" className="text-[14px]" />{formatDate(featured.published_at || featured.created_at)}</span>
+                        <span className="flex items-center gap-1">
+                          <Icon name="calendar_today" className="text-[14px]" />
+                          {formatDate(featured.published_at || featured.created_at)}
+                        </span>
                       </div>
-                      <div className="mt-6 flex items-center gap-2 text-[#081534] text-[13px] font-bold group-hover:gap-3 transition-all">
+                      <div className="mt-5 flex min-h-11 items-center gap-2 text-[14px] font-bold text-[#081534] transition-all group-hover:gap-3 sm:mt-6 sm:text-[13px]">
                         Read Post <Icon name="arrow_forward" className="text-[16px]" />
                       </div>
                     </div>
@@ -166,40 +170,41 @@ export default function DevotionalsPage() {
               </motion.div>
             )}
 
-            {/* Post grid */}
+            {/* Post list: compact rows on phones, cards from sm up */}
             {rest.length > 0 && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-5 lg:grid-cols-3">
                 {rest.map((p, i) => (
                   <motion.div key={p.id}
-                    initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }} transition={{ delay: i * 0.06 }}>
+                    initial={reduce ? false : { opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }} transition={{ delay: Math.min(i, 5) * 0.05 }}>
                     <Link href={`/devotionals/${p.slug}`}
-                      className="group block bg-white rounded-xl border border-[#eceef0] overflow-hidden hover:shadow-lg hover:border-[#fdc425]/30 transition-all duration-400 h-full">
+                      className="group flex h-full gap-3 overflow-hidden rounded-xl border border-[#eceef0] bg-white transition-all hover:border-[#fdc425]/30 hover:shadow-lg active:bg-[#f7f9fb] sm:block sm:gap-0">
                       {p.cover_image ? (
-                        <div className="h-44 overflow-hidden bg-[#eceef0]">
-                          <img src={p.cover_image} alt={p.title}
-                            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                        <div className="relative min-h-28 w-28 shrink-0 self-stretch overflow-hidden bg-[#eceef0] sm:h-44 sm:min-h-0 sm:w-full">
+                          <img src={p.cover_image} alt={p.title} loading="lazy" decoding="async"
+                            className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105 sm:static" />
                         </div>
                       ) : (
-                        <div className="h-44 bg-[#081534] flex items-center justify-center">
-                          <Icon name="auto_stories" className="text-[#fdc425] text-[40px]" />
+                        <div className="flex min-h-28 w-28 shrink-0 items-center justify-center self-stretch bg-[#081534] sm:h-44 sm:min-h-0 sm:w-full">
+                          <Icon name="auto_stories" className="text-[32px] text-[#fdc425] sm:text-[40px]" />
                         </div>
                       )}
-                      <div className="p-5">
-                        <span className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-bold mb-3 ${categoryColor(p.category)}`}>
+                      <div className="min-w-0 flex-1 py-3 pr-3 sm:p-5">
+                        <span className={`mb-2 inline-block rounded-full px-2.5 py-0.5 text-[11px] font-bold sm:mb-3 ${categoryColor(p.category)}`}>
                           {p.category}
                         </span>
-                        <h3 className="text-[#081534] text-[15px] font-bold leading-snug mb-2 line-clamp-2 group-hover:text-[#785a00] transition-colors">
+                        <h3 className="mb-1 line-clamp-3 text-[15px] font-bold leading-snug text-[#081534] transition-colors group-hover:text-[#785a00] sm:mb-2 sm:line-clamp-2">
                           {p.title}
                         </h3>
                         {p.excerpt && (
-                          <p className="text-[#45464e] text-[12px] leading-relaxed line-clamp-2 mb-4">
+                          <p className="mb-4 line-clamp-2 hidden text-[13px] leading-relaxed text-[#45464e] sm:block">
                             {p.excerpt}
                           </p>
                         )}
-                        <div className="flex items-center justify-between text-[11px] text-[#5f6068] pt-3 border-t border-[#f2f4f6]">
-                          <span className="flex items-center gap-1"><Icon name="calendar_today" className="text-[13px]" />{formatDate(p.published_at || p.created_at)}</span>
-                        </div>
+                        <p className="flex items-center gap-1 text-[12px] text-[#5f6068] sm:border-t sm:border-[#f2f4f6] sm:pt-3">
+                          <Icon name="calendar_today" className="text-[13px]" />
+                          {formatDate(p.published_at || p.created_at)}
+                        </p>
                       </div>
                     </Link>
                   </motion.div>
