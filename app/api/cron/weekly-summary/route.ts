@@ -1,129 +1,80 @@
-// app/api/cron/weekly-summary/route.ts
-// Runs every Monday at 8:00 AM via Vercel Cron.
-// Add to vercel.json:
-// {
-//   "crons": [{
-//     "path": "/api/cron/weekly-summary",
-//     "schedule": "0 8 * * 1"
-//   }]
-// }
-
 import { NextRequest, NextResponse } from 'next/server'
 import { getSupabaseAdminClient } from '@/lib/supabase-server'
 import { SITE_CONFIG } from '@/lib/site-config'
+import { renderEventEmail, sendBrevoEmail } from '@/lib/media-event-auth'
+
+const SITE = (process.env.NEXT_PUBLIC_SITE_URL || 'https://spotlightglobal.vercel.app').replace(/\/$/, '')
 
 export async function GET(req: NextRequest) {
-  // Protect endpoint — only Vercel's cron runner should call this
-  const authHeader = req.headers.get('authorization')
-  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+  if (!process.env.CRON_SECRET || req.headers.get('authorization') !== `Bearer ${process.env.CRON_SECRET}`) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
+  if (!process.env.BREVO_API_KEY) return NextResponse.json({ error: 'Brevo not configured' }, { status: 500 })
 
-  const supabase = getSupabaseAdminClient()
-  const now      = new Date()
-  const weekAgo  = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
-  const monthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
+  const db = getSupabaseAdminClient() as any
+  const now = new Date()
+  const weekAgo = new Date(now.getTime() - 7 * 86_400_000).toISOString()
+  const monthAgo = new Date(now.getTime() - 30 * 86_400_000).toISOString()
+  const today = now.toISOString().split('T')[0]
+  const nextWeek = new Date(now.getTime() + 7 * 86_400_000).toISOString().split('T')[0]
+  const head = (table: string) => db.from(table).select('id', { count: 'exact', head: true })
 
-  // ── Fetch weekly stats ────────────────────────────────────────
-  const { count: totalMembers }    = await supabase.from('members').select('id', { count: 'exact', head: true })
-  const { count: newThisWeek }     = await supabase.from('members').select('id', { count: 'exact', head: true }).gte('created_at', weekAgo.toISOString())
-  const { count: newThisMonth }    = await supabase.from('members').select('id', { count: 'exact', head: true }).gte('created_at', monthAgo.toISOString())
-  const { count: newPartners }     = await (supabase.from('partner_submissions') as any).select('id', { count: 'exact', head: true }).eq('status', 'new')
-  const { count: totalPartners }   = await supabase.from('partner_submissions').select('id', { count: 'exact', head: true })
+  const [total, week, month, partnersNew, prayerNew, givingNew, testimoniesPending, attendance, events] = await Promise.all([
+    head('members'),
+    head('members').gte('created_at', weekAgo),
+    head('members').gte('created_at', monthAgo),
+    head('partner_submissions').eq('status', 'new'),
+    head('prayer_requests').eq('status', 'new'),
+    head('giving_confirmations').eq('status', 'new'),
+    head('testimonies').eq('is_visible', false),
+    db.from('attendance_records').select('service_date, total_count, male_count, female_count, children_count').order('service_date', { ascending: false }).limit(1).maybeSingle(),
+    db.from('church_events').select('title, event_date, event_time, location').gte('event_date', today).lte('event_date', nextWeek).order('event_date', { ascending: true }),
+  ])
 
-  // Latest Sunday attendance
-  const { data: latestAttendance } = await supabase
-    .from('attendance_records')
-    .select('service_date, total_count, male_count, female_count, children_count')
-    .order('service_date', { ascending: false })
-    .limit(1)
-    .single() as { data: { service_date: string; total_count: number; male_count: number; female_count: number; children_count: number } | null }
-
-  // Upcoming events this week
-  const nextWeek = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000)
-  const { data: upcomingEvents } = await supabase
-    .from('church_events')
-    .select('title, event_date, event_time, location')
-    .gte('event_date', now.toISOString().split('T')[0])
-    .lte('event_date', nextWeek.toISOString().split('T')[0])
-    .order('event_date', { ascending: true }) as { data: { title: string; event_date: string; event_time: string | null; location: string }[] | null }
-
+  const n = (r: { count: number | null }) => r.count ?? 0
+  const day = (d: string, opts: Intl.DateTimeFormatOptions) => new Date(`${d}T00:00:00`).toLocaleDateString('en-NG', opts)
   const dateLabel = now.toLocaleDateString('en-NG', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
 
-  const attendanceBlock = latestAttendance
-    ? `Last Sunday (${new Date(latestAttendance.service_date + 'T00:00:00').toLocaleDateString('en-NG', { month: 'short', day: 'numeric' })}):\n  Total: ${latestAttendance.total_count} | Male: ${latestAttendance.male_count} | Female: ${latestAttendance.female_count} | Children: ${latestAttendance.children_count}`
-    : 'No attendance recorded yet this week.'
+  const waiting = [
+    [n(prayerNew), 'new prayer request'],
+    [n(givingNew), 'giver confirmation'],
+    [n(testimoniesPending), 'testimony awaiting approval'],
+    [n(partnersNew), 'partner submission'],
+  ].filter(([c]) => (c as number) > 0).map(([c, l]) => `${c} ${l}${c === 1 ? '' : 's'}`)
 
-  const eventsBlock = upcomingEvents && upcomingEvents.length > 0
-    ? upcomingEvents.map(e => `  • ${e.title} — ${new Date(e.event_date + 'T00:00:00').toLocaleDateString('en-NG', { weekday: 'short', month: 'short', day: 'numeric' })}${e.event_time ? ` at ${e.event_time}` : ''}, ${e.location}`).join('\n')
-    : '  No events scheduled this week.'
+  const a = attendance.data
+  const details = [
+    { label: 'Total members', value: n(total).toLocaleString() },
+    { label: 'New this week', value: String(n(week)) },
+    { label: 'New this month', value: String(n(month)) },
+    { label: 'Last service', value: a ? `${day(a.service_date, { day: 'numeric', month: 'short' })}: ${a.total_count} total (${a.male_count} men, ${a.female_count} women, ${a.children_count} children)` : 'No attendance recorded yet' },
+    ...((events.data ?? []) as any[]).map(e => ({
+      label: e.title,
+      value: `${day(e.event_date, { weekday: 'short', day: 'numeric', month: 'short' })}${e.event_time ? `, ${e.event_time}` : ''}, ${e.location}`,
+    })),
+  ]
+  if (!(events.data ?? []).length) details.push({ label: 'Events this week', value: 'None scheduled' })
 
-  const emailBody = `Good morning Setman,
-
-Here is your weekly ministry summary for ${dateLabel}:
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-📊 CONGREGATION
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Total Registered Members: ${totalMembers?.toLocaleString() || '—'}
-New This Week: ${newThisWeek || 0}
-New This Month: ${newThisMonth || 0}
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-🙏 SUNDAY ATTENDANCE
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-${attendanceBlock}
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-🤝 PARTNERSHIPS
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-New Submissions (unreviewed): ${newPartners || 0}
-Total Partners: ${totalPartners || 0}
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-📅 UPCOMING EVENTS THIS WEEK
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-${eventsBlock}
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-View full dashboard: https://spotlightglobal.vercel.app/admin/dashboard
-
-Keep shining the light. 🌟
-
-— theSpotlightChurch Admin System`
-
-  // ── Send via Brevo ────────────────────────────────────────────
-  if (!process.env.BREVO_API_KEY) {
-    console.error('[CRON] BREVO_API_KEY not set')
-    return NextResponse.json({ error: 'Brevo not configured' }, { status: 500 })
-  }
-
-  const senderEmail = process.env.BREVO_SENDER_EMAIL || SITE_CONFIG.email
-  const senderName = process.env.BREVO_SENDER_NAME || 'TheSpotlightChurch'
-
-  const brevoRes = await fetch('https://api.brevo.com/v3/smtp/email', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'api-key': process.env.BREVO_API_KEY,
-    },
-    body: JSON.stringify({
-      sender: { name: senderName, email: senderEmail },
-      to: [{ email: SITE_CONFIG.email, name: 'Apostle Edet Kingsley' }],
-      subject: `Weekly Spotlight Summary — ${dateLabel}`,
-      textContent: emailBody,
+  const message = await sendBrevoEmail({
+    to: [{ email: SITE_CONFIG.email, name: 'Apostle Edet Kingsley' }],
+    subject: `Weekly Spotlight Summary: ${dateLabel}`,
+    htmlContent: renderEventEmail({
+      preheader: waiting.length ? `Waiting for you: ${waiting.join(', ')}.` : 'Your weekly ministry summary.',
+      eyebrow: 'WEEKLY SUMMARY',
+      title: 'Your week at a glance',
+      greeting: 'Good morning Setman,',
+      paragraphs: [
+        waiting.length ? `Waiting for you in the admin portal: ${waiting.join(', ')}.` : 'Nothing is waiting for review. All clear.',
+        `Here is the summary for ${dateLabel}.`,
+      ],
+      details,
+      action: { label: 'Open the dashboard', url: `${SITE}/admin/dashboard` },
     }),
   })
 
-  if (!brevoRes.ok) {
-    const err = await brevoRes.text()
-    console.error('[CRON] Brevo send failed:', err)
+  if (!message.sent) {
+    console.error('[CRON] Weekly summary send failed:', message.error)
     return NextResponse.json({ error: 'Email send failed' }, { status: 500 })
   }
-
-  console.log('[CRON] Weekly summary sent successfully')
-  return NextResponse.json({
-    success: true,
-    stats: { totalMembers, newThisWeek, newThisMonth, newPartners, latestAttendance }
-  })
+  return NextResponse.json({ success: true })
 }

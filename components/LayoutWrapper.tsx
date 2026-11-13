@@ -6,6 +6,7 @@ import Navbar from "./Navbar";
 import Footer from "./Footer";
 import FeaturedEventPromo from "./FeaturedEventPromo";
 import FaqChat from "./FaqChat";
+import PwaPrompt from "./PwaPrompt";
 
 export default function LayoutWrapper({
   children,
@@ -26,6 +27,7 @@ export default function LayoutWrapper({
       <div className="flex-grow">{children}</div>
       <Footer />
       {!pathname.startsWith("/conference") && <FaqChat />}
+      <PwaPrompt />
      </MotionConfig>
   );
 }

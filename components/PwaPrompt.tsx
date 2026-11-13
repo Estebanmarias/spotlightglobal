@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { usePathname } from 'next/navigation'
+import Icon from '@/components/Icon'
 
 const KEY_DISMISS = 'pwa-prompt-dismissed'
 const KEY_VISITS = 'pwa-prompt-visits'
@@ -13,15 +14,23 @@ const b64 = (s: string) => {
   return Uint8Array.from(raw, c => c.charCodeAt(0))
 }
 
+const BENEFITS = [
+  { icon: 'bolt', text: 'Opens instantly from your home screen' },
+  { icon: 'favorite', text: 'A word of hope on your phone every day' },
+  { icon: 'fullscreen', text: 'Full-screen, with no browser clutter' },
+]
+
+type Env = { ios: boolean; standalone: boolean; canPush: boolean }
+
 export default function PwaPrompt() {
   const pathname = usePathname()
-  const [mode, setMode] = useState<'none' | 'push' | 'ios'>('none')
+  const blocked = pathname.startsWith('/admin') || pathname.startsWith('/conference')
+  const [env, setEnv] = useState<Env | null>(null)
+  const [open, setOpen] = useState(false)
   const [installEvent, setInstallEvent] = useState<any>(null)
+  const [step, setStep] = useState<'install' | 'push' | 'done'>('install')
   const [busy, setBusy] = useState(false)
   const [msg, setMsg] = useState('')
-  const [done, setDone] = useState(false)
-
-  const blocked = pathname.startsWith('/admin') || pathname.startsWith('/conference')
 
   useEffect(() => {
     const onInstall = (e: Event) => { e.preventDefault(); setInstallEvent(e) }
@@ -36,21 +45,22 @@ export default function PwaPrompt() {
       try {
         const last = Number(localStorage.getItem(KEY_DISMISS) || 0)
         if (last && Date.now() - last < COOLDOWN_DAYS * 86_400_000) return
-        const visits = Number(localStorage.getItem(KEY_VISITS) || 0) + 1
-        sessionStorage.getItem(KEY_VISITS) || (localStorage.setItem(KEY_VISITS, String(visits)), sessionStorage.setItem(KEY_VISITS, '1'))
+        let visits = Number(localStorage.getItem(KEY_VISITS) || 0)
+        if (!sessionStorage.getItem(KEY_VISITS)) {
+          visits += 1
+          localStorage.setItem(KEY_VISITS, String(visits))
+          sessionStorage.setItem(KEY_VISITS, '1')
+        }
         if (visits < 2) return
 
         const ios = /iphone|ipad|ipod/i.test(navigator.userAgent)
-        const standalone = window.matchMedia('(display-mode: standalone)').matches || (navigator as any).standalone
-        let next: 'push' | 'ios' | 'none' = 'none'
-
-        if (ios && !standalone) next = 'ios'
-        else if ('serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window && Notification.permission === 'default') {
+        const standalone = window.matchMedia('(display-mode: standalone)').matches || (navigator as any).standalone === true
+        let canPush = 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window && Notification.permission === 'default'
+        if (canPush) {
           const reg = await navigator.serviceWorker.getRegistration()
-          const sub = await reg?.pushManager.getSubscription()
-          if (!sub) next = 'push'
+          if (await reg?.pushManager.getSubscription()) canPush = false
         }
-        if (next !== 'none') timer = setTimeout(() => setMode(next), 12_000)
+        timer = setTimeout(() => { setEnv({ ios, standalone, canPush }); setOpen(true) }, 12_000)
       } catch { /* storage blocked: stay quiet */ }
     })()
     return () => clearTimeout(timer)
@@ -58,56 +68,92 @@ export default function PwaPrompt() {
 
   const dismiss = () => {
     try { localStorage.setItem(KEY_DISMISS, String(Date.now())) } catch {}
-    setMode('none')
+    setOpen(false)
+  }
+
+  const install = async () => {
+    if (!installEvent) return
+    installEvent.prompt()
+    const choice = await installEvent.userChoice.catch(() => null)
+    setInstallEvent(null)
+    if (choice?.outcome === 'accepted' && env?.canPush) setStep('push')
+    else dismiss()
   }
 
   const turnOn = async () => {
     setBusy(true); setMsg('')
     try {
       const perm = await Notification.requestPermission()
-      if (perm !== 'granted') { dismiss(); return }
+      if (perm !== 'granted') { dismiss(); setBusy(false); return }
       const reg = await navigator.serviceWorker.ready
       const sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: b64(process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!) })
       const res = await fetch('/api/push/subscribe', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(sub.toJSON()) })
       if (!res.ok) throw new Error()
-      setDone(true)
-      setTimeout(() => setMode('none'), 2500)
+      setStep('done')
+      setTimeout(() => setOpen(false), 2500)
     } catch { setMsg('Could not turn on notifications. Please try again.') }
     setBusy(false)
   }
 
-  const install = async () => {
-    if (!installEvent) return
-    installEvent.prompt()
-    await installEvent.userChoice.catch(() => null)
-    setInstallEvent(null)
-  }
+  if (blocked || !open || !env) return null
 
-  if (blocked || mode === 'none') return null
+  const iosInstall = env.ios && !env.standalone
+  const canInstall = !!installEvent && !env.standalone
+  const pushOnly = !iosInstall && !canInstall && env.canPush
+  if (!iosInstall && !canInstall && !env.canPush) return null
+  const showPush = step === 'push' || (pushOnly && step !== 'done')
 
   return (
-    <div role="dialog" aria-label="Get the church app" className="fixed inset-x-3 bottom-3 z-[60] mx-auto max-w-[440px] rounded-2xl border border-[#c6c6cf] bg-white p-5 shadow-2xl">
-      <button onClick={dismiss} aria-label="Close" className="absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-full text-[#45464e] hover:bg-[#f2f4f6]">✕</button>
-      {done ? (
-        <p className="py-2 text-center text-[14px] font-bold text-green-800">You’re subscribed. God bless you!</p>
-      ) : mode === 'ios' ? (
-        <>
-          <p className="pr-8 text-[16px] font-bold text-[#081534]">Get a word of hope on your phone</p>
-          <p className="mt-1 text-[13px] leading-5 text-[#45464e]">On iPhone: tap the Share button, choose “Add to Home Screen”, then open theSpotlightChurch from your Home Screen. You’ll be able to turn on daily notifications from there.</p>
-          <button onClick={dismiss} className="mt-4 rounded-full border border-[#c6c6cf] px-5 py-2 text-[13px] font-bold text-[#45464e]">Not now</button>
-        </>
-      ) : (
-        <>
-          <p className="pr-8 text-[16px] font-bold text-[#081534]">A word of hope, every day</p>
-          <p className="mt-1 text-[13px] leading-5 text-[#45464e]">Get a short scripture or encouragement on your phone. You can turn it off any time.</p>
-          <div className="mt-4 flex flex-wrap gap-2">
-            <button onClick={turnOn} disabled={busy} className="rounded-full bg-[#081534] px-5 py-2.5 text-[13px] font-bold text-white disabled:opacity-60">{busy ? 'Turning on...' : 'Turn on daily word'}</button>
-            {installEvent && <button onClick={install} className="rounded-full bg-[#fdc425] px-5 py-2.5 text-[13px] font-bold text-[#6d5200]">Install app</button>}
-            <button onClick={dismiss} className="rounded-full border border-[#c6c6cf] px-5 py-2.5 text-[13px] font-bold text-[#45464e]">Not now</button>
-          </div>
-          {msg && <p role="alert" className="mt-2 text-[12px] text-[#ba1a1a]">{msg}</p>}
-        </>
-      )}
-    </div>
+    <>
+      <div className="fixed inset-0 z-[59] bg-black/40" onClick={dismiss} aria-hidden="true" />
+      <div role="dialog" aria-modal="true" aria-label="Get the church app"
+        className="fixed inset-x-0 bottom-0 z-[60] mx-auto w-full max-w-[460px] rounded-t-3xl bg-white px-6 pb-7 pt-6 shadow-2xl sm:bottom-6 sm:rounded-3xl">
+        <button onClick={dismiss} aria-label="Close"
+          className="absolute right-4 top-4 flex h-9 w-9 items-center justify-center rounded-full bg-[#f2f4f6] text-[#45464e]">
+          <Icon name="close" className="text-[18px]" />
+        </button>
+
+        <div className="mx-auto flex h-20 w-20 items-center justify-center overflow-hidden rounded-[22px] bg-[#081534] shadow-md ring-1 ring-[#fdc425]/30">
+          <img src="/images/logo.png" alt="" className="h-full w-full object-cover" />
+        </div>
+
+        {step === 'done' ? (
+          <p className="py-6 text-center text-[16px] font-bold text-green-800">You’re all set. God bless you!</p>
+        ) : showPush ? (
+          <>
+            <h2 className="mt-4 text-center text-[20px] font-bold text-[#081534]">{step === 'push' ? 'App installed. One more step' : 'Get a word of hope daily'}</h2>
+            <p className="mt-2 text-center text-[14px] leading-6 text-[#45464e]">Turn on notifications and get a short scripture or encouragement each day. You can turn it off any time.</p>
+            <button onClick={turnOn} disabled={busy} className="mt-6 w-full rounded-xl bg-[#fdc425] py-3.5 text-[15px] font-bold text-[#6d5200] disabled:opacity-60">
+              {busy ? 'Turning on...' : 'Turn on notifications'}
+            </button>
+            {msg && <p role="alert" className="mt-2 text-center text-[12px] text-[#ba1a1a]">{msg}</p>}
+            <button onClick={dismiss} className="mt-3 w-full py-2 text-[13px] font-semibold text-[#45464e]">Not now</button>
+          </>
+        ) : (
+          <>
+            <h2 className="mt-4 text-center text-[20px] font-bold text-[#081534]">Get the theSpotlightChurch app</h2>
+            <p className="mt-2 text-center text-[14px] leading-6 text-[#45464e]">Add the church to your phone for a faster, simpler experience.</p>
+            <ul className="mt-5 space-y-3">
+              {BENEFITS.map(b => (
+                <li key={b.text} className="flex items-center gap-3">
+                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#fff4d6] text-[#785a00]"><Icon name={b.icon} className="text-[20px]" /></span>
+                  <span className="text-[14px] font-medium text-[#191c1e]">{b.text}</span>
+                </li>
+              ))}
+            </ul>
+            {iosInstall ? (
+              <p className="mt-5 rounded-xl bg-[#f7f9fb] p-4 text-[13px] leading-6 text-[#45464e]">
+                On iPhone: tap the <strong>Share</strong> button, choose <strong>“Add to Home Screen”</strong>, then open theSpotlightChurch from your Home Screen. You can turn on daily notifications from there.
+              </p>
+            ) : (
+              <button onClick={install} className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl bg-[#fdc425] py-3.5 text-[15px] font-bold text-[#6d5200]">
+                <Icon name="download" className="text-[18px]" /> Install App
+              </button>
+            )}
+            <button onClick={dismiss} className="mt-3 w-full py-2 text-[13px] font-semibold text-[#45464e]">Not now</button>
+          </>
+        )}
+      </div>
+    </>
   )
 }
