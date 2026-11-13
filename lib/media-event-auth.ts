@@ -95,7 +95,7 @@ export function renderEventEmail(input: {
   imageUrl?: string | null;
 }) {
   const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL || "https://spotlightglobal.vercel.app").replace(/\/$/, "");
-  const logoUrl = `${siteUrl}/images/logo-mark.png`;
+  const logoUrl = `${siteUrl}/images/icon.png`;
   const formatLines = (value: string) => escapeEmailHtml(value).replace(/\r?\n/g, "<br>");
   const detailsHtml = input.details?.length
     ? `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f2f4f6;border-radius:12px;margin:24px 0"><tr><td style="padding:20px 24px"><table role="presentation" width="100%" cellpadding="0" cellspacing="0">${input.details.map(detail => `<tr><td style="padding:5px 12px 5px 0;font-family:'Plus Jakarta Sans',Arial,sans-serif;font-size:12px;color:#76777f;vertical-align:top">${escapeEmailHtml(detail.label)}</td><td style="padding:5px 0;font-family:'Plus Jakarta Sans',Arial,sans-serif;font-size:13px;font-weight:700;color:#081534;vertical-align:top">${formatLines(detail.value)}</td></tr>`).join("")}</table></td></tr></table>`
