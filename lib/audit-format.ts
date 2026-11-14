@@ -45,6 +45,7 @@ const TABLES: Record<string, { noun: string; group: string }> = {
   prayer_requests: { noun: "a prayer request", group: "Prayer" },
   community_photos: { noun: "a gallery photo", group: "Website" },
   testimonies: { noun: "a testimony", group: "Website" },
+  push_messages: { noun: "a scheduled notification", group: "Website" },
   devotionals: { noun: "a devotional", group: "Website" },
   blog_posts: { noun: "a blog post", group: "Website" },
   partner_submissions: { noun: "a partnership submission", group: "Partners" },
@@ -82,6 +83,8 @@ const FIELDS: Record<string, string> = {
   is_active: "active", thank_you_enabled: "thank-you email", thank_you_message: "thank-you message",
   description: "description", flyer_url: "flyer", special_session_label: "special session",
   admin_notes: "notes", discovery_source: "how they heard about us", interests: "interests",
+  is_visible: "shown on the website", testimony: "testimony text", send_on: "send date",
+  body: "message", url: "link opened",
 };
 
 const VALUES: Record<string, string> = {

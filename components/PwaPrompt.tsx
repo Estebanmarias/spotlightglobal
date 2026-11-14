@@ -16,8 +16,8 @@ const b64 = (s: string) => {
 
 const BENEFITS = [
   { icon: 'bolt', text: 'Opens instantly from your home screen' },
-  { icon: 'favorite', text: 'A word of hope on your phone every day' },
-  { icon: 'fullscreen', text: 'Full-screen, with no browser clutter' },
+  { icon: 'favorite', text: 'Get a word of hope as a daily notification' },
+  { icon: 'fullscreen', text: 'Distraction-free, full-screen experience' },
 ]
 
 type Env = { ios: boolean; standalone: boolean; canPush: boolean }
@@ -31,6 +31,7 @@ export default function PwaPrompt() {
   const [step, setStep] = useState<'install' | 'push' | 'done'>('install')
   const [busy, setBusy] = useState(false)
   const [msg, setMsg] = useState('')
+  const [manual, setManual] = useState(false)
 
   useEffect(() => {
     const onInstall = (e: Event) => { e.preventDefault(); setInstallEvent(e) }
@@ -72,7 +73,7 @@ export default function PwaPrompt() {
   }
 
   const install = async () => {
-    if (!installEvent) return
+    if (!installEvent) { setManual(true); return }
     installEvent.prompt()
     const choice = await installEvent.userChoice.catch(() => null)
     setInstallEvent(null)
@@ -97,11 +98,10 @@ export default function PwaPrompt() {
 
   if (blocked || !open || !env) return null
 
-  const iosInstall = env.ios && !env.standalone
-  const canInstall = !!installEvent && !env.standalone
-  const pushOnly = !iosInstall && !canInstall && env.canPush
-  if (!iosInstall && !canInstall && !env.canPush) return null
-  const showPush = step === 'push' || (pushOnly && step !== 'done')
+  const notInstalled = !env.standalone
+  if (!notInstalled && !env.canPush) return null
+  const iosInstall = env.ios && notInstalled
+  const showPush = step === 'push' || (!notInstalled && step !== 'done')
 
   return (
     <>
@@ -132,7 +132,7 @@ export default function PwaPrompt() {
         ) : (
           <>
             <h2 className="mt-4 text-center text-[20px] font-bold text-[#081534]">Get the theSpotlightChurch app</h2>
-            <p className="mt-2 text-center text-[14px] leading-6 text-[#45464e]">Add the church to your phone for a faster, simpler experience.</p>
+            <p className="mt-2 text-center text-[14px] leading-6 text-[#45464e]">Install theSpotlightChurch on your device for a faster, full-screen experience.</p>
             <ul className="mt-5 space-y-3">
               {BENEFITS.map(b => (
                 <li key={b.text} className="flex items-center gap-3">
@@ -146,9 +146,16 @@ export default function PwaPrompt() {
                 On iPhone: tap the <strong>Share</strong> button, choose <strong>“Add to Home Screen”</strong>, then open theSpotlightChurch from your Home Screen. You can turn on daily notifications from there.
               </p>
             ) : (
-              <button onClick={install} className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl bg-[#fdc425] py-3.5 text-[15px] font-bold text-[#6d5200]">
-                <Icon name="download" className="text-[18px]" /> Install App
-              </button>
+              <>
+                <button onClick={install} className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl bg-[#fdc425] py-3.5 text-[15px] font-bold text-[#6d5200]">
+                  <Icon name="download" className="text-[18px]" /> Install App
+                </button>
+                {manual && (
+                  <p className="mt-3 rounded-xl bg-[#f7f9fb] p-4 text-[13px] leading-6 text-[#45464e]">
+                    Tap your browser menu (<strong>⋮</strong>), then choose <strong>“Install app”</strong> or <strong>“Add to Home screen”</strong>.
+                  </p>
+                )}
+              </>
             )}
             <button onClick={dismiss} className="mt-3 w-full py-2 text-[13px] font-semibold text-[#45464e]">Not now</button>
           </>
