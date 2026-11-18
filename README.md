@@ -44,3 +44,5 @@ with direct text. Early returns already guarantee a loaded event, so the
 removed branches were unreachable. Fixes the Vercel type-check failure.
 
 enebled the thank you message in supabase
+
+added a new key
